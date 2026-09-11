@@ -490,7 +490,7 @@ for (const theme of ["light", "dark"] as const) {
     await open(page);
     await expect(page.locator(".ocelot-sidebar")).toHaveCSS(
       "background-color",
-      theme === "dark" ? "rgb(17, 24, 32)" : "rgb(245, 247, 249)",
+      theme === "dark" ? "rgb(18, 22, 28)" : "rgb(243, 245, 247)",
     );
     await settleMotion(page);
     const audit = await new AxeBuilder({ page }).analyze();

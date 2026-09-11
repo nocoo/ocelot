@@ -1,4 +1,10 @@
-# Ocelot
+<p align="center">
+  <img src="assets/brand/icon-rounded.png" width="128" height="128" alt="Ocelot：凝望彩色折纸鸟的碎片豹猫">
+</p>
+
+<h1 align="center">Ocelot</h1>
+
+<p align="center">简体中文 · <a href="docs/README.en.md">English</a></p>
 
 一处安静的私人阅读室。连接 GitHub 上的公开或私有 Obsidian 知识库，沿着目录、
 双链和文章大纲阅读。源仓库始终只读。
@@ -66,6 +72,8 @@ bun run test:e2e           # 独立 Wrangler + 生产前端的浏览器验收
 - [04 · 实现与本地验收](docs/04-implementation-and-local-testing.md)
 - [05 · 运行契约与验收记录](docs/05-runtime-contract-and-verification.md)
 - [06 · 本地运行、PAT 轮换与部署](docs/06-running-and-deployment.md)
+- [07 · Basalt 导航与阅读界面](docs/07-basalt-navigation.md)
+- [08 · 视觉规范](docs/08-visual-identity.md) · [品牌资产](assets/brand/README.md)
 - [开发协作约定](AGENTS.md) · [第三方说明](THIRD_PARTY_NOTICES.md)
 
 在 `main` 上按可验证的结果做原子提交。公开仓库只保存应用与合成示例，
