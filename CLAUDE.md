@@ -66,6 +66,9 @@ binary checksums. Do not bypass hooks, coverage thresholds or security scans.
 - GitHub vault credentials are separate: Worker Secret `GITHUB_TOKEN`, with
   optional `GITHUB_TOKEN_EXPIRES_AT`. Never put a PAT in Actions build variables,
   `VITE_*`, source, browser storage, logs, screenshots, or test fixtures.
+  In the Dashboard select Secret, not Text: Wrangler replaces ordinary variables
+  from config. Session status must reject a missing current PAT even if D1 still
+  holds an earlier healthy result.
   Initial deployment can serve an authenticated empty reader without a PAT;
   GitHub operations still reject missing credentials. The empty declaration in
   `.dev.vars.example` is used only for deterministic type generation, never deploy.

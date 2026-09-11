@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@nocoo/basalt/components/av
 import { Badge } from "@nocoo/basalt/components/badge";
 import { Button } from "@nocoo/basalt/components/button";
 import { DialogDescription, DialogTitle } from "@nocoo/basalt/components/dialog";
+import { Empty } from "@nocoo/basalt/components/empty";
 import { PageHeader } from "@nocoo/basalt/components/page-header";
 import {
   ContentIsland,
@@ -275,7 +276,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
                 reveal={state.directoryFocus}
                 onSelect={navigate}
               />
-            ) : (
+            ) : state.booting || state.loading ? (
               <div className="tree-skeleton" aria-hidden="true">
                 {[76, 90, 66, 83, 58, 72].map((width, index) => (
                   <span
@@ -285,6 +286,33 @@ function Reader({ model }: { model: ReaderViewModel }) {
                   />
                 ))}
               </div>
+            ) : (
+              <Empty
+                className="tree-empty"
+                icon={<BookOpen aria-hidden="true" />}
+                title={
+                  state.error
+                    ? "目录暂未载入"
+                    : state.repositories.length
+                      ? "选择一个知识库"
+                      : "还没有知识库"
+                }
+                description={
+                  state.error?.message ??
+                  (state.repositories.length
+                    ? "打开已连接的知识库，继续阅读。"
+                    : "添加 GitHub 仓库后，目录会显示在这里。")
+                }
+                action={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => model.openDialog("repositories")}
+                  >
+                    {state.repositories.length ? "选择知识库" : "添加知识库"}
+                  </Button>
+                }
+              />
             )}
           </SidebarNav>
           <SidebarFooter className={`sidebar-bottom ${railCollapsed ? "is-collapsed" : ""}`}>

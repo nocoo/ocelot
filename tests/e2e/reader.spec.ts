@@ -108,6 +108,52 @@ test.beforeEach(async ({ request }) => {
   expect(response.ok()).toBe(true);
 });
 
+test("an empty sidebar offers a repository action instead of an idle loading animation", async ({
+  page,
+}) => {
+  await page.route("**/api/repositories", (route) => route.fulfill({ json: [] }));
+  await page.goto("/");
+  const sidebar = page.getByRole("navigation", { name: "笔记导航", exact: true });
+  await expect(sidebar.getByText("还没有知识库", { exact: true })).toBeVisible();
+  await expect(sidebar.locator(".tree-skeleton")).toHaveCount(0);
+  await expect(page.locator(".loading-line")).toHaveCount(0);
+  await sidebar.getByRole("button", { name: "添加知识库", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "添加 GitHub 知识库" })).toBeVisible();
+});
+
+test("sidebar loading ends after a failed sync and the registered vault can be reopened", async ({
+  page,
+}) => {
+  let finishSync!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    finishSync = resolve;
+  });
+  const endpoint = "**/api/repositories/101/sync";
+  await page.route(endpoint, async (route) => {
+    await pending;
+    await route.fulfill({
+      status: 503,
+      json: { error: { code: "github_offline", message: "暂时无法连接 GitHub。" } },
+    });
+  });
+  await page.goto("/");
+  const sidebar = page.getByRole("navigation", { name: "笔记导航", exact: true });
+  await expect(sidebar.locator(".tree-skeleton")).toBeVisible();
+  finishSync();
+  await expect(sidebar.getByText("目录暂未载入", { exact: true })).toBeVisible();
+  await expect(sidebar).toContainText("暂时无法连接 GitHub。");
+  await expect(sidebar.locator(".tree-skeleton")).toHaveCount(0);
+  await expect(page.locator(".loading-line")).toHaveCount(0);
+  await page.unroute(endpoint);
+  await sidebar.getByRole("button", { name: "选择知识库", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: /^fieldnotes/ })
+    .click();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  await expect(page.locator(".vault-tree")).toBeVisible();
+});
+
 test("Chinese and English reading, wikilinks, deep links and browser history", async ({ page }) => {
   await open(page);
   await expect(page.locator("#document-title")).toHaveText(welcome);

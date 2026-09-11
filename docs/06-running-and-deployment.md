@@ -144,11 +144,13 @@ bun x wrangler secret put GITHUB_TOKEN
 ```
 
 也可在 Cloudflare Dashboard → Workers → `ocelot` → Settings → Variables and
-Secrets 添加名为 `GITHUB_TOKEN` 的 **Secret**。不要用 GitHub Actions 同名的
+Secrets 添加名为 `GITHUB_TOKEN` 的 **Secret**，不要选择普通 Text 变量。普通变量
+会在部署时按仓库配置覆盖；Secret 由 Wrangler 保留。不要用 GitHub Actions 同名的
 内置 token：它不代表选定私人知识库的授权。
 
 首次上线允许没有 PAT 的空阅读室；身份、头像和版本仍可加载，GitHub 操作
-会明确拒绝缺失凭据。当前尚未提供实际 PAT。配置 Secret 后，后续 Wrangler
+会明确拒绝缺失凭据。用户已配置 PAT，首次普通变量配置已恢复为 Secret（见 09）。
+配置 Secret 后，后续 Wrangler
 部署会保留它；补充到期日写入 `GITHUB_TOKEN_EXPIRES_AT` 后通过 CD 发布。
 登录受保护域名后，在应用内添加 `owner/repo` 或 GitHub 仓库 URL。
 登记不会扩大 PAT 权限；新增未授权仓库时，先在 GitHub 更新其授权范围。
@@ -174,7 +176,7 @@ Secrets 添加名为 `GITHUB_TOKEN` 的 **Secret**。不要用 GitHub Actions �
 
 当前已验证本地 mock、真实 Workers 测试运行时、SQLite D1/R2、作者资料和生产
 打包；远程 D1/R2 创建、迁移、部署、Git 版本与 Access 入口均已通过，证据见 09。
-真实 PAT 尚未提供；配置后仍需验收本人登录、非本人拒绝、私有笔记/图片保护，
+真实 PAT 已配置并检测成功；仍需验收本人登录、非本人拒绝、私有笔记/图片保护，
 以及轮换后读取选定真实仓库的完整流程。无 JWT 的应用层拒绝已由 Worker 测试覆盖。
 
 首版使用默认分支、文件名/路径搜索及浏览器渲染；不做全文索引、离线持久存储

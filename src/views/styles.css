@@ -281,6 +281,10 @@ a {
   padding: 0 17px;
   overflow: hidden;
 }
+.tree-empty {
+  padding: 28px 12px;
+  line-height: 1.7;
+}
 .vault-tree {
   display: block;
   width: 100%;

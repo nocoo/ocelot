@@ -49,7 +49,7 @@ export async function connection(env: Bindings): Promise<Connection> {
   }>();
   if (!row) throw new HttpError(503, "database_setup", "阅读器尚未完成初始化。");
   return {
-    status: row.status,
+    status: env.GITHUB_TOKEN ? row.status : "invalid",
     expiresAt: row.expires_at,
     checkedAt: row.checked_at,
     retryAt: row.retry_at,

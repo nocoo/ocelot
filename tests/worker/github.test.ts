@@ -93,6 +93,13 @@ describe("GitHub read-only transport", () => {
     });
     expect(transport).not.toHaveBeenCalled();
   });
+  it("reports a missing current PAT instead of a previous healthy connection", async () => {
+    await env.DB.prepare("UPDATE connection SET status = 'healthy', checked_at = ?")
+      .bind(Date.now())
+      .run();
+    expect((await connection(env)).status).toBe("healthy");
+    expect((await connection({ ...env, GITHUB_TOKEN: "" })).status).toBe("invalid");
+  });
   it("parses numeric, HTTP-date and reset-based retry advice", () => {
     const now = Date.parse("2026-09-11T00:00:00Z");
     expect(retryTime(new Headers({ "Retry-After": "10" }), now)).toBe(now + 10_000);
