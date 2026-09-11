@@ -168,3 +168,20 @@ Secret 列表为空。生产 D1 只读查询确认登记仓库和目录快照均
 该凭据访问 GitHub `/user` 返回 200。凭据不进入源代码、公开输出或测试数据。
 连接状态回归与 07 的浏览器流程均通过；非 View UT 共 164 项，四项覆盖率为
 100 / 98.62 / 100 / 100%。本次没有改变同步算法或扩大凭据权限。
+
+## v0.2.0 发行约定（2026-09-12）
+
+用户明确要求 `su-release Y+1`，接受本次 minor 发行 `v0.1.0 → v0.2.0`，
+patch 归零。已读取本机 `su-release` 命令与 nmem 版本流程，并以现有
+`scripts/release.ts` 执行版本、CHANGELOG、锁文件、提交、匹配 CI/CD、
+不可变 annotated tag 和 GitHub Release；发布后 5 分钟再次核对 CI 与部署。
+
+发行前已核查：根 `package.json` 为唯一版本来源，侧栏 Pill、`/api/live`、
+Worker 部署标签和验证脚本均直接引用它。旧版本仅出现在历史记录与隔离的
+发布算法测试中，无需改写。`bun run release -- --dry-run minor` 确认目标
+为 `v0.2.0`。本次包含 10 的阅读器交互、11 的本地 HTTPS 和 12 的线上资料恢复。
+
+12 的修复已随 `2da14ad` 通过完整 CI/CD 并部署；发行提交将单独通过完整
+Verify / Security / Deploy 后才创建标签。
+最终版本及发布证据以 [v0.2.0 Release](https://github.com/nocoo/ocelot/releases/tag/v0.2.0)
+附带的匹配 CI/CD 链接为准。

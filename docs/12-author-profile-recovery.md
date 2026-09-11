@@ -1,6 +1,6 @@
 # 12 · 线上作者身份资料恢复
 
-状态：**修复已通过 Cloudflare 真实资料请求及本地验收；交付结果见对应 main CI/CD** · 2026-09-12
+状态：**修复已通过 Cloudflare 实测、本地验收及完整 CI/CD，并部署到生产** · 2026-09-12
 
 ## 用户要求
 
@@ -54,5 +54,7 @@
 临时远程预览已关闭；诊断没有挂载应用资源或读取私有内容。
 浏览器使用合成身份和知识库；真实公开资料通过上面的 Cloudflare 远程运行验证，
 不能将其写成已验收生产浏览器中的私有知识库。
-原子提交推送后的 Verify / Security / Deploy 以对应 `main` 的
-[持续交付记录](https://github.com/nocoo/ocelot/actions/workflows/verify.yml) 为准。
+修复提交 `2da14ad5e72e74b6ce26ce185b24cba0830da2a1` 的
+[CI/CD](https://github.com/nocoo/ocelot/actions/runs/34652651390)
+已完成，Verify / Security / Deploy 全部成功；部署检查核对了运行版本、Git SHA
+和 Access 登录边界。后续发行结果以匹配的 GitHub Release 与 CI/CD 为准。
