@@ -8,8 +8,26 @@ async function publicResource(url: string, type: RegExp, limit: number): Promise
   try {
     const cache = await caches.open("ocelot-public-profiles");
     const cached = await cache.match(url);
-    if (cached) return cached;
-    const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(2000) });
+    if (cached) return cached.headers.has("Retry-After") ? null : cached;
+    const response = await fetch(url, {
+      redirect: "error",
+      signal: AbortSignal.timeout(5000),
+      headers: {
+        Accept: "application/json, image/*;q=0.9",
+        "User-Agent": "Ocelot (+https://github.com/nocoo/ocelot)",
+      },
+    });
+    if (response.status === 429) {
+      await response.body?.cancel();
+      // Store a cacheable backoff marker; it is never forwarded as a profile or avatar.
+      await cache.put(
+        url,
+        Response.json(null, {
+          headers: { "Cache-Control": "public, max-age=60", "Retry-After": "60" },
+        }),
+      );
+      return null;
+    }
     const contentType = response.headers.get("Content-Type")?.split(";")[0].trim() ?? "";
     if (!response.ok || !type.test(contentType)) {
       await response.body?.cancel();

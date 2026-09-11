@@ -1,5 +1,5 @@
 import { BookOpen, FileQuestion, ImageOff } from "lucide-react";
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, memo, Suspense, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
@@ -11,21 +11,27 @@ import { readingSchema, rehypeReadingAnchors, remarkObsidian } from "../models/d
 import { renderUrl } from "../models/links";
 import { readRoute } from "../services/browser";
 import type { Reading } from "../viewmodels/reader";
+import { ReaderImage } from "./ReaderImage";
 
 const Diagram = lazy(() => import("./Diagram"));
 
-export function Markdown({
+export const Markdown = memo(function Markdown({
   reading,
   snapshot,
   onNavigate,
+  onOpenImage,
 }: {
   reading: Reading;
   snapshot: Snapshot;
   onNavigate: (path: string, anchor?: string) => void;
+  onOpenImage: (src: string, alt: string) => void;
 }) {
   const components = useMemo<Components>(
     () => ({
-      a: ({ href, children, title }) => {
+      a: ({ href, children, title, node }) => {
+        // Image links open the lightbox without nesting an interactive image inside a link.
+        if (node?.children.some((child) => child.type === "element" && child.tagName === "img"))
+          return <span className="linked-image">{children}</span>;
         if (!href)
           return (
             <span className="unresolved-link" title="当前知识库中找不到这个链接">
@@ -94,7 +100,7 @@ export function Markdown({
               {alt || "图片暂不可用"}
             </span>
           );
-        return <img src={src} alt={alt ?? ""} loading="lazy" decoding="async" />;
+        return <ReaderImage src={src} alt={alt ?? ""} onOpen={onOpenImage} />;
       },
       pre: ({ children, node }) => {
         const child = node?.children[0];
@@ -117,7 +123,7 @@ export function Markdown({
                 />
               }
             >
-              <Diagram source={source} />
+              <Diagram source={source} onOpenImage={onOpenImage} />
             </Suspense>
           );
         }
@@ -130,7 +136,7 @@ export function Markdown({
         </section>
       ),
     }),
-    [reading.embeds, onNavigate],
+    [reading.embeds, onNavigate, onOpenImage],
   );
 
   if (reading.assetUrl && reading.assetType) {
@@ -138,7 +144,7 @@ export function Markdown({
     if (type.startsWith("image/"))
       return (
         <div className="asset-preview">
-          <img src={reading.assetUrl} alt={reading.parsed.title} />
+          <ReaderImage src={reading.assetUrl} alt={reading.parsed.title} onOpen={onOpenImage} />
         </div>
       );
     if (type.startsWith("audio/"))
@@ -178,4 +184,4 @@ export function Markdown({
       {reading.parsed.markdown}
     </ReactMarkdown>
   );
-}
+});

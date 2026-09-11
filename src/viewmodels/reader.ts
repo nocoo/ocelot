@@ -36,6 +36,13 @@ export interface Reading extends DocumentContent {
 }
 export type DialogName = "search" | "repositories" | "connection" | "preferences" | "local" | null;
 
+export interface LightboxImage {
+  src: string;
+  alt: string;
+  zoomed: boolean;
+  failed: boolean;
+}
+
 export interface ReaderState {
   session: Session | null;
   profile: AuthorProfile | null;
@@ -57,8 +64,12 @@ export interface ReaderState {
   query: string;
   repositoryInput: string;
   fontScale: number;
+  fullWidth: boolean;
+  raw: boolean;
+  outlineOpen: boolean;
+  lightbox: LightboxImage | null;
   directoryFocus: { path: string } | null;
-  navigation: { version: number; anchor: string; preserve: boolean };
+  navigation: { version: number; anchor: string; preserve: boolean; smooth?: boolean };
   local: { scenario: Scenario; requests: Record<string, number>; repositories: string[] } | null;
 }
 
@@ -96,6 +107,10 @@ export class ReaderViewModel {
       query: "",
       repositoryInput: "",
       fontScale: browser.readScale(),
+      fullWidth: browser.readFullWidth(),
+      raw: false,
+      outlineOpen: false,
+      lightbox: null,
       directoryFocus: null,
       navigation: { version: 0, anchor: "", preserve: false },
       local: null,
@@ -206,6 +221,8 @@ export class ReaderViewModel {
       dialog: null,
       checking: false,
       directoryFocus: null,
+      outlineOpen: false,
+      lightbox: null,
     });
     try {
       const snapshot = await this.api.sync(id);
@@ -215,7 +232,15 @@ export class ReaderViewModel {
           ? path
           : initialDocument(snapshot.files);
       if (target) await this.load(snapshot, target, anchor, replace, ticket, false, {});
-      else this.set({ snapshot, reading: null, pending: null, loading: false, changes: {} });
+      else
+        this.set({
+          snapshot,
+          reading: null,
+          pending: null,
+          loading: false,
+          changes: {},
+          raw: false,
+        });
     } catch (error) {
       if (ticket === this.epoch) {
         this.report(error);
@@ -228,10 +253,18 @@ export class ReaderViewModel {
   async selectNote(path: string, anchor = "", replace = false): Promise<void> {
     const snapshot = this.state.snapshot;
     if (!snapshot) return;
-    this.set({ dialog: null, error: null, notice: "", directoryFocus: null });
+    this.set({
+      dialog: null,
+      error: null,
+      notice: "",
+      directoryFocus: null,
+      outlineOpen: false,
+      lightbox: null,
+    });
     if (this.state.reading?.path === path && !this.state.loading) {
       this.browser.navigate(routeUrl(snapshot.repository.id, path, anchor), replace);
       this.set({
+        raw: anchor ? false : this.state.raw,
         navigation: { version: this.state.navigation.version + 1, anchor, preserve: !anchor },
       });
       return;
@@ -289,6 +322,9 @@ export class ReaderViewModel {
         changes,
         notice: "",
         directoryFocus: null,
+        raw: preserve ? this.state.raw : false,
+        outlineOpen: false,
+        lightbox: null,
         navigation: { version: this.state.navigation.version + 1, anchor, preserve },
       });
       this.browser.navigate(routeUrl(snapshot.repository.id, path, anchor), replace);
@@ -378,7 +414,14 @@ export class ReaderViewModel {
         ? path
         : initialDocument(pending.files);
     if (!target) {
-      this.set({ snapshot: pending, pending: null, reading: null });
+      this.set({
+        snapshot: pending,
+        pending: null,
+        reading: null,
+        raw: false,
+        outlineOpen: false,
+        lightbox: null,
+      });
       return;
     }
     this.controller?.abort();
@@ -431,7 +474,7 @@ export class ReaderViewModel {
   }
 
   openDialog(dialog: DialogName): void {
-    this.set({ dialog, query: "", error: null });
+    this.set({ dialog, query: "", error: null, outlineOpen: false, lightbox: null });
     if (dialog === "local") void this.loadLocal();
   }
   revealDirectory(path: string): void {
@@ -478,6 +521,9 @@ export class ReaderViewModel {
           pendingPath: null,
           changes: {},
           directoryFocus: null,
+          raw: false,
+          outlineOpen: false,
+          lightbox: null,
         });
     } catch (error) {
       if (ticket === this.epoch) this.report(error);
@@ -504,6 +550,9 @@ export class ReaderViewModel {
           changes: {},
           loading: false,
           directoryFocus: null,
+          raw: false,
+          outlineOpen: false,
+          lightbox: null,
         });
         const first = repositories[0];
         if (first) await this.selectRepository(first.id);
@@ -521,6 +570,69 @@ export class ReaderViewModel {
     const fontScale = Math.min(1.3, Math.max(0.9, scale));
     this.browser.writeScale(fontScale);
     this.set({ fontScale });
+  }
+
+  setFullWidth(fullWidth: boolean): void {
+    this.browser.writeFullWidth(fullWidth);
+    this.set({ fullWidth });
+  }
+
+  setRaw(raw: boolean): void {
+    if (!this.state.reading || this.state.reading.assetType) return;
+    this.set({
+      raw,
+      outlineOpen: false,
+      lightbox: null,
+      navigation: { version: this.state.navigation.version + 1, anchor: "", preserve: false },
+    });
+  }
+
+  setOutlineOpen(outlineOpen: boolean): void {
+    this.set({ outlineOpen: outlineOpen && !this.state.raw });
+  }
+
+  jumpToHeading(anchor: string): void {
+    if (!this.state.reading?.parsed.headings.some((heading) => heading.id === anchor)) return;
+    this.set({
+      raw: false,
+      outlineOpen: false,
+      navigation: {
+        version: this.state.navigation.version + 1,
+        anchor,
+        preserve: false,
+        smooth: true,
+      },
+    });
+  }
+
+  scrollToTop(): void {
+    this.set({
+      outlineOpen: false,
+      navigation: {
+        version: this.state.navigation.version + 1,
+        anchor: "",
+        preserve: false,
+        smooth: true,
+      },
+    });
+  }
+
+  openImage(src: string, alt: string): void {
+    if (!this.state.reading || this.state.raw) return;
+    this.set({ lightbox: { src, alt, zoomed: false, failed: false }, outlineOpen: false });
+  }
+
+  closeImage(): void {
+    this.set({ lightbox: null });
+  }
+
+  toggleImageZoom(): void {
+    const lightbox = this.state.lightbox;
+    if (lightbox) this.set({ lightbox: { ...lightbox, zoomed: !lightbox.zoomed } });
+  }
+
+  imageFailed(): void {
+    if (this.state.lightbox) this.set({ lightbox: { ...this.state.lightbox, failed: true } });
   }
 
   async copyLink(): Promise<void> {

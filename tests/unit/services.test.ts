@@ -155,6 +155,25 @@ describe("browser integration", () => {
     expect(win.history.pushState).toHaveBeenCalledWith(null, "", "/?repo=101");
     expect(win.history.replaceState).toHaveBeenCalledWith(null, "", "/");
   });
+  it("defaults to a limited width and persists only a boolean preference", () => {
+    const { services, win, storage } = platform();
+    expect(services.readFullWidth()).toBe(false);
+    services.writeFullWidth(true);
+    expect(services.readFullWidth()).toBe(true);
+    services.writeFullWidth(false);
+    expect(services.readFullWidth()).toBe(false);
+    storage.set("ocelot-full-width", "invalid");
+    expect(services.readFullWidth()).toBe(false);
+    win.localStorage.getItem.mockImplementationOnce(() => {
+      throw new Error("Storage blocked");
+    });
+    expect(services.readFullWidth()).toBe(false);
+    win.localStorage.setItem.mockImplementationOnce(() => {
+      throw new Error("Storage blocked");
+    });
+    expect(() => services.writeFullWidth(true)).not.toThrow();
+    expect([...storage.keys()]).toEqual(["ocelot-full-width"]);
+  });
   it("listens for visibility, back/forward and the search shortcut, and cleans up", () => {
     const { services, win, doc } = platform();
     const navigate = vi.fn();

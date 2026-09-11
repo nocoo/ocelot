@@ -346,6 +346,23 @@ export function Dialogs({ state, model }: { state: ReaderState; model: ReaderVie
                 </Button>
               ))}
             </fieldset>
+            <fieldset className="width-options" aria-label="正文宽度">
+              <legend>正文宽度</legend>
+              <Button
+                variant={state.fullWidth ? "outline" : "default"}
+                aria-pressed={!state.fullWidth}
+                onClick={() => model.setFullWidth(false)}
+              >
+                舒适行宽
+              </Button>
+              <Button
+                variant={state.fullWidth ? "default" : "outline"}
+                aria-pressed={state.fullWidth}
+                onClick={() => model.setFullWidth(true)}
+              >
+                全宽
+              </Button>
+            </fieldset>
             <p className="subtle-note">偏好仅保存在这个浏览器，笔记内容不会写入本地存储。</p>
           </>
         )}

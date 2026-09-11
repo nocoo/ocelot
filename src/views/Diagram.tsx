@@ -1,7 +1,14 @@
 import { useEffect, useId, useState } from "react";
+import { ReaderImage } from "./ReaderImage";
 import { useResolvedTheme } from "./useResolvedTheme";
 
-export default function Diagram({ source }: { source: string }) {
+export default function Diagram({
+  source,
+  onOpenImage,
+}: {
+  source: string;
+  onOpenImage: (src: string, alt: string) => void;
+}) {
   const id = useId().replace(/[^a-z\d]/giu, "");
   const { resolvedTheme } = useResolvedTheme();
   const [image, setImage] = useState<string | null>(null);
@@ -42,7 +49,7 @@ export default function Diagram({ source }: { source: string }) {
     );
   return image ? (
     <figure className="diagram">
-      <img src={image} alt="笔记中的 Mermaid 图示" />
+      <ReaderImage src={image} alt="笔记中的 Mermaid 图示" onOpen={onOpenImage} />
     </figure>
   ) : (
     <div className="diagram-placeholder shimmer" role="status" aria-label="正在绘制图示" />

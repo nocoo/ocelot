@@ -76,6 +76,8 @@ function setup(local = true) {
     listen: vi.fn(() => vi.fn()),
     readScale: vi.fn(() => 1),
     writeScale: vi.fn(),
+    readFullWidth: vi.fn(() => false),
+    writeFullWidth: vi.fn(),
     copy: vi.fn(async () => undefined),
     origin: vi.fn(() => "https://reader.test"),
   };
@@ -505,6 +507,103 @@ describe("version handoff and connection recovery", () => {
 });
 
 describe("repository and reading preferences", () => {
+  it("uses the saved width and switches raw content without fetching or storing a note", async () => {
+    const { api, model, browser } = setup();
+    expect(model.getSnapshot().fullWidth).toBe(false);
+    model.setRaw(true);
+    expect(model.getSnapshot().raw).toBe(false);
+    await model.start();
+    const original = model.getSnapshot().reading;
+    const requests = vi.mocked(api.document).mock.calls.length;
+    model.setFullWidth(true);
+    expect(browser.writeFullWidth).toHaveBeenCalledWith(true);
+    expect(model.getSnapshot().fullWidth).toBe(true);
+    vi.mocked(browser.readFullWidth).mockReturnValue(true);
+    expect(new ReaderViewModel(api, browser).getSnapshot().fullWidth).toBe(true);
+    model.setOutlineOpen(true);
+    expect(model.getSnapshot().outlineOpen).toBe(true);
+    model.openImage("/api/asset", "Synthetic landscape");
+    model.setRaw(true);
+    expect(model.getSnapshot()).toMatchObject({ raw: true, outlineOpen: false, lightbox: null });
+    model.setOutlineOpen(true);
+    model.openImage("/api/asset", "Synthetic landscape");
+    expect(model.getSnapshot()).toMatchObject({ outlineOpen: false, lightbox: null });
+    expect(model.getSnapshot().reading).toBe(original);
+    model.setRaw(false);
+    model.setOutlineOpen(false);
+    expect(model.getSnapshot().raw).toBe(false);
+    expect(api.document).toHaveBeenCalledTimes(requests);
+    model.setRaw(true);
+    await model.selectNote("Second.md");
+    expect(model.getSnapshot()).toMatchObject({ raw: false, fullWidth: true });
+    model.setRaw(true);
+    await model.selectNote("Second.md", "note-anchor");
+    expect(model.getSnapshot().raw).toBe(false);
+    await model.selectNote("image.png");
+    model.setRaw(true);
+    expect(model.getSnapshot().raw).toBe(false);
+    model.setFullWidth(false);
+    expect(browser.writeFullWidth).toHaveBeenLastCalledWith(false);
+  });
+
+  it("forwards chapter and top intents without changing the document or fetching content", async () => {
+    const { api, model } = setup();
+    model.jumpToHeading("note-unknown");
+    vi.mocked(api.document).mockResolvedValueOnce(
+      document("README.md", "a", "# A note\n\n## 中文 section\n\nText.\n"),
+    );
+    await model.start();
+    const before = model.getSnapshot();
+    model.jumpToHeading("note-unknown");
+    expect(model.getSnapshot().navigation).toBe(before.navigation);
+    model.setRaw(true);
+    model.jumpToHeading("note-中文-section");
+    expect(model.getSnapshot()).toMatchObject({
+      raw: false,
+      outlineOpen: false,
+      navigation: { anchor: "note-中文-section", preserve: false, smooth: true },
+    });
+    const version = model.getSnapshot().navigation.version;
+    model.scrollToTop();
+    expect(model.getSnapshot().navigation).toEqual({
+      version: version + 1,
+      anchor: "",
+      preserve: false,
+      smooth: true,
+    });
+    expect(model.getSnapshot().reading).toBe(before.reading);
+    expect(api.document).toHaveBeenCalledOnce();
+  });
+
+  it("resets lightbox zoom and failures between images and closes it on navigation or dialogs", async () => {
+    const { model } = setup();
+    model.openImage("/api/asset", "Image");
+    model.toggleImageZoom();
+    model.imageFailed();
+    expect(model.getSnapshot().lightbox).toBeNull();
+    await model.start();
+    model.openImage("/api/asset", "Image");
+    model.toggleImageZoom();
+    model.imageFailed();
+    expect(model.getSnapshot().lightbox).toEqual({
+      src: "/api/asset",
+      alt: "Image",
+      zoomed: true,
+      failed: true,
+    });
+    model.toggleImageZoom();
+    expect(model.getSnapshot().lightbox?.zoomed).toBe(false);
+    model.closeImage();
+    expect(model.getSnapshot().lightbox).toBeNull();
+    model.openImage("/api/another-asset", "Another image");
+    expect(model.getSnapshot().lightbox).toMatchObject({ zoomed: false, failed: false });
+    model.openDialog("preferences");
+    expect(model.getSnapshot().lightbox).toBeNull();
+    model.openImage("/api/asset", "Image");
+    await model.selectNote("Second.md");
+    expect(model.getSnapshot().lightbox).toBeNull();
+  });
+
   it("registers a late addition without replacing a more recent navigation", async () => {
     const { model, api, browser } = setup();
     await model.start();

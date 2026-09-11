@@ -27,9 +27,15 @@ describe("optional author profiles behind Access", () => {
     expect(String(url)).toMatch(
       /^https:\/\/lizheng\.blog\/api\/authors\/profile\?hash=[a-f0-9]{64}$/u,
     );
+    expect(String(url)).toBe(
+      "https://lizheng.blog/api/authors/profile?hash=2cecb651356e138bd83a5215c4d7c5a3ebfb923a0c316de1b218797417911c5e",
+    );
     expect(String(url)).not.toContain(email);
     expect(init).toMatchObject({ redirect: "error", signal: expect.any(AbortSignal) });
-    expect(init?.headers).toBeUndefined();
+    expect(init?.headers).toEqual({
+      Accept: "application/json, image/*;q=0.9",
+      "User-Agent": "Ocelot (+https://github.com/nocoo/ocelot)",
+    });
     const response = await authorAvatar(email);
     expect(response.headers.get("Content-Type")).toBe("image/jpeg");
     expect(new TextDecoder().decode(await response.arrayBuffer())).toBe("synthetic-image");
@@ -50,6 +56,33 @@ describe("optional author profiles behind Access", () => {
         )
       ).status,
     ).toBe(200);
+    expect(outgoing).toHaveBeenCalledTimes(2);
+  });
+
+  it("hashes normalized Unicode email as UTF-8", async () => {
+    const outgoing = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(Response.json(empty));
+    expect(await authorProfile("  讀者@EXAMPLE.TEST  ")).toEqual(empty);
+    expect(outgoing.mock.calls[0][0]).toBe(
+      "https://lizheng.blog/api/authors/profile?hash=fe442d369672015baf0994cc3333f16c9f78291bc86c4fbe9bc30d9362ec44b1",
+    );
+  });
+
+  it("backs off for a minute after 429 and can recover after the temporary cache expires", async () => {
+    const outgoing = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response("Rate limited", { status: 429 }));
+    const limitedEmail = "limited-reader@example.test";
+    expect(await authorProfile(limitedEmail)).toEqual(empty);
+    expect(await authorProfile(limitedEmail)).toEqual(empty);
+    expect(outgoing).toHaveBeenCalledOnce();
+    const url = String(outgoing.mock.calls[0][0]);
+    const cache = await caches.open("ocelot-public-profiles");
+    const cached = await cache.match(url);
+    expect(cached?.headers.get("Retry-After")).toBe("60");
+    expect(cached?.headers.get("Cache-Control")).toBe("public, max-age=60");
+    await cache.delete(url);
+    outgoing.mockResolvedValueOnce(Response.json({ name: "Recovered reader", avatar: null }));
+    expect(await authorProfile(limitedEmail)).toEqual({ name: "Recovered reader", avatar: null });
     expect(outgoing).toHaveBeenCalledTimes(2);
   });
 

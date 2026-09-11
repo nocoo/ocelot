@@ -3,7 +3,13 @@ import { AppMain, AppShell, AppSkipLink } from "@nocoo/basalt/components/app-she
 import { Avatar, AvatarFallback, AvatarImage } from "@nocoo/basalt/components/avatar";
 import { Badge } from "@nocoo/basalt/components/badge";
 import { Button } from "@nocoo/basalt/components/button";
-import { DialogDescription, DialogTitle } from "@nocoo/basalt/components/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@nocoo/basalt/components/dialog";
 import { Empty } from "@nocoo/basalt/components/empty";
 import { PageHeader } from "@nocoo/basalt/components/page-header";
 import {
@@ -54,7 +60,6 @@ import {
 } from "react";
 import { version } from "../../package.json";
 import { connectionPresentation } from "../models/connection";
-import type { Heading } from "../models/document";
 import { changedFiles, fileTitle, isMarkdown } from "../models/vault";
 import type { ReaderViewModel } from "../viewmodels/reader";
 import { Dialogs } from "./Dialogs";
@@ -63,6 +68,8 @@ import { Mark } from "./Mark";
 import { Markdown } from "./Markdown";
 import { NavigationTree } from "./NavigationTree";
 import { ReaderBreadcrumbs } from "./ReaderBreadcrumbs";
+import { ImageLightbox } from "./ReaderImage";
+import { ReaderOutline } from "./ReaderOutline";
 import { useResolvedTheme } from "./useResolvedTheme";
 
 export function App({ model }: { model: ReaderViewModel }) {
@@ -95,9 +102,9 @@ function Reader({ model }: { model: ReaderViewModel }) {
   const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 767px)").matches);
   const [collapsed, setCollapsed] = useState(() => window.matchMedia("(max-width: 767px)").matches);
   const railCollapsed = collapsed && !compact;
-  const [outlineOpen, setOutlineOpen] = useState(false);
+  const outlineButton = useRef<HTMLButtonElement>(null);
   const scroller = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ progress: 0, heading: "" });
+  const [position, setPosition] = useState({ progress: 0, heading: "", scrolled: false });
   const connection = connectionPresentation(state.session?.connection ?? null);
   const identity = model.identity();
   const snapshot = state.snapshot;
@@ -115,6 +122,8 @@ function Reader({ model }: { model: ReaderViewModel }) {
     },
     [model],
   );
+  const openImage = useCallback((src: string, alt: string) => model.openImage(src, alt), [model]);
+  const jump = useCallback((id: string) => model.jumpToHeading(id), [model]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -135,48 +144,59 @@ function Reader({ model }: { model: ReaderViewModel }) {
   useEffect(() => {
     const container = scroller.current;
     if (!container) return;
+    const behavior =
+      state.navigation.smooth && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "smooth"
+        : "instant";
     if (state.navigation.anchor)
-      document.getElementById(state.navigation.anchor)?.scrollIntoView({ block: "start" });
-    else if (!state.navigation.preserve) container.scrollTop = 0;
+      document
+        .getElementById(state.navigation.anchor)
+        ?.scrollIntoView({ behavior, block: "start" });
+    else if (!state.navigation.preserve) container.scrollTo({ top: 0, behavior });
   }, [state.navigation]);
   useEffect(() => {
     const container = scroller.current;
     if (!container) return;
     const update = () => {
+      container.style.setProperty("--reading-height", `${container.clientHeight}px`);
       const height = container.scrollHeight - container.clientHeight;
-      const headings = reading?.parsed.headings ?? [];
+      const headings = state.raw ? [] : (reading?.parsed.headings ?? []);
       const top = container.getBoundingClientRect().top + 100;
       let active = headings[0]?.id ?? "";
       for (const heading of headings) {
         const element = document.getElementById(heading.id);
         if (element && element.getBoundingClientRect().top <= top) active = heading.id;
       }
+      if (height > 0 && container.scrollTop >= height - 2) active = headings.at(-1)?.id ?? "";
       setPosition({
         progress:
           height <= 0 ? 100 : Math.min(100, Math.round((container.scrollTop / height) * 100)),
         heading: active,
+        scrolled: container.scrollTop > 0,
       });
     };
     update();
     container.addEventListener("scroll", update, { passive: true });
     const resize = new ResizeObserver(update);
     resize.observe(container);
+    if (container.firstElementChild) resize.observe(container.firstElementChild);
     return () => {
       container.removeEventListener("scroll", update);
       resize.disconnect();
     };
-  }, [reading]);
+  }, [reading, state.raw]);
   useEffect(() => {
     document.title = reading ? `${reading.parsed.title} · Ocelot` : "Ocelot · 私人阅读室";
   }, [reading]);
 
-  const jump = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "start",
-    });
-    setOutlineOpen(false);
-  };
+  const avatar = (
+    <Avatar className="identity-avatar" title={identity.name}>
+      <AvatarImage src={identity.avatar} alt={identity.name} />
+      <AvatarFallback className="identity-icon">
+        {identity.local ? <LockKeyhole size={16} aria-hidden="true" /> : identity.initial}
+      </AvatarFallback>
+    </Avatar>
+  );
   return (
     <SidebarProvider
       collapsed={collapsed}
@@ -317,15 +337,18 @@ function Reader({ model }: { model: ReaderViewModel }) {
           </SidebarNav>
           <SidebarFooter className={`sidebar-bottom ${railCollapsed ? "is-collapsed" : ""}`}>
             {railCollapsed ? (
-              <SidebarIconItem
-                className={`connection-shortcut ${connection.tone}`}
-                aria-label={`阅读连接：${connection.label}`}
-                title={connection.label}
-                onClick={() => model.openDialog("connection")}
-              >
-                <Link2 size={18} />
-                <span className="status-dot" />
-              </SidebarIconItem>
+              <>
+                <SidebarIconItem
+                  className={`connection-shortcut ${connection.tone}`}
+                  aria-label={`阅读连接：${connection.label}`}
+                  title={connection.label}
+                  onClick={() => model.openDialog("connection")}
+                >
+                  <Link2 size={18} />
+                  <span className="status-dot" />
+                </SidebarIconItem>
+                {avatar}
+              </>
             ) : (
               <>
                 <Button
@@ -341,18 +364,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
                   className="space-identity"
                   name={identity.name}
                   email={identity.subtitle}
-                  avatar={
-                    <Avatar className="identity-avatar">
-                      <AvatarImage src={identity.avatar} alt={identity.name} />
-                      <AvatarFallback className="identity-icon">
-                        {identity.local ? (
-                          <LockKeyhole size={15} aria-hidden="true" />
-                        ) : (
-                          identity.initial
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                  }
+                  avatar={avatar}
                   action={
                     <ShieldCheck
                       size={17}
@@ -391,98 +403,128 @@ function Reader({ model }: { model: ReaderViewModel }) {
             }
             actions={
               <>
-                <Button
-                  variant="ghost"
-                  className={`sync-button ${state.pending ? "update-ready" : ""}`}
-                  onClick={() => {
-                    if (state.pending) void model.applyUpdate();
-                    else void model.check(true);
-                  }}
-                  disabled={
-                    !snapshot ||
-                    state.loading ||
-                    state.checking ||
-                    (state.session?.connection.retryAt ?? 0) > Date.now()
-                  }
-                  aria-label={state.pending ? `应用更新，${updateCount} 份文件` : "检查更新"}
-                  title={state.pending ? `${updateCount} 份文件有新版本，点击应用` : "检查更新"}
-                >
-                  <span className={state.checking ? "spin" : ""}>
-                    {state.checking ? (
-                      <LoaderCircle size={14} />
-                    ) : state.pending ? (
-                      <ArrowDownToLine size={14} />
-                    ) : (
-                      <RotateCw size={14} />
-                    )}
-                  </span>
-                  <span>
-                    {state.checking
-                      ? "正在检查"
-                      : state.pending
-                        ? `应用更新 · ${updateCount}`
-                        : "检查更新"}
-                  </span>
-                </Button>
-                <span className="toolbar-divider" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="chrome-button type-button"
-                  aria-label="阅读偏好"
-                  title="阅读偏好"
-                  onClick={() => model.openDialog("preferences")}
-                >
-                  Aa
-                </Button>
-                <ThemeButton />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="chrome-button copy-button"
-                  aria-label="复制阅读链接"
-                  title="复制阅读链接"
-                  onClick={() => {
-                    void model.copyLink();
-                  }}
-                  disabled={!reading}
-                >
-                  <Link2 size={17} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="chrome-button mobile-outline-button"
-                  aria-label="文章大纲"
-                  title="文章大纲"
-                  onClick={() => setOutlineOpen(!outlineOpen)}
-                  disabled={!reading?.parsed.headings.length}
-                >
-                  <ListTree size={17} />
-                </Button>
-                {state.session?.local && (
+                <fieldset className="reader-options" aria-label="阅读器选项">
+                  <span className="reader-options-label">阅读器</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="chrome-button"
-                    aria-label="本地体验场景"
-                    title="本地体验场景"
-                    onClick={() => model.openDialog("local")}
+                    className="chrome-button width-button"
+                    aria-label="全宽阅读"
+                    title={state.fullWidth ? "恢复舒适行宽" : "全宽阅读"}
+                    aria-pressed={state.fullWidth}
+                    disabled={!reading}
+                    onClick={() => model.setFullWidth(!state.fullWidth)}
                   >
-                    <FlaskConical size={17} />
+                    全宽
                   </Button>
-                )}
-                <Button variant="ghost" size="icon" className="chrome-button" asChild>
-                  <a
-                    href="https://github.com/nocoo/ocelot"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Ocelot GitHub 仓库"
-                    title="Ocelot GitHub 仓库"
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="chrome-button type-button"
+                    aria-label="阅读偏好"
+                    title="阅读偏好"
+                    onClick={() => model.openDialog("preferences")}
                   >
-                    <GitHubMark />
-                  </a>
-                </Button>
+                    Aa
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="chrome-button raw-button"
+                    aria-label={state.raw ? "返回文章阅读" : "查看 Markdown 原文"}
+                    title={state.raw ? "返回文章阅读" : "查看 Markdown 原文"}
+                    aria-pressed={state.raw}
+                    disabled={!reading || !!reading.assetType}
+                    onClick={() => model.setRaw(!state.raw)}
+                  >
+                    {state.raw ? <BookOpen size={17} /> : <span>Raw</span>}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="chrome-button copy-button"
+                    aria-label="复制阅读链接"
+                    title="复制阅读链接"
+                    onClick={() => {
+                      void model.copyLink();
+                    }}
+                    disabled={!reading}
+                  >
+                    <Link2 size={17} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="chrome-button mobile-outline-button"
+                    ref={outlineButton}
+                    aria-label="文章大纲"
+                    title="文章大纲"
+                    aria-expanded={state.outlineOpen}
+                    onClick={() => model.setOutlineOpen(!state.outlineOpen)}
+                    disabled={state.raw || !reading?.parsed.headings.length}
+                  >
+                    <ListTree size={17} />
+                  </Button>
+                </fieldset>
+                <fieldset className="global-actions" aria-label="全局操作">
+                  <Button
+                    variant="ghost"
+                    className={`sync-button ${state.pending ? "update-ready" : ""}`}
+                    onClick={() => {
+                      if (state.pending) void model.applyUpdate();
+                      else void model.check(true);
+                    }}
+                    disabled={
+                      !snapshot ||
+                      state.loading ||
+                      state.checking ||
+                      (state.session?.connection.retryAt ?? 0) > Date.now()
+                    }
+                    aria-label={state.pending ? `应用更新，${updateCount} 份文件` : "检查更新"}
+                    title={state.pending ? `${updateCount} 份文件有新版本，点击应用` : "检查更新"}
+                  >
+                    <span className={state.checking ? "spin" : ""}>
+                      {state.checking ? (
+                        <LoaderCircle size={14} />
+                      ) : state.pending ? (
+                        <ArrowDownToLine size={14} />
+                      ) : (
+                        <RotateCw size={14} />
+                      )}
+                    </span>
+                    <span>
+                      {state.checking
+                        ? "正在检查"
+                        : state.pending
+                          ? `应用更新 · ${updateCount}`
+                          : "检查更新"}
+                    </span>
+                  </Button>
+                  <ThemeButton />
+                  {state.session?.local && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="chrome-button"
+                      aria-label="本地体验场景"
+                      title="本地体验场景"
+                      onClick={() => model.openDialog("local")}
+                    >
+                      <FlaskConical size={17} />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="chrome-button" asChild>
+                    <a
+                      href="https://github.com/nocoo/ocelot"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Ocelot GitHub 仓库"
+                      title="Ocelot GitHub 仓库"
+                    >
+                      <GitHubMark />
+                    </a>
+                  </Button>
+                </fieldset>
               </>
             }
           />
@@ -527,7 +569,9 @@ function Reader({ model }: { model: ReaderViewModel }) {
             <ContentIsland className="reading-island">
               <div className="reading-scroll" ref={scroller}>
                 {reading && snapshot ? (
-                  <div className="reading-grid">
+                  <div
+                    className={`reading-grid ${state.fullWidth ? "is-full-width" : ""} ${state.raw ? "is-raw" : ""}`}
+                  >
                     <article
                       className="article"
                       aria-labelledby="document-title"
@@ -561,51 +605,52 @@ function Reader({ model }: { model: ReaderViewModel }) {
                           只读
                         </span>
                       </div>
-                      <div className="prose">
-                        <Markdown reading={reading} snapshot={snapshot} onNavigate={navigate} />
-                      </div>
+                      {state.raw ? (
+                        // biome-ignore lint/a11y/noNoninteractiveTabindex: Raw Markdown can scroll horizontally with the keyboard.
+                        <section className="raw-markdown" tabIndex={0} aria-label="Markdown 原文">
+                          <pre>
+                            <code>{reading.content}</code>
+                          </pre>
+                        </section>
+                      ) : (
+                        <div className="prose">
+                          <Markdown
+                            reading={reading}
+                            snapshot={snapshot}
+                            onNavigate={navigate}
+                            onOpenImage={openImage}
+                          />
+                        </div>
+                      )}
                       <footer className="article-footer">
                         <Mark small />
                         <span>留一点空白，给下一个想法。</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            scroller.current?.scrollTo({
-                              top: 0,
-                              behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
-                                .matches
-                                ? "auto"
-                                : "smooth",
-                            })
-                          }
-                          aria-label="回到文章顶部"
-                        >
-                          <ArrowUp size={16} />
-                        </button>
                       </footer>
                     </article>
-                    <aside className="outline-column" aria-label="文章大纲">
-                      <Outline
-                        headings={reading.parsed.headings}
-                        active={position.heading}
-                        jump={jump}
-                      />
-                      <div className="reading-progress">
-                        <span>阅读进度</span>
-                        <span>{position.progress}%</span>
-                        <div>
-                          <i style={{ width: `${position.progress}%` }} />
+                    {!state.raw && (
+                      <aside className="outline-column" aria-label="文章大纲">
+                        <div className="reading-progress">
+                          <span>阅读进度</span>
+                          <span>{position.progress}%</span>
+                          <div>
+                            <i style={{ width: `${position.progress}%` }} />
+                          </div>
                         </div>
-                      </div>
-                      <div className="quiet-note">
-                        <span className="quiet-note-line" />
-                        <p>
-                          慢慢读，
-                          <br />
-                          让想法停留片刻。
-                        </p>
-                      </div>
-                    </aside>
+                        <ReaderOutline
+                          headings={reading.parsed.headings}
+                          active={position.heading}
+                          onJump={jump}
+                        />
+                        <div className="quiet-note">
+                          <span className="quiet-note-line" />
+                          <p>
+                            慢慢读，
+                            <br />
+                            让想法停留片刻。
+                          </p>
+                        </div>
+                      </aside>
+                    )}
                   </div>
                 ) : state.loading || state.booting ? (
                   <ReadingSkeleton />
@@ -635,6 +680,19 @@ function Reader({ model }: { model: ReaderViewModel }) {
                   </div>
                 )}
               </div>
+              {reading && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="back-to-top"
+                  aria-label="回到文章顶部"
+                  title="回到文章顶部"
+                  disabled={!position.scrolled}
+                  onClick={() => model.scrollToTop()}
+                >
+                  <ArrowUp size={17} />
+                </Button>
+              )}
             </ContentIsland>
           </div>
           <div className="reading-status">
@@ -672,58 +730,34 @@ function Reader({ model }: { model: ReaderViewModel }) {
             </span>
           </div>
         </AppMain>
-        {outlineOpen && reading && (
-          <div className="mobile-outline">
-            <div>
-              <strong>在这篇笔记里</strong>
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label="关闭文章大纲"
-                onClick={() => setOutlineOpen(false)}
-              >
+      </AppShell>
+      <Dialog open={state.outlineOpen} onOpenChange={(open) => model.setOutlineOpen(open)}>
+        <DialogContent
+          className="ocelot-dialog mobile-outline"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            outlineButton.current?.focus({ preventScroll: true });
+          }}
+        >
+          <div className="outline-dialog-header">
+            <DialogTitle>文章大纲</DialogTitle>
+            <DialogClose asChild>
+              <Button size="icon" variant="ghost" aria-label="关闭文章大纲">
                 <X size={16} />
               </Button>
-            </div>
-            <Outline headings={reading.parsed.headings} active={position.heading} jump={jump} />
+            </DialogClose>
           </div>
-        )}
-      </AppShell>
+          <DialogDescription className="sr-only">滚动目录，选择要阅读的章节。</DialogDescription>
+          <ReaderOutline
+            headings={reading?.parsed.headings ?? []}
+            active={position.heading}
+            onJump={jump}
+          />
+        </DialogContent>
+      </Dialog>
+      <ImageLightbox image={state.lightbox} model={model} />
       <Dialogs state={state} model={model} />
     </SidebarProvider>
-  );
-}
-
-function Outline({
-  headings,
-  active,
-  jump,
-}: {
-  headings: Heading[];
-  active: string;
-  jump: (id: string) => void;
-}) {
-  return (
-    <nav className="article-outline" aria-label="本篇大纲">
-      <span className="section-eyebrow">在这篇笔记里</span>
-      {headings.length ? (
-        <ol>
-          {headings.map((heading) => (
-            <li key={heading.id} className={heading.depth > 2 ? "outline-sub" : ""}>
-              <button
-                type="button"
-                aria-current={heading.id === active ? "location" : undefined}
-                onClick={() => jump(heading.id)}
-              >
-                {heading.text}
-              </button>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <p className="outline-empty">这一篇，适合一口气读完。</p>
-      )}
-    </nav>
   );
 }
 

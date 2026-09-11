@@ -60,6 +60,20 @@ export function browserServices(win: Window, doc: Document) {
         /* Preferences still work for this session. */
       }
     },
+    readFullWidth: () => {
+      try {
+        return win.localStorage.getItem("ocelot-full-width") === "true";
+      } catch {
+        return false;
+      }
+    },
+    writeFullWidth: (fullWidth: boolean) => {
+      try {
+        win.localStorage.setItem("ocelot-full-width", String(fullWidth));
+      } catch {
+        /* Preferences still work for this session. */
+      }
+    },
     copy: (text: string) => win.navigator.clipboard.writeText(text),
     origin: () => win.location.origin,
   };

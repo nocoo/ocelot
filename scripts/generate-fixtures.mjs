@@ -14,18 +14,21 @@ function file(path, content, binary = false) {
 }
 
 // A small original, deterministic landscape. No third-party or private imagery.
-function landscape() {
-  const width = 1200;
-  const height = 480;
+function landscape(width = 1200, height = 480) {
   const pixels = Buffer.alloc((width * 3 + 1) * height);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const t = y / height;
+      const horizontal = (x / width) * 1200;
+      const vertical = t * 480;
       let color = [195 - t * 23, 216 - t * 23, 225 - t * 13];
-      if (Math.hypot(x - 887, y - 113) < 37) color = [242, 240, 222];
-      if (y > 235 - Math.sin(x / 145) * 65 - Math.cos(x / 73) * 20) color = [122, 154, 174];
-      if (y > 322 - Math.sin(x / 220 + 2) * 73 - Math.cos(x / 140) * 20) color = [80, 118, 142];
-      if (y > 410 - Math.sin(x / 310 + 1) * 68) color = [51, 84, 108];
+      if (Math.hypot(x - width * 0.739, y - height * 0.235) < Math.min(width, height) * 0.077)
+        color = [242, 240, 222];
+      if (vertical > 235 - Math.sin(horizontal / 145) * 65 - Math.cos(horizontal / 73) * 20)
+        color = [122, 154, 174];
+      if (vertical > 322 - Math.sin(horizontal / 220 + 2) * 73 - Math.cos(horizontal / 140) * 20)
+        color = [80, 118, 142];
+      if (vertical > 410 - Math.sin(horizontal / 310 + 1) * 68) color = [51, 84, 108];
       const offset = y * (width * 3 + 1) + 1 + x * 3;
       pixels.set(color.map(Math.round), offset);
     }
@@ -63,11 +66,67 @@ const curated = [
   ["02 观察与记录/城市里的蓝色.md", "blue.md"],
   ["03 The Reading Room/On paying attention.md", "attention.md"],
   ["04 工具与实践/Markdown 排版实验室.md", "laboratory.md"],
+  ["06 阅读器体验/图文与版式图鉴.md", "illustrated.md"],
 ];
 const entries = [];
 for (const [path, source] of curated)
   entries.push(file(path, await readFile(new URL(`fixtures/notes/${source}`, root), "utf8")));
 entries.push(file("附件/blue-hour.png", landscape(), true));
+for (const [name, width, height] of [
+  ["portrait", 800, 1200],
+  ["square", 720, 720],
+  ["panorama", 2400, 480],
+  ["long-poster", 960, 3200],
+  ["small", 96, 96],
+])
+  entries.push(file(`附件/${name}.png`, landscape(width, height), true));
+
+const chapters = Array.from({ length: 48 }, (_, index) => {
+  const number = String(index + 1).padStart(2, "0");
+  const subject = [
+    "清晨的街道",
+    "旧书店的窗",
+    "河边的长椅",
+    "山路上的云",
+    "夜色里的灯",
+    "回程的风",
+  ][index % 6];
+  return `## 第 ${number} 章 · ${subject}
+
+走过同一条街，并不意味着每次看见的都是同一个地方。今天的光落在墙面上，昨天的雨还留在石缝里。我们停下来记下这些变化，也记下自己为什么会在这个时刻注意到它们。第 ${index + 1} 次观察，就从眼前这一点具体的差异开始。
+
+一份长笔记需要清晰的入口，也需要可以随时离开的出口。读者可能从头开始，也可能带着一个问题直接来到这一节。标题帮助我们找到位置，图片让某个难以描述的细节重新出现，而段落之间的空白，给思考留下一点时间。
+
+### 观察与记录
+
+At the edge of the page, a small detail changes the story. The notebook keeps the scene, the question, and the uncertainty together. Read a paragraph, follow a reference, then return to the place where the thought began.
+
+我们把观察拆成三件事：先写发生了什么，再写当时的解释，最后留下一个尚未回答的问题。不要急着把笔记修成一个完整的故事。细节之间的联系，会在下一次重访时变得更清楚。中文和 English 可以在同一段落里自然出现，例如 page 12 的一句旁注，或者一次关于 typography 的小实验。
+
+#### 留给下一次重访的问题
+
+- 哪一个细节与预期不同？它是否也会出现在另一个时间或地点？
+- 如果拿走原先的解释，现有记录还能支持怎样的理解？
+- 沿着 [[01 思考的方法/渐进式总结|渐进式总结]] 继续，或回到本章的观察重新读一次。
+
+${index % 8 === 0 ? "![[附件/blue-hour.png|长文中的山峦插图]]\n\n图片之后仍然有正文；稍后加载的图像也不能让目录和阅读进度停留在旧位置。\n" : ""}
+${index % 8 === 3 ? "> [!NOTE] 一次中途回望\n> 章节标题只是入口。理解仍然来自细节之间可以再次被检验的联系。\n" : ""}
+${index % 8 === 5 ? "| 记录 | 原始观察 | 下一步 |\n| --- | --- | --- |\n| 街角 | 光线随时间改变 | 傍晚再来一次 |\n| 书页 | 中英混排的行长不同 | 在全宽模式中对比 |\n" : ""}
+`;
+});
+entries.push(
+  file(
+    "06 阅读器体验/长文与多级目录.md",
+    `---\ntitle: 四十八次慢行\ndescription: 一篇有 48 章、144 个目录条目与穿插图片的超长合成游记。\ntags: [长文, 图文, 体验]\n---\n# 四十八次慢行\n\n从第一章走到最后一章，也可以在右侧目录里直接寻找一个中途入口。\n\n${chapters.join("\n")}\n回到 [[README|花园入口]]，或打开 [[06 阅读器体验/图文与版式图鉴|图文与版式图鉴]]。\n`,
+  ),
+);
+entries.push(
+  file(
+    "06 阅读器体验/无标题短笺.md",
+    "雨停了，先去外面走一小段路。\n\nA short note, without headings.\n",
+  ),
+);
+entries.push(file("06 阅读器体验/只有标题.md", "# 只有标题\n"));
 for (const [folder, titles] of [
   [
     "01 思考的方法",

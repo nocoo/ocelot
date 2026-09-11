@@ -20,6 +20,8 @@ const origin = "http://127.0.0.1:5174";
 const headers = { Origin: origin, "X-Ocelot-Request": "1" };
 const welcome = "阅读，是一场安静的探索";
 const laboratory = "04 工具与实践/Markdown 排版实验室.md";
+const longRead = "06 阅读器体验/长文与多级目录.md";
+const illustrated = "06 阅读器体验/图文与版式图鉴.md";
 
 async function scenario(request: APIRequestContext, value: Scenario) {
   const response = await request.post("/api/local", { headers, data: { scenario: value } });
@@ -157,7 +159,7 @@ test("sidebar loading ends after a failed sync and the registered vault can be r
 test("Chinese and English reading, wikilinks, deep links and browser history", async ({ page }) => {
   await open(page);
   await expect(page.locator("#document-title")).toHaveText(welcome);
-  await expect(page.getByText("1,173 篇", { exact: true })).toBeVisible();
+  await expect(page.getByText("1,177 篇", { exact: true })).toBeVisible();
   await search(page, "On paying attention");
   await expect(page.locator("#document-title")).toHaveText("On paying attention");
   await expect(page.locator(".prose")).toContainText(
@@ -532,6 +534,15 @@ test("untrusted note content cannot execute scripts, clobber anchors or load tra
   );
   expect(await page.evaluate(() => "ocelotInjected" in window)).toBe(false);
   expect(external).toEqual([]);
+  await page.getByRole("button", { name: "查看 Markdown 原文" }).click();
+  await expect(page.locator(".raw-markdown code")).toContainText(
+    "<script>window.ocelotInjected = true</script>",
+  );
+  await expect(
+    page.locator(".raw-markdown script, .raw-markdown img, .raw-markdown iframe"),
+  ).toHaveCount(0);
+  expect(await page.evaluate(() => "ocelotInjected" in window)).toBe(false);
+  expect(external).toEqual([]);
 });
 
 test("Access identity loads after reading, hides local controls and handles a failed avatar", async ({
@@ -573,7 +584,17 @@ test("Access identity loads after reading, hides local controls and handles a fa
   }
   await expect(page.locator(".space-identity p").first()).toHaveText("示例读者");
   await expect(page.locator(".identity-avatar img")).toBeVisible();
-  await expect(page.locator(".identity-avatar")).toHaveCSS("width", "30px");
+  await expect(page.locator(".identity-avatar")).toHaveCSS("width", "36px");
+  await expect(page.locator(".space-identity p").first()).toHaveCSS("margin", "0px");
+  await expect(page.locator(".space-identity p").first()).toHaveCSS("font-size", "14px");
+  await expect(page.locator(".space-identity p").last()).toHaveCSS("font-size", "12px");
+  const alignment = await page.locator(".space-identity").evaluate((element) => {
+    const avatar = element.querySelector(".identity-avatar")?.getBoundingClientRect();
+    const name = element.querySelector("p")?.parentElement?.getBoundingClientRect();
+    return avatar && name ? Math.abs(avatar.y + avatar.height / 2 - name.y - name.height / 2) : -1;
+  });
+  expect(alignment).toBeLessThanOrEqual(1);
+  expect(alignment).toBeGreaterThanOrEqual(0);
   await expect(page.locator("#document-title")).toHaveText(welcome);
   available = false;
   const failedAvatar = page.waitForResponse(
@@ -668,7 +689,7 @@ test("mobile drawer and outline are keyboard accessible and respect reduced moti
   await expect(page.locator("#document-title")).toHaveText("On paying attention");
   await expect(drawer).toHaveCount(0);
   await page.getByRole("button", { name: "文章大纲", exact: true }).click();
-  await page.getByRole("button", { name: "Leaving room", exact: true }).click();
+  await page.getByRole("link", { name: "Leaving room", exact: true }).click();
   await expect(page.locator(".mobile-outline")).toHaveCount(0);
   await page.getByRole("button", { name: "回到文章顶部", exact: true }).click();
   expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(0);
@@ -680,4 +701,289 @@ test("mobile drawer and outline are keyboard accessible and respect reduced moti
   expect(audit.violations).toEqual([]);
   await expectReadableText(page);
   await page.screenshot({ path: info.outputPath("reader-mobile.png") });
+});
+
+test("a 144-section Basalt outline scrolls independently, animates and reaches the final section", async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1440, height: 760 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await open(page, longRead);
+  const article = page.locator(".reading-scroll");
+  const outline = page.locator(".outline-column .outline-scroll");
+  await expect(outline.locator(".basalt-ui")).toHaveAttribute("aria-label", "在这篇笔记里");
+  await expect(outline.getByRole("link")).toHaveCount(144);
+  const progressBounds = await page.locator(".reading-progress").boundingBox();
+  const indexBounds = await outline.boundingBox();
+  expect(
+    progressBounds && indexBounds && progressBounds.y + progressBounds.height <= indexBounds.y,
+  ).toBe(true);
+  expect(
+    await article.evaluate((element) => element.scrollHeight / element.clientHeight),
+  ).toBeGreaterThan(50);
+  expect(await outline.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(
+    true,
+  );
+  const initial = await article.evaluate((element) => element.scrollTop);
+  await outline.hover();
+  await page.mouse.wheel(0, 1400);
+  await expect.poll(() => outline.evaluate((element) => element.scrollTop)).toBeGreaterThan(500);
+  expect(await article.evaluate((element) => element.scrollTop)).toBe(initial);
+
+  const last = outline.getByRole("link").last();
+  await last.focus();
+  await expect(last).toBeInViewport();
+  await last.press("Enter");
+  const animated = await page.evaluate(async () => {
+    const marker = document.querySelector<HTMLElement>(".outline-column .outline-marker");
+    const body = document.querySelector<HTMLElement>(".outline-column .outline-body");
+    let moving = false;
+    for (let frame = 0; frame < 70; frame++) {
+      await new Promise(requestAnimationFrame);
+      if (!marker || !body) continue;
+      const target = Number.parseFloat(body.style.getPropertyValue("--outline-marker-top"));
+      const current = new DOMMatrixReadOnly(getComputedStyle(marker).transform).m42;
+      if (Math.abs(target - current) > 1) moving = true;
+    }
+    return moving;
+  });
+  expect(animated, "The persistent active marker must move between sections").toBe(true);
+  await expect(last).toHaveAttribute("aria-current", "location");
+  await expect(page.locator(".reading-progress")).toContainText("100%");
+  const outlineBounds = await outline.boundingBox();
+  expect(outlineBounds && outlineBounds.y + outlineBounds.height).toBeLessThan(760);
+  await page.screenshot({ path: info.outputPath("long-reader.png") });
+  const toTop = page.getByRole("button", { name: "回到文章顶部", exact: true });
+  await expect(toTop).toBeInViewport();
+  await toTop.click();
+  await expect.poll(() => article.evaluate((element) => element.scrollTop)).toBe(0);
+  await expect(outline.getByRole("link").first()).toHaveAttribute("aria-current", "location");
+});
+
+test("full width persists and Raw shows the exact Markdown without another content request", async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1800, height: 1000 });
+  let raw = "";
+  let documents = 0;
+  await page.route("**/api/repositories/101/document?*", async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    documents++;
+    if (new URL(route.request().url()).searchParams.get("path") === illustrated) raw = body.content;
+    await route.fulfill({ response, json: body });
+  });
+  await open(page, illustrated);
+  await expect(page.locator(".embed-skeleton")).toHaveCount(0);
+  const article = page.locator(".article");
+  const limited = (await article.boundingBox())?.width ?? 0;
+  expect(limited).toBeGreaterThan(600);
+  expect(limited).toBeLessThanOrEqual(680);
+  const readerOptions = page.getByRole("group", { name: "阅读器选项", exact: true });
+  const fullWidth = readerOptions.getByRole("button", { name: "全宽阅读", exact: true });
+  await expect(fullWidth).toBeInViewport();
+  await expect(fullWidth).toHaveText("全宽");
+  await expect(fullWidth).toHaveAttribute("aria-pressed", "false");
+  await fullWidth.click();
+  await expect(fullWidth).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "阅读偏好", exact: true }).click();
+  await expect(page.getByRole("button", { name: "全宽", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.keyboard.press("Escape");
+  expect((await article.boundingBox())?.width).toBeGreaterThan(limited + 150);
+  await page.reload();
+  await expect(page.locator(".reading-grid")).toHaveClass(/is-full-width/);
+  await expect(page.locator(".embed-skeleton")).toHaveCount(0);
+  const before = documents;
+  await page.getByRole("button", { name: "查看 Markdown 原文" }).click();
+  await expect(page.locator(".raw-markdown code")).toHaveText(raw, { useInnerText: false });
+  expect(raw.startsWith("---\n")).toBe(true);
+  expect(raw).toContain("# 图文与版式图鉴");
+  expect(raw).toContain("<details>");
+  await expect(page.locator(".prose, .raw-markdown img, .raw-markdown details")).toHaveCount(0);
+  await expect(page.locator(".outline-column")).toHaveCount(0);
+  expect(documents).toBe(before);
+  await page.screenshot({ path: info.outputPath("raw-reader.png") });
+  await page.getByRole("button", { name: "返回文章阅读" }).click();
+  await expect(page.locator(".prose img").first()).toBeVisible();
+  expect(documents).toBe(before);
+  const table = page.getByRole("region", { name: "表格，可横向滚动" });
+  expect(await table.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+  await page.getByRole("button", { name: "阅读偏好", exact: true }).click();
+  await page.getByRole("button", { name: "舒适行宽", exact: true }).click();
+  await page.keyboard.press("Escape");
+  expect((await article.boundingBox())?.width).toBe(limited);
+  await expect(fullWidth).toHaveAttribute("aria-pressed", "false");
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(["ocelot-full-width"]);
+});
+
+test("image overlays fit the viewport, scroll at original size and restore reading focus", async ({
+  page,
+}, info) => {
+  await open(page, illustrated);
+  const trigger = page.getByRole("button", { name: "放大图片：横向全景", exact: true });
+  await trigger.scrollIntoViewIfNeeded();
+  const before = await page.locator(".reading-scroll").evaluate((element) => element.scrollTop);
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "图片预览", exact: true });
+  await expect(dialog).toBeVisible();
+  const image = dialog.getByRole("img", { name: "横向全景", exact: true });
+  await expect
+    .poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth))
+    .toBe(2400);
+  const stage = dialog.getByRole("region", { name: "图片，可滚动查看原图" });
+  expect(await stage.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  const audit = await new AxeBuilder({ page }).analyze();
+  expect(audit.violations).toEqual([]);
+  await page.screenshot({ path: info.outputPath("image-lightbox.png") });
+  await dialog.getByRole("button", { name: "查看原图尺寸" }).click();
+  expect(await stage.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+  await stage.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => stage.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(
+    before,
+  );
+
+  const poster = page.getByRole("button", { name: "放大图片：超长山峦海报", exact: true });
+  await poster.click();
+  await dialog.getByRole("button", { name: "查看原图尺寸" }).click();
+  expect(await stage.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
+  await stage.focus();
+  await page.keyboard.press("PageDown");
+  await expect.poll(() => stage.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await dialog.getByRole("button", { name: "适应窗口" }).click();
+  await expect(stage).not.toHaveClass(/is-zoomed/);
+  await dialog.getByRole("button", { name: "关闭图片预览" }).click();
+  await expect(poster).toBeFocused();
+
+  const linked = page.getByRole("button", { name: "放大图片：带链接的山峦", exact: true });
+  await linked.click();
+  await expect(dialog.getByRole("img", { name: "带链接的山峦" })).toBeVisible();
+  await settleMotion(page);
+  await page.mouse.click(5, 5);
+  await expect(dialog).toHaveCount(0);
+  await expect(linked).toBeFocused();
+  await expect(page).toHaveURL(/note=/);
+  expect(await linked.evaluate((element) => element.closest("a"))).toBeNull();
+});
+
+test("image attachments and Mermaid use the same lightbox with a readable failure fallback", async ({
+  page,
+}) => {
+  await open(page, laboratory);
+  await page.getByRole("button", { name: "放大图片：笔记中的 Mermaid 图示" }).click();
+  const dialog = page.getByRole("dialog", { name: "图片预览", exact: true });
+  await expect(dialog.getByRole("img")).toHaveAttribute("src", /^data:image\/svg\+xml/);
+  await page.keyboard.press("Escape");
+  await page.route("**/api/repositories/101/asset?*", (route) =>
+    route.fulfill({ status: 404, body: "" }),
+  );
+  await open(page, "附件/small.png");
+  await expect(page.getByRole("button", { name: "查看 Markdown 原文" })).toBeDisabled();
+  await page.getByRole("button", { name: "放大图片：small.png" }).click();
+  await expect(dialog.getByRole("status")).toContainText("图片暂时无法加载");
+  await expect(dialog.getByRole("button", { name: "查看原图尺寸" })).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#document-title")).toHaveText("small.png");
+});
+
+test("sidebar keyboard resizing uses a short focus handle and retains the collapsed identity", async ({
+  page,
+}, info) => {
+  await open(page);
+  const handle = page.getByRole("separator", { name: "Resize sidebar" });
+  await page.keyboard.press("Tab");
+  await handle.focus();
+  await expect(handle).toHaveCSS("outline-style", "none");
+  await settleMotion(page);
+  const marker = await handle.evaluate((element) => {
+    const style = getComputedStyle(element, "::after");
+    return { height: style.height, color: style.backgroundColor };
+  });
+  expect(marker.height).toBe("36px");
+  expect(marker.color).not.toBe("rgba(0, 0, 0, 0)");
+  await handle.press("ArrowLeft");
+  await expect(handle).toHaveAttribute("aria-valuenow", "272");
+  await page.locator(".reader-main").focus();
+  await expect(page.locator(".reader-main")).toHaveCSS("outline-style", "none");
+  const toggle = page.getByRole("button", { name: "切换知识库导航", exact: true });
+  await toggle.focus();
+  await expect(toggle).toHaveCSS("outline-width", "2px");
+  await toggle.click();
+  await settleMotion(page);
+  await expect(page.locator(".sidebar-bottom .identity-avatar")).toBeVisible();
+  expect((await page.locator(".brand .ocelot-mark").boundingBox())?.x).toBe(24);
+  await page.screenshot({ path: info.outputPath("collapsed-identity.png") });
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`${theme} mobile handles the long outline, reduced motion and image overlay`, async ({
+    page,
+  }, info) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
+    await open(page, longRead);
+    const options = page.getByRole("group", { name: "阅读器选项", exact: true });
+    const global = page.getByRole("group", { name: "全局操作", exact: true });
+    await expect(options.getByRole("button", { name: "全宽阅读", exact: true })).toBeInViewport();
+    await expect(
+      options.getByRole("button", { name: "复制阅读链接", exact: true }),
+    ).toBeInViewport();
+    const readerBounds = await options.boundingBox();
+    const globalBounds = await global.boundingBox();
+    expect(
+      readerBounds && globalBounds && readerBounds.y >= globalBounds.y + globalBounds.height,
+    ).toBe(true);
+    const trigger = page.getByRole("button", { name: "文章大纲", exact: true });
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: "文章大纲", exact: true });
+    const last = dialog.getByRole("link").last();
+    await last.focus();
+    await expect(last).toBeInViewport();
+    expect(
+      await dialog.locator(".outline-scroll").evaluate((element) => element.scrollTop),
+    ).toBeGreaterThan(2000);
+    const audit = await new AxeBuilder({ page }).analyze();
+    expect(audit.violations).toEqual([]);
+    await last.press("Enter");
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await expect(page.locator(".reading-scroll")).toHaveJSProperty(
+      "scrollTop",
+      await page
+        .locator(".reading-scroll")
+        .evaluate((element) => element.scrollHeight - element.clientHeight),
+    );
+    await page.getByRole("button", { name: "回到文章顶部", exact: true }).click();
+    expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(0);
+    await open(page, illustrated);
+    await page.getByRole("button", { name: "放大图片：暮色中的山峦", exact: true }).click();
+    const lightbox = page.getByRole("dialog", { name: "图片预览", exact: true });
+    await expect(lightbox).toBeVisible();
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    await expectReadableText(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+    await page.screenshot({ path: info.outputPath(`lightbox-mobile-${theme}.png`) });
+    await page.keyboard.press("Escape");
+  });
+}
+
+test("short local examples keep an empty outline and a working Raw view", async ({ page }) => {
+  for (const [path, title] of [
+    ["无标题短笺", "无标题短笺"],
+    ["只有标题", "只有标题"],
+  ]) {
+    await open(page, `06 阅读器体验/${path}.md`);
+    await expect(page.locator("#document-title")).toHaveText(title);
+    await expect(page.locator(".article-outline a")).toHaveCount(0);
+    await expect(page.locator(".outline-empty")).toBeVisible();
+    await page.getByRole("button", { name: "查看 Markdown 原文" }).click();
+    await expect(page.locator(".raw-markdown code")).not.toBeEmpty();
+  }
 });
