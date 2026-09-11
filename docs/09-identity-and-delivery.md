@@ -185,3 +185,11 @@ Worker 部署标签和验证脚本均直接引用它。旧版本仅出现在历�
 Verify / Security / Deploy 后才创建标签。
 最终版本及发布证据以 [v0.2.0 Release](https://github.com/nocoo/ocelot/releases/tag/v0.2.0)
 附带的匹配 CI/CD 链接为准。
+
+发行结果：`v0.2.0` annotated tag 与正式 GitHub Release 均已发布，固定指向
+`6abc940af080598dea319ec865ad32c0227bd6ca`。
+[该提交的 CI/CD](https://github.com/nocoo/ocelot/actions/runs/34653096481)
+Verify / Security / Deploy 全部成功；独立生产复查确认 `v0.2.0`、同一 Git SHA、
+Worker `9c040a12-eca7-43c5-9c29-4ebb8aac52e3` 与 Access 登录边界。
+本地 HTTPS `/api/live` 同样返回 `0.2.0`。首次创建 Release 遇到 GitHub 连接
+重置，已按恢复约定从现有标签完成创建，未改写标签或再次递增版本。
