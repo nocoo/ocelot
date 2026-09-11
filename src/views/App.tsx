@@ -611,7 +611,16 @@ function Reader({ model }: { model: ReaderViewModel }) {
                   <ReadingSkeleton />
                 ) : (
                   <div className="empty-reading">
-                    <Mark />
+                    <img
+                      className="empty-reading-art"
+                      src="/logo-presentation-256.webp"
+                      srcSet="/logo-presentation-256.webp 256w, /logo-presentation-512.webp 512w"
+                      sizes="(max-width: 767px) 144px, 192px"
+                      width="192"
+                      height="192"
+                      alt=""
+                      aria-hidden="true"
+                    />
                     <p className="section-eyebrow">A SPACE OF YOUR OWN</p>
                     <h1>给你的知识，一处安静的入口。</h1>
                     <p>

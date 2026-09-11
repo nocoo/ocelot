@@ -11,7 +11,8 @@ The generation archive is `nocoo/hexly.ai/artwork/logo-family/ocelot/2026-09-11-
 | Root `logo.png` | Canonical transparent 2048 px foreground |
 | `assets/brand/icon.png` | Complete square presentation with independent paper and shadows |
 | `assets/brand/icon-rounded.png` | Rounded presentation for both README headers |
-| Shared `Mark`, including navigation, collapsed rail, article footer and empty reader | Transparent foreground, served at 80/160 px; no enclosing tile or corner crop |
+| Shared `Mark`, including navigation, collapsed rail and article footer | Transparent foreground, served at 80/160 px; no enclosing tile or corner crop |
+| Empty reader hero | Complete approved paper presentation, served at 256/512 px; 192 px on desktop and 144 px on mobile, with the original 23% corner radius |
 | Browser favicon | Transparent 16/32 px PNGs |
 | Apple touch icon | Square 180 px presentation; the platform supplies its own mask |
 | Social previews | The shared Hexly image at `https://hexly.ai/og/ocelot.jpg` |
@@ -29,4 +30,33 @@ The app remains a single-user, read-only GitHub vault reader. Branding does not 
 - The study's `inspection/source-browser/checks.json` records eight actual consumer states across both themes, five exact served asset checksums, 36/23/57 px application marks, full opacity, transparent backgrounds, no additional crop or filter, and no overflow or page errors.
 - Native extraction preserves the RGB of all 1,953,070 fully opaque pixels. Both ears, eyes, muzzle, whiskers and the full paper bird remain inside the rounded boundary; only the approved shoulder entry crosses the frame. All ten export sizes are retained.
 - The source pre-commit typecheck and pre-push non-View coverage gate remain enabled. Publication results and immutable source revision are recorded in the Hexly adoption record after the push.
-- The subsequent pre-release sidebar alignment in document 07 uses the same approved foreground at 24 px in expanded, collapsed and mobile navigation. Its single-row title/version layout and six browser states were verified separately; article footer and empty-reader sizes remain as adopted above.
+- The subsequent pre-release sidebar alignment in document 07 uses the same approved foreground at 24 px in expanded, collapsed and mobile navigation. Its single-row title/version layout and six browser states were verified separately. At that stage, the article footer and 57 px empty-reader foreground retained their original sizes; the empty-reader update below supersedes that use.
+
+## Empty-reader presentation
+
+Status: **Implemented and locally verified**, 2026-09-11. The plan was recorded
+before implementation. Delivery follows the matching `main` CI/CD run. The owner
+asked for a larger empty-page logo using the complete background and texture from
+the existing Hexly Ocelot design.
+
+Use the exact `icon-256.webp` and `icon-512.webp` files in the approved Hexly public
+archive `logos/family/ocelot/2026-09-11-01/03/`, with explicit Ocelot presentation
+filenames and provenance. These are the square presentation, including sand paper,
+broken almond rosettes, turned-page curves, grain and the existing contact shadows.
+Render the entire square using the recipe's single 23% rounded boundary. Display
+at 192 px on desktop and 144 px on mobile, with responsive sources for sharpness.
+
+This is an additional use of an adopted presentation. The canonical artwork and
+palette stay at finishing 03; no image generation or new finishing pass is needed.
+The sidebar continues to use the transparent 24 px foreground established in 07.
+Inspect the empty page in both themes and on mobile; retain synthetic browser
+evidence without adding View unit tests or an image-processing dependency.
+
+Verification: four actual Chromium states cover light/dark desktop and mobile.
+The hero measures exactly 192/144 px, uses the original 23% radius, and loads the
+512 px source at 2x. Downloaded bytes match the checked-in exports. The sidebar
+mark remains 24 × 24 px at `(24, 16)`; all four states have no overflow or page
+errors, and axe reports zero violations after the theme transition settles.
+Visible interface text remains at least 11 px. TypeScript, Biome and the production
+build pass. Screenshots and measurements are in the ignored
+`output/testing/empty-reading-*` files. No View unit tests were added.

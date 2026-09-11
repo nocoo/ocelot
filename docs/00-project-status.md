@@ -2,7 +2,7 @@
 
 更新：2026-09-11
 
-当前阶段：**生产 PAT 已恢复为 Secret；目录状态修复已通过本地验证，待自动部署**。
+当前阶段：**生产 PAT 已恢复为 Secret；目录状态与空白页展示修复已实现并本地验证**。
 
 ## 文档
 
@@ -56,6 +56,8 @@
 已恢复为 Worker Secret 并通过 GitHub 检测。持续 loading 的状态修复见 07，
 凭据恢复记录见 09；不能将凭据检测成功视为真实私有知识库已完成接入。
 远程 CI/CD 证据见 09；正式发行记录以 GitHub Release 及其不可变 tag 为准。
+后续目录状态与空白页完整插图的本地结果分别见 07、08，部署结果以对应
+`main` 提交的 [CI/CD](https://github.com/nocoo/ocelot/actions/workflows/verify.yml) 为准。
 
 每次提交前运行 `git diff --cached --check`；推送后核对 `origin/main`
 与本地提交一致。原子提交及推送状态以 Git 记录为准。

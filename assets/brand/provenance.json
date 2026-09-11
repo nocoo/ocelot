@@ -107,6 +107,28 @@
       "sha256": "ac24d11b7c60fe8f557a9b30a3bf48dc45554ecf0c56cab07dd8b754e6d99839",
       "clearPixels": 0,
       "opaquePixels": 32400
+    },
+    {
+      "path": "public/logo-presentation-256.webp",
+      "role": "complete empty-reader presentation",
+      "derivedFrom": "Hexly public/logos/family/ocelot/2026-09-11-01/03/icon-256.webp",
+      "width": 256,
+      "height": 256,
+      "bytes": 14366,
+      "sha256": "a7e9e55b0702961991088f8d4e63a401bbf60ee72d883b74566c8b4502183ad7",
+      "clearPixels": 0,
+      "opaquePixels": 65536
+    },
+    {
+      "path": "public/logo-presentation-512.webp",
+      "role": "complete empty-reader presentation",
+      "derivedFrom": "Hexly public/logos/family/ocelot/2026-09-11-01/03/icon-512.webp",
+      "width": 512,
+      "height": 512,
+      "bytes": 35472,
+      "sha256": "e23f42b6b0df08b0418a5b2a9ace9d7a06ac3639c1bd1c5c8f3fbb4b229cc4b0",
+      "clearPixels": 0,
+      "opaquePixels": 262144
     }
   ]
 }

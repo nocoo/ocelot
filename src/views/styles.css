@@ -1121,9 +1121,11 @@ a {
   padding: 48px 24px;
   text-align: center;
 }
-.empty-reading .ocelot-mark {
-  width: 57px;
-  height: 57px;
+.empty-reading-art {
+  width: 192px;
+  height: 192px;
+  flex-shrink: 0;
+  border-radius: 23%;
   margin-bottom: 32px;
 }
 .empty-reading .section-eyebrow {
@@ -1871,6 +1873,10 @@ a {
     font-size: 25px;
     max-width: 270px;
     line-height: 1.6;
+  }
+  .empty-reading-art {
+    width: 144px;
+    height: 144px;
   }
   .skeleton-title {
     height: 31px;
