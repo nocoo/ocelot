@@ -192,7 +192,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
               <DialogDescription className="sr-only">选择知识库或打开一份笔记。</DialogDescription>
             </>
           )}
-          <SidebarHeader className={`brand-header ${railCollapsed ? "is-collapsed" : ""}`}>
+          <SidebarHeader className="brand-header">
             <a className="brand" href="/" aria-label="Ocelot 首页" title={`Ocelot v${version}`}>
               <Mark />
               {!railCollapsed && (

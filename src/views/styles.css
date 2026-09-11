@@ -137,13 +137,13 @@ a {
   background: var(--rail);
   border: 0;
 }
-.brand-header.is-collapsed,
-.sidebar-bottom.is-collapsed {
-  justify-content: center;
-  padding-inline: 0;
+.brand-header {
+  padding-inline: 24px 12px;
 }
 .sidebar-bottom.is-collapsed {
   display: flex;
+  justify-content: center;
+  padding-inline: 0;
 }
 .sidebar-expanded[hidden],
 .navigation-area[hidden] {

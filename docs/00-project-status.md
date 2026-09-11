@@ -14,7 +14,7 @@
 | 04 | [实现与本地验收](04-implementation-and-local-testing.md) | 本地验收完成 |
 | 05 | [运行契约与验收记录](05-runtime-contract-and-verification.md) | 已记录覆盖率、浏览器结果和支持边界 |
 | 06 | [本地运行、PAT 轮换与部署](06-running-and-deployment.md) | 已对齐实际配置与自动部署 |
-| 07 | [Basalt 侧栏与路径导航](07-basalt-navigation.md) | 导航与单行品牌区已验收，4 项相关浏览器回归通过 |
+| 07 | [Basalt 侧栏与路径导航](07-basalt-navigation.md) | 已验收并获用户确认，logo 固定起点，960 帧无位移 |
 | 08 | [视觉规范](08-visual-identity.md) | 已采用新品牌图标与双语 README |
 | 09 | [身份展示、版本与持续交付](09-identity-and-delivery.md) | 本地验收完成，远程部署执行中 |
 

@@ -41,6 +41,8 @@ The application runs on Cloudflare Workers behind Cloudflare Access.
 - Sidebar and header share the Basalt L0 background. Interface text must be
   at least 11px. Keep visible spacing between adjacent hovered/selected tree
   backgrounds without changing virtual row geometry.
+- Keep the sidebar logo at the same 24px left offset when expanded, collapsed,
+  and throughout the transition, following Surety. Do not center it dynamically.
 - Keep root `package.json` as the sole version source. Show its `vX.Y.Z` beside
   the sidebar name and return `X.Y.Z` from the authenticated `/api/live`.
   Use `scripts/release.ts`; publishing requires the matching successful CI/CD.
