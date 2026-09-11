@@ -20,7 +20,7 @@ Basalt **2.1.7** 提供控件与布局，Pierre Trees 提供虚拟化目录，�
 
 ## 本地体验
 
-需要 Node.js 26、Bun 1.4.0：
+需要 Node.js 26.8.1、Bun 1.4.0：
 
 ```sh
 bun install --frozen-lockfile
@@ -31,7 +31,7 @@ bun run dev
 和磁盘 R2，无需 PAT 或 Cloudflare 账户。开发数据保存在 `.wrangler/state`。
 
 示例包含 3 个合成仓库、1,173 篇可见主库笔记、原创图片和两个 Git 版本。
-侧栏的烧瓶按钮可以体验慢加载、到期提醒、凭据失效、限流、离线及新提交。
+右上角的烧瓶按钮可以体验慢加载、到期提醒、凭据失效、限流、离线及新提交。
 “我的知识库”支持添加第三个示例 `ocelot-demo/reading-room`。
 
 ## 阅读与同步
@@ -48,20 +48,26 @@ bun run dev
 Vite + React + **TypeScript 7.0.2**，MVVM，Biome，Husky。Worker 使用
 Cloudflare Access 验证身份，PAT 存放于 Worker Secrets；D1 保存元数据，
 私有 R2 保存可重建缓存。
+线上左下角显示 Access 用户姓名和头像，资料服务暂不可用时仍能正常阅读。
+侧栏与顶部共用 Basalt 背景，站名旁显示版本，右上角可打开源码仓库。
 
 ```sh
 bun run check              # 类型、Biome、完整非 View 覆盖率、前端构建
 bun run worker:check       # 生产 Worker dry run
 bun x playwright install chromium
 bun run test:e2e           # 独立 Wrangler + 生产前端的浏览器验收
+bun run check:security     # OSV 依赖检查与 Gitleaks 历史扫描
+bun run release -- --dry-run
 ```
 
-本地验收：**147 项 UT、16 项浏览器测试通过**。非 View 代码包含 Worker 与未执行
-源码，语句/分支/函数/行覆盖率分别为 **100% / 98.34% / 100% / 100%**。
+本地验收：**161 项 UT、17 项浏览器测试通过**。非 View 代码包含 Worker 与未执行
+源码，语句/分支/函数/行覆盖率分别为 **100% / 98.6% / 100% / 100%**。
 浅色、深色和移动端 axe 扫描通过。详细证据与支持边界见 [05](docs/05-runtime-contract-and-verification.md)。
 
-生产入口和配置已准备；**尚未部署**。需要实际域名、Access、D1/R2 与 PAT，
-按 [06 · 运行与部署](docs/06-running-and-deployment.md) 配置。默认本地 mock 不连接真实 GitHub。
+生产地址为 **<https://ocelot.hexly.ai>**，首次部署正在执行。可信 `main` 通过
+验证和安全扫描后，CD 自动准备 D1、私有 R2、迁移并发布；成功后才创建版本 tag。
+GitHub PAT 独立存放在 Worker Secret，配置方式见
+[06 · 运行与部署](docs/06-running-and-deployment.md)。默认本地 mock 不连接真实 GitHub。
 
 ## 文档
 
@@ -74,6 +80,8 @@ bun run test:e2e           # 独立 Wrangler + 生产前端的浏览器验收
 - [06 · 本地运行、PAT 轮换与部署](docs/06-running-and-deployment.md)
 - [07 · Basalt 导航与阅读界面](docs/07-basalt-navigation.md)
 - [08 · 视觉规范](docs/08-visual-identity.md) · [品牌资产](assets/brand/README.md)
+- [09 · 身份、版本与持续交付](docs/09-identity-and-delivery.md)
+- [操作入口](CLAUDE.md) · [版本变更](CHANGELOG.md)
 - [开发协作约定](AGENTS.md) · [第三方说明](THIRD_PARTY_NOTICES.md)
 
 在 `main` 上按可验证的结果做原子提交。公开仓库只保存应用与合成示例，

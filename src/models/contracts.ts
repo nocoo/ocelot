@@ -48,6 +48,11 @@ export interface Session {
   connection: Connection;
 }
 
+export interface AuthorProfile {
+  name: string | null;
+  avatar: string | null;
+}
+
 export interface ApiFailure {
   code: string;
   message: string;

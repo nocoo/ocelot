@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { DocumentContent, Session, Snapshot } from "../../src/models/contracts";
+import type { AuthorProfile, DocumentContent, Session, Snapshot } from "../../src/models/contracts";
 import { ApiClient, ApiError } from "../../src/services/api";
 import type { BrowserServices } from "../../src/services/browser";
 import { ReaderViewModel } from "../../src/viewmodels/reader";
@@ -54,6 +54,7 @@ function setup(local = true) {
     connection: { status: "healthy", checkedAt: 1, expiresAt: null, retryAt: 0 },
   };
   vi.spyOn(api, "session").mockImplementation(async () => structuredClone(session));
+  vi.spyOn(api, "profile").mockResolvedValue({ name: null, avatar: null });
   vi.spyOn(api, "repositories").mockResolvedValue([current.repository, snapshot(102).repository]);
   vi.spyOn(api, "sync").mockImplementation(async (id) => snapshot(id));
   vi.spyOn(api, "document").mockImplementation(async (_id, tree, path) => ({
@@ -88,6 +89,62 @@ afterEach(() => {
 });
 
 describe("reading state and navigation", () => {
+  it("loads the Access profile independently of reading and keeps local identity synthetic", async () => {
+    const { api, model } = setup(false);
+    const profile = deferred<AuthorProfile>();
+    vi.mocked(api.profile).mockReturnValue(profile.promise);
+    expect(model.identity().name).toBe("我的私人阅读室");
+    await model.start();
+    expect(model.getSnapshot().reading?.path).toBe("README.md");
+    expect(model.identity()).toMatchObject({
+      name: "reader@example.test",
+      initial: "R",
+      local: false,
+    });
+    await model.selectNote("Second.md");
+    profile.resolve({ name: "读者 Reader", avatar: "/api/avatar" });
+    await profile.promise;
+    expect(model.identity()).toMatchObject({
+      name: "读者 Reader",
+      avatar: "/api/avatar",
+      initial: "读",
+    });
+    expect(model.getSnapshot().reading?.path).toBe("Second.md");
+    const local = setup();
+    await local.model.start();
+    expect(local.api.profile).not.toHaveBeenCalled();
+    expect(local.model.identity()).toMatchObject({
+      name: "我的私人阅读室",
+      avatar: undefined,
+      local: true,
+    });
+  });
+  it("keeps the email fallback on profile failure and ignores cancelled profile requests", async () => {
+    const { api, model } = setup(false);
+    vi.mocked(api.profile).mockRejectedValueOnce(new Error("Profile service unavailable"));
+    await model.start();
+    expect(model.getSnapshot().error).toBeNull();
+    expect(model.identity()).toMatchObject({ name: "reader@example.test", avatar: undefined });
+    const stale = deferred<AuthorProfile>();
+    vi.mocked(api.profile).mockReturnValueOnce(stale.promise);
+    await model.start();
+    const signal = vi.mocked(api.profile).mock.lastCall?.[0];
+    await model.start();
+    expect(signal?.aborted).toBe(true);
+    stale.resolve({ name: "Stale identity", avatar: "/api/avatar" });
+    await stale.promise;
+    expect(model.identity().name).toBe("reader@example.test");
+    vi.useFakeTimers();
+    const pending = deferred<AuthorProfile>();
+    vi.mocked(api.profile).mockReturnValueOnce(pending.promise);
+    const unmount = model.mount();
+    await vi.waitFor(() => expect(api.profile).toHaveBeenCalledTimes(4));
+    unmount();
+    expect(vi.mocked(api.profile).mock.lastCall?.[0]?.aborted).toBe(true);
+    pending.resolve({ name: "Unmounted", avatar: null });
+    await pending.promise;
+    expect(model.identity().name).toBe("reader@example.test");
+  });
   it("opens a deep-linked repository and exposes stable external-store snapshots", async () => {
     const { api, model, browser } = setup();
     const changed = vi.fn();

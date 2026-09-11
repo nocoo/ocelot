@@ -1,5 +1,6 @@
 import type {
   ApiFailure,
+  AuthorProfile,
   Connection,
   DocumentContent,
   Repository,
@@ -55,6 +56,9 @@ export class ApiClient {
 
   session(): Promise<Session> {
     return this.request("/api/session");
+  }
+  profile(signal?: AbortSignal): Promise<AuthorProfile> {
+    return this.request("/api/profile", "GET", undefined, signal);
   }
   repositories(): Promise<Repository[]> {
     return this.request("/api/repositories");

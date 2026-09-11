@@ -9,6 +9,7 @@ Their upstream licenses continue to apply. In particular:
 | [Pierre Trees](https://github.com/pierrecomputer/pierre) 1.0.0-beta.6 | Read-only file navigation | [Apache-2.0](public/licenses/pierre.txt), [upstream notice including headless-tree](public/licenses/pierre-notice.txt) |
 | [Source Serif 4](https://github.com/adobe-fonts/source-serif) via Fontsource 5.3.0 | Unmodified self-hosted Latin font files | [OFL-1.1](public/licenses/source-serif-4.txt) |
 | [Kami](https://github.com/tw93/Kami) | Chinese/English typography reference | [MIT upstream](https://github.com/tw93/Kami/blob/main/LICENSE) |
+| [Primer Octicons](https://github.com/primer/octicons) | GitHub repository icon (`mark-github-16`) | [MIT](public/licenses/octicons.txt) |
 
 The license copies above are also included in the built site's `licenses/` directory.
 Ocelot adapts Kami's hierarchy, measure, paragraph rhythm, and font fallback principles

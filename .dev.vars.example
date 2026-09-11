@@ -1,4 +1,5 @@
-# Only for separately configured local testing of worker/index.ts with real Access JWTs.
-# Do not copy for `bun run dev`: the default demo always uses synthetic GitHub data.
-# Production uses `wrangler secret put GITHUB_TOKEN`. See docs/06-running-and-deployment.md.
-GITHUB_TOKEN=replace-with-a-fine-grained-read-only-token
+# Empty declaration used by `bun run types` for deterministic Worker Secret types.
+# For real Access testing, copy to ignored .dev.vars and set a read-only PAT there.
+# `bun run dev` uses synthetic GitHub data and does not need this file.
+# Production uses `wrangler secret put GITHUB_TOKEN`; this example is never deployed.
+GITHUB_TOKEN=

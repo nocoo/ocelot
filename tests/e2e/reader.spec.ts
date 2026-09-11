@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type APIRequestContext, test as base, expect, type Page } from "@playwright/test";
+import manifest from "../../package.json" with { type: "json" };
 import type { Repository, Scenario, Snapshot } from "../../src/models/contracts";
 
 const test = base.extend<{ pageErrors: undefined }>({
@@ -14,6 +15,7 @@ const test = base.extend<{ pageErrors: undefined }>({
   ],
 });
 
+const version = manifest.version;
 const origin = "http://127.0.0.1:5174";
 const headers = { Origin: origin, "X-Ocelot-Request": "1" };
 const welcome = "阅读，是一场安静的探索";
@@ -440,10 +442,14 @@ test("rate limits back off and an offline upstream recovers without losing the a
 
 test("untrusted note content cannot execute scripts, clobber anchors or load trackers", async ({
   page,
+  baseURL,
 }) => {
   const external: string[] = [];
   page.on("request", (request) => {
-    if (/^https?:/.test(request.url()) && !request.url().startsWith(`${origin}/`))
+    if (
+      /^https?:/.test(request.url()) &&
+      new URL(request.url()).origin !== new URL(baseURL ?? origin).origin
+    )
       external.push(request.url());
   });
   await page.route("**/api/repositories/101/document?*", async (route) => {
@@ -482,15 +488,87 @@ test("untrusted note content cannot execute scripts, clobber anchors or load tra
   expect(external).toEqual([]);
 });
 
+test("Access identity loads after reading, hides local controls and handles a failed avatar", async ({
+  page,
+}) => {
+  let revealProfile!: () => void;
+  const profileReady = new Promise<void>((resolve) => {
+    revealProfile = resolve;
+  });
+  await page.route("**/api/session", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({
+      response,
+      json: { ...(await response.json()), local: false, email: "reader@example.test" },
+    });
+  });
+  await page.route("**/api/profile", async (route) => {
+    await profileReady;
+    await route.fulfill({ json: { name: "示例读者", avatar: "/api/avatar" } });
+  });
+  let available = true;
+  try {
+    await open(page);
+    await expect(page.locator(".space-identity p").first()).toHaveText("reader@example.test");
+    await expect(page.getByRole("button", { name: "本地体验场景" })).toHaveCount(0);
+    const snapshot: Snapshot = await (
+      await page.request.get("/api/repositories/101/snapshot")
+    ).json();
+    const image = await page.request.get(
+      `/api/repositories/101/asset?${new URLSearchParams({ tree: snapshot.treeSha, path: "附件/blue-hour.png" })}`,
+    );
+    expect(image.ok()).toBe(true);
+    const body = await image.body();
+    await page.route("**/api/avatar", (route) =>
+      route.fulfill(available ? { contentType: "image/png", body } : { status: 404, body: "" }),
+    );
+  } finally {
+    revealProfile();
+  }
+  await expect(page.locator(".space-identity p").first()).toHaveText("示例读者");
+  await expect(page.locator(".identity-avatar img")).toBeVisible();
+  await expect(page.locator(".identity-avatar")).toHaveCSS("width", "30px");
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  available = false;
+  const failedAvatar = page.waitForResponse(
+    (response) => response.url().endsWith("/api/avatar") && response.status() === 404,
+  );
+  await page.reload();
+  await failedAvatar;
+  await expect(page.locator(".identity-icon")).toHaveText("示");
+  await expect(page.locator(".identity-avatar img")).toHaveCount(0);
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  await expect(page.locator(".reader-error")).toHaveCount(0);
+  await expectReadableText(page);
+});
+
 for (const theme of ["light", "dark"] as const) {
   test(`${theme} desktop has accessible contrast, keyboard dialogs and persistent preferences`, async ({
     page,
   }, info) => {
     await page.emulateMedia({ colorScheme: theme });
     await open(page);
+    await expect(page.locator(".version-pill")).toHaveText(`v${version}`);
+    await expect(
+      page.locator(".reader-toolbar").getByRole("button", { name: "本地体验场景" }),
+    ).toBeVisible();
+    await expect(
+      page.locator(".ocelot-sidebar").getByRole("button", { name: "本地体验场景" }),
+    ).toHaveCount(0);
+    const github = page
+      .locator(".reader-toolbar")
+      .getByRole("link", { name: "Ocelot GitHub 仓库" });
+    await expect(github).toHaveAttribute("href", "https://github.com/nocoo/ocelot");
+    await expect(github).toHaveAttribute("target", "_blank");
     await expect(page.locator(".ocelot-sidebar")).toHaveCSS(
       "background-color",
       theme === "dark" ? "rgb(18, 22, 28)" : "rgb(243, 245, 247)",
+    );
+    await expect(page.locator(".reader-toolbar")).toHaveCSS(
+      "background-color",
+      await page
+        .locator(".ocelot-sidebar")
+        .evaluate((element) => getComputedStyle(element).backgroundColor),
     );
     await settleMotion(page);
     const audit = await new AxeBuilder({ page }).analyze();

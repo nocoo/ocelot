@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { mockGitHub, scenario } from "../../mock/github";
+import { version } from "../../package.json";
 import type { Snapshot } from "../../src/models/contracts";
 import local from "../../worker/local";
 
@@ -21,6 +22,11 @@ afterEach(() => {
 describe("local API boundaries and scenarios", () => {
   it("handles registration, metadata, short sync responses, assets and removal through the HTTP router", async () => {
     expect((await api("/api/session")).status).toBe(200);
+    const live = await api("/api/live");
+    expect(await live.json()).toEqual({ version, deployment: env.VERSION_METADATA });
+    expect(live.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(await (await api("/api/profile")).json()).toEqual({ name: null, avatar: null });
+    expect((await api("/api/avatar")).status).toBe(404);
     expect(await (await api("/api/repositories")).json()).toEqual([]);
     const added = await api("/api/repositories", "POST", { repository: "ocelot-demo/fieldnotes" });
     expect(added.status).toBe(201);

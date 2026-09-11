@@ -42,6 +42,7 @@ describe("HTTP client", () => {
     await api.checkConnection();
     await api.local();
     await api.local("expiring");
+    await api.profile();
     expect(transport.mock.calls.map(([url]) => url)).toEqual([
       "/api/session",
       "/api/repositories",
@@ -53,6 +54,7 @@ describe("HTTP client", () => {
       "/api/connection/check",
       "/api/local",
       "/api/local",
+      "/api/profile",
     ]);
     expect(transport.mock.calls[9][1]?.body).toBe('{"scenario":"expiring"}');
   });

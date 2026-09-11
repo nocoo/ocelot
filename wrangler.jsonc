@@ -1,12 +1,14 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ocelot",
+  "account_id": "d51a8fde361e4be31db17d8c56737c1f",
   "main": "worker/index.ts",
   "compatibility_date": "2026-09-11",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
-  "secrets": { "required": ["GITHUB_TOKEN"] },
+  "routes": [{ "pattern": "ocelot.hexly.ai", "custom_domain": true }],
+  "version_metadata": { "binding": "VERSION_METADATA" },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
@@ -15,16 +17,15 @@
   },
   "observability": { "enabled": true, "head_sampling_rate": 0.1 },
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "https://configure-your-team.cloudflareaccess.com",
-    "ACCESS_AUD": "configure-before-deployment",
-    "OWNER_EMAIL": "configure-before-deployment",
+    "ACCESS_TEAM_DOMAIN": "https://nocoo.cloudflareaccess.com",
+    "ACCESS_AUD": "9ae6de1c823b3d81d5332533d40024ddee04eb692b9e33b068c4071c64154798",
+    "OWNER_EMAIL": "architie@gmail.com",
     "GITHUB_TOKEN_EXPIRES_AT": ""
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "ocelot",
-      "database_id": "00000000-0000-0000-0000-000000000001",
       "migrations_dir": "migrations"
     }
   ],

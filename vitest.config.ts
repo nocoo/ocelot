@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "istanbul",
-      include: ["src/**/*.{ts,tsx}", "worker/**/*.ts", "mock/**/*.ts"],
+      include: ["src/**/*.{ts,tsx}", "worker/**/*.ts", "mock/**/*.ts", "scripts/release-model.ts"],
       exclude: ["src/views/**", "src/main.tsx", "**/*.d.ts"],
       reporter: ["text", "html", "json", "json-summary"],
       thresholds: { statements: 95, branches: 95, functions: 95, lines: 95 },

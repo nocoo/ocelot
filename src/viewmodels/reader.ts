@@ -1,4 +1,5 @@
 import type {
+  AuthorProfile,
   Connection,
   DocumentContent,
   Repository,
@@ -37,6 +38,7 @@ export type DialogName = "search" | "repositories" | "connection" | "preferences
 
 export interface ReaderState {
   session: Session | null;
+  profile: AuthorProfile | null;
   repositories: Repository[];
   snapshot: Snapshot | null;
   reading: Reading | null;
@@ -65,6 +67,7 @@ export class ReaderViewModel {
   private listeners = new Set<() => void>();
   private epoch = 0;
   private controller: AbortController | null = null;
+  private profileController: AbortController | null = null;
   private retryAt = 0;
   private checkSerial = 0;
 
@@ -74,6 +77,7 @@ export class ReaderViewModel {
   ) {
     this.state = {
       session: null,
+      profile: null,
       repositories: [],
       snapshot: null,
       reading: null,
@@ -127,12 +131,14 @@ export class ReaderViewModel {
       unsubscribe();
       this.epoch++;
       this.controller?.abort();
+      this.profileController?.abort();
     };
   }
 
   async start(): Promise<void> {
     const ticket = ++this.epoch;
-    this.set({ booting: true, error: null });
+    this.profileController?.abort();
+    this.set({ booting: true, error: null, profile: null });
     try {
       const [session, repositories] = await Promise.all([
         this.api.session(),
@@ -140,6 +146,7 @@ export class ReaderViewModel {
       ]);
       if (ticket !== this.epoch) return;
       this.set({ session, repositories, booting: false });
+      if (!session.local) void this.loadProfile();
       await this.followLocation(true);
     } catch (error) {
       if (ticket === this.epoch) {
@@ -147,6 +154,30 @@ export class ReaderViewModel {
         this.set({ booting: false });
       }
     }
+  }
+
+  private async loadProfile(): Promise<void> {
+    const controller = new AbortController();
+    this.profileController = controller;
+    try {
+      const profile = await this.api.profile(controller.signal);
+      if (!controller.signal.aborted) this.set({ profile });
+    } catch {
+      // Author details are optional; a failed photo service must not interrupt reading.
+    }
+  }
+
+  identity() {
+    const { session, profile } = this.state;
+    const local = !session || session.local;
+    const name = local ? "我的私人阅读室" : (profile?.name ?? session.email);
+    return {
+      name,
+      subtitle: local ? "安静，只读，自由探索" : session.email,
+      avatar: local ? undefined : (profile?.avatar ?? undefined),
+      initial: name.slice(0, 1).toUpperCase(),
+      local,
+    };
   }
 
   async followLocation(replace = false): Promise<void> {

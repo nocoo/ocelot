@@ -1,6 +1,6 @@
 # 05 · 运行契约与验收记录
 
-状态：**本地验收通过；生产部署待配置** · 2026-09-11
+状态：**本地验收通过；首次远程交付执行中** · 2026-09-11
 
 ## 已实现的边界
 
@@ -51,28 +51,36 @@ Markdown）、两个 Git 版本、原创 PNG 附件。所有内容与路径均�
   浅色、深色及移动端均检查无障碍与页面溢出。
 - 工程门禁：Husky 提交前检查暂存文件的 Biome 与项目类型，推送前检查完整
   非 View 覆盖率；CI 另外校验生成的 Worker 类型、构建、Worker dry run 和浏览器。
-  CI 只使用合成数据，不需要 GitHub PAT 或 Cloudflare 部署凭据。
+  验证 job 只使用合成数据，不获得 GitHub PAT 或 Cloudflare 部署凭据；CD Token
+  只进入所有验证通过后的部署步骤。OSV / Gitleaks 同时作为部署门禁。
 - 工具版本已固定：Basalt 2.1.7、TypeScript 7.0.2；Cloudflare 当前测试插件
   `@cloudflare/vitest-plugin` 1.1.7 与 Wrangler 4.131.0 使用同版本 Miniflare。
 - `bun run typecheck`、`bun run lint` 通过。
-- `bun run test:coverage`：**8 个测试文件，147 项通过**；语句 **100% (924/924)**、
-  分支 **98.34% (713/725)**、函数 **100% (170/170)**、行 **100% (820/820)**。
+- `bun run test:coverage`：**10 个测试文件，161 项通过**；语句 **100% (1041/1041)**、
+  分支 **98.6% (846/858)**、函数 **100% (189/189)**、行 **100% (925/925)**。
   统计包含未执行的 Models、ViewModels、services、Worker 与 mock；只排除
-  `src/views/`、单独的 bootstrap `src/main.tsx` 及生成/声明类型。
+  `src/views/`、单独的 bootstrap `src/main.tsx` 及生成/声明类型。发布决策模型
+  也计入覆盖率；CLI 另以临时 Git 仓库和可控命令验证 dry run 与部署顺序。
 - 覆盖真实 Worker/D1/R2 的授权窗口、缓存命中、304、版本固定、lease 丢失、
   截断目录补全、撤销权限、限流、30 天清理及 501 对象的分页删除。
-- `bun run test:e2e`：**16 项 Chromium 流程通过**，使用生产前端与独立 Wrangler，
-  最后一轮约 25 秒。验证中英文、深链接/历史、目录键盘、千篇搜索、富文本、
+- Playwright：**17 项 Chromium 流程通过**，使用生产前端与独立 Wrangler，
+  本轮约 22 秒。验证中英文、深链接/历史、目录键盘、千篇搜索、富文本、
   私有仓库管理、慢加载、PAT 轮换/失效、更新不挤动正文及目录展开保留。
   补充完整路径、目录定位、菜单焦点、11px 最小字号和目录行距检查，见 07。
+  新增资料延迟不阻塞阅读、线上隐藏本地入口、头像失败回退、版本与顶部入口，
+  并验证明暗主题下侧栏与 header 的背景完全相同。并行品牌任务占用默认测试
+  端口，本轮独立使用 5184/8789 与专用测试状态；CI 仍使用标准 5174/8788。
 - 浅色、深色、390 × 844 移动端 axe 扫描 **0 violations**；检查截图、横向溢出、
   弹层焦点恢复与 reduced motion。浏览器测试无未处理的页面异常。
-- `bun run build`、`bun run worker:check` 通过。生产 Worker 约 **17.26 KiB gzip**，
+- `bun run check:security`：OSV 2.5.1 和 Gitleaks 8.30.1 通过。已修复 Mermaid
+  间接依赖中的 lodash-es 已知漏洞，并验证 Mermaid 实际渲染。
+- `bun run build`、`bun run worker:check` 通过。生产 Worker **65.45 KiB / gzip 18.08 KiB**，
   打包入口不包含 mock 数据。Mermaid 按需加载；前端仍有大于 500 kB 的 JS chunk
   构建提示，首屏与低端移动设备的网络性能需要在真实部署后进一步测量。
 
 报告位置：`coverage/`、`playwright-report/`、`test-results/`；它们是本地生成
 产物，不进入公开 Git。GitHub Actions 已配置，远程执行状态以仓库运行记录为准。
 
-生产部署仍需要实际 D1 ID、私有 R2、Access team/audience/owner、域名和 PAT。
-当前配置中的占位符不能视为已部署或已完成生产认证。
+生产的账号、域名、Access team/audience/owner 已写入配置，CD Token 已保存。
+D1 按名称复用或创建、先执行迁移，私有 R2 由 Wrangler 原生配置；首次部署
+正在执行，实际结果见 09。尚未提供真实 GitHub PAT 或完成私有知识库线上验收。

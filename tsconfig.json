@@ -15,5 +15,5 @@
     "noUnusedParameters": true,
     "types": ["vite/client", "@cloudflare/workers-types", "@cloudflare/vitest-plugin/types", "node"]
   },
-  "include": ["src", "worker", "mock", "fixtures", "tests", "*.ts"]
+  "include": ["src", "worker", "mock", "fixtures", "tests", "scripts/**/*.ts", "*.ts"]
 }

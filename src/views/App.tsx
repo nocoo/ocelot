@@ -1,5 +1,7 @@
 import { AppHeader } from "@nocoo/basalt/components/app-header";
 import { AppMain, AppShell, AppSkipLink } from "@nocoo/basalt/components/app-shell";
+import { Avatar, AvatarFallback, AvatarImage } from "@nocoo/basalt/components/avatar";
+import { Badge } from "@nocoo/basalt/components/badge";
 import { Button } from "@nocoo/basalt/components/button";
 import { DialogDescription, DialogTitle } from "@nocoo/basalt/components/dialog";
 import { PageHeader } from "@nocoo/basalt/components/page-header";
@@ -49,11 +51,13 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { version } from "../../package.json";
 import { connectionPresentation } from "../models/connection";
 import type { Heading } from "../models/document";
 import { changedFiles, fileTitle, isMarkdown } from "../models/vault";
 import type { ReaderViewModel } from "../viewmodels/reader";
 import { Dialogs } from "./Dialogs";
+import { GitHubMark } from "./GitHubMark";
 import { Mark } from "./Mark";
 import { Markdown } from "./Markdown";
 import { NavigationTree } from "./NavigationTree";
@@ -94,6 +98,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
   const scroller = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ progress: 0, heading: "" });
   const connection = connectionPresentation(state.session?.connection ?? null);
+  const identity = model.identity();
   const snapshot = state.snapshot;
   const reading = state.reading;
   const updateCount = useMemo(
@@ -188,11 +193,17 @@ function Reader({ model }: { model: ReaderViewModel }) {
             </>
           )}
           <SidebarHeader className={`brand-header ${railCollapsed ? "is-collapsed" : ""}`}>
-            <a className="brand" href="/" aria-label="Ocelot 首页">
+            <a className="brand" href="/" aria-label="Ocelot 首页" title={`Ocelot v${version}`}>
               <Mark small={railCollapsed} />
               {!railCollapsed && (
                 <span>
-                  ocelot<small>YOUR PRIVATE READING ROOM</small>
+                  <span className="brand-name">
+                    ocelot
+                    <Badge variant="secondary" className="version-pill">
+                      v{version}
+                    </Badge>
+                  </span>
+                  <small>YOUR PRIVATE READING ROOM</small>
                 </span>
               )}
             </a>
@@ -303,27 +314,25 @@ function Reader({ model }: { model: ReaderViewModel }) {
                 </Button>
                 <SidebarUser
                   className="space-identity"
-                  name="我的私人阅读室"
-                  email="安静，只读，自由探索"
+                  name={identity.name}
+                  email={identity.subtitle}
                   avatar={
-                    <span className="identity-icon">
-                      <LockKeyhole size={15} aria-hidden="true" />
-                    </span>
+                    <Avatar className="identity-avatar">
+                      <AvatarImage src={identity.avatar} alt={identity.name} />
+                      <AvatarFallback className="identity-icon">
+                        {identity.local ? (
+                          <LockKeyhole size={15} aria-hidden="true" />
+                        ) : (
+                          identity.initial
+                        )}
+                      </AvatarFallback>
+                    </Avatar>
                   }
                   action={
-                    state.session?.local ? (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="本地体验场景"
-                        title="本地体验场景"
-                        onClick={() => model.openDialog("local")}
-                      >
-                        <FlaskConical size={16} />
-                      </Button>
-                    ) : (
-                      <ShieldCheck size={17} aria-label="受登录保护" />
-                    )
+                    <ShieldCheck
+                      size={17}
+                      aria-label={identity.local ? "本地阅读空间" : "受 Cloudflare Access 保护"}
+                    />
                   }
                 />
               </>
@@ -425,6 +434,29 @@ function Reader({ model }: { model: ReaderViewModel }) {
                   disabled={!reading?.parsed.headings.length}
                 >
                   <ListTree size={17} />
+                </Button>
+                {state.session?.local && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="chrome-button"
+                    aria-label="本地体验场景"
+                    title="本地体验场景"
+                    onClick={() => model.openDialog("local")}
+                  >
+                    <FlaskConical size={17} />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" className="chrome-button" asChild>
+                  <a
+                    href="https://github.com/nocoo/ocelot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Ocelot GitHub 仓库"
+                    title="Ocelot GitHub 仓库"
+                  >
+                    <GitHubMark />
+                  </a>
                 </Button>
               </>
             }

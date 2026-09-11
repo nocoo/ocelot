@@ -20,7 +20,7 @@ light/dark themes, mobile layouts, keyboard navigation and reduced motion.
 
 ## Try it locally
 
-Use Node.js 26 and Bun 1.4.0:
+Use Node.js 26.8.1 and Bun 1.4.0:
 
 ```sh
 bun install --frozen-lockfile
@@ -31,7 +31,7 @@ Open <http://127.0.0.1:5173>. The demo uses a real local Wrangler Worker, SQLite
 It needs no PAT or Cloudflare account and stores its data under `.wrangler/state`.
 
 Synthetic fixtures provide three repositories, 1,173 visible notes in the main vault, original images and two Git revisions.
-The sidebar's flask button demonstrates slow loading, expiry reminders, invalid credentials, rate limits, offline behavior and new commits.
+The top-right flask button demonstrates slow loading, expiry reminders, invalid credentials, rate limits, offline behavior and new commits.
 Add the third example, `ocelot-demo/reading-room`, through the repository dialog.
 
 ## Reading and updates
@@ -48,21 +48,26 @@ Add the third example, `ocelot-demo/reading-room`, through the repository dialog
 Vite, React and **TypeScript 7.0.2** form an MVVM application, with Biome and Husky.
 The Worker validates Cloudflare Access identity; GitHub PATs stay in Worker Secrets.
 D1 stores metadata and private R2 stores a rebuildable cache.
+The sidebar shows the verified Access user's name and avatar without delaying reading.
+The header and sidebar share a Basalt surface; the app version and GitHub link stay visible.
 
 ```sh
 bun run check
 bun run worker:check
 bun x playwright install chromium
 bun run test:e2e
+bun run check:security
+bun run release -- --dry-run
 ```
 
 These commands cover static checks, non-View code coverage, the frontend build, a Worker dry run and browser acceptance.
-The existing local baseline records **147 unit tests and 16 browser tests passed**, with non-View statement/branch/function/line
-coverage of **100% / 98.34% / 100% / 100%** and light, dark and mobile axe checks.
+Local verification records **161 unit tests and 17 browser tests passed**, with non-View statement/branch/function/line
+coverage of **100% / 98.6% / 100% / 100%** and light, dark and mobile axe checks.
 The [runtime and verification record](05-runtime-contract-and-verification.md) documents the evidence and support boundaries.
 
-The production entry point and configuration are prepared, but the application has **not been deployed**.
-Follow [Running and deployment](06-running-and-deployment.md) to configure a real domain, Access, D1/R2 and PAT.
+Production is configured at **<https://ocelot.hexly.ai>**; the first deployment is in progress.
+After verification and security checks, trusted `main` provisions D1/private R2, migrates and deploys. Releases require successful CD.
+Follow [Running and deployment](06-running-and-deployment.md) to configure the separate GitHub PAT as a Worker Secret.
 The default local demo does not connect to real GitHub repositories.
 
 ## Documentation
@@ -76,6 +81,8 @@ The default local demo does not connect to real GitHub repositories.
 - [06 · Running, PAT rotation and deployment](06-running-and-deployment.md)
 - [07 · Basalt navigation and reading chrome](07-basalt-navigation.md)
 - [08 · Visual identity](08-visual-identity.md) · [Brand assets](../assets/brand/README.md)
+- [09 · Identity, versioning and delivery](09-identity-and-delivery.md)
+- [Operations](../CLAUDE.md) · [Changelog](../CHANGELOG.md)
 - [Contributor agreement](../AGENTS.md) · [Third-party notices](../THIRD_PARTY_NOTICES.md)
 
 Make coherent atomic commits on `main`. This public repository contains the application and synthetic fixtures,

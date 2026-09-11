@@ -193,6 +193,23 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.brand-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.version-pill {
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--muted);
+  background: var(--accent-soft);
+  border: 1px solid var(--hairline);
+}
 .sidebar-tools {
   padding: 12px 18px 0;
   display: grid;
@@ -344,14 +361,19 @@ a {
   border-top: 1px solid var(--hairline);
   padding: 16px 8px 0;
 }
+.identity-avatar,
 .identity-icon {
   width: 30px;
   height: 30px;
+  flex-shrink: 0;
+}
+.identity-icon {
   border-radius: 50%;
   background: var(--accent-soft);
   display: grid;
   place-items: center;
   color: var(--accent);
+  font-size: 12px;
 }
 .space-identity p {
   font-size: 11px;
@@ -1701,6 +1723,12 @@ a {
   .reader-toolbar > div:first-child {
     gap: 6px;
   }
+  .reader-toolbar > div:last-child {
+    gap: 2px;
+  }
+  .reader-breadcrumbs > span:last-child {
+    min-width: 0;
+  }
   .breadcrumb-current {
     font-size: 11px;
   }
@@ -1712,13 +1740,13 @@ a {
   }
   .reader-toolbar .sync-button {
     padding: 0 8px;
-    width: 32px;
+    width: 28px;
   }
   .reader-toolbar .sync-button > span:last-child {
     display: none;
   }
   .chrome-button {
-    width: 30px;
+    width: 28px;
     height: 30px;
   }
   .island-wrap {

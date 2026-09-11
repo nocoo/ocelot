@@ -1,5 +1,7 @@
+import { version } from "../package.json";
 import { type Bindings, GitHub, type Transport } from "./github";
 import { HttpError, json, readJson, requireSameOrigin } from "./http";
+import { authorAvatar, authorProfile } from "./profile";
 import { connection, VaultStore } from "./store";
 
 export async function handleApi(
@@ -13,8 +15,16 @@ export async function handleApi(
   const url = new URL(request.url);
   const github = new GitHub(env, transport);
   const store = new VaultStore(env, github);
+  if (url.pathname === "/api/live" && request.method === "GET")
+    return json({ version, deployment: env.VERSION_METADATA });
   if (url.pathname === "/api/session" && request.method === "GET")
     return json({ email, local, connection: await connection(env) });
+  if (url.pathname === "/api/profile" && request.method === "GET") {
+    const profile = local ? { name: null, avatar: null } : await authorProfile(email);
+    return json({ name: profile.name, avatar: profile.avatar ? "/api/avatar" : null });
+  }
+  if (url.pathname === "/api/avatar" && request.method === "GET" && !local)
+    return authorAvatar(email);
   if (url.pathname === "/api/connection/check" && request.method === "POST") {
     const response = await github.request("/user");
     await response.body?.cancel();

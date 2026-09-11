@@ -41,6 +41,10 @@ The application runs on Cloudflare Workers behind Cloudflare Access.
 - Sidebar and header share the Basalt L0 background. Interface text must be
   at least 11px. Keep visible spacing between adjacent hovered/selected tree
   backgrounds without changing virtual row geometry.
+- Keep root `package.json` as the sole version source. Show its `vX.Y.Z` beside
+  the sidebar name and return `X.Y.Z` from the authenticated `/api/live`.
+  Use `scripts/release.ts`; publishing requires the matching successful CI/CD.
+  Operational commands and release recovery are in `CLAUDE.md` and document 09.
 
 ## Security boundaries
 

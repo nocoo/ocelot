@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=22.12.0"
   },
+  "overrides": {
+    "lodash-es": "4.18.1"
+  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:worker": "wrangler dev --local --config wrangler.local.jsonc --ip 127.0.0.1 --port 8787",
@@ -16,7 +19,7 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "types": "wrangler types worker/worker-configuration.d.ts --env-interface WorkerBindings --include-runtime false --strict-vars false",
+    "types": "wrangler types worker/worker-configuration.d.ts --env-interface WorkerBindings --include-runtime false --strict-vars false --env-file .dev.vars.example",
     "lint": "biome check --error-on-warnings .",
     "format": "biome check --write .",
     "test": "vitest run",
@@ -24,6 +27,10 @@
     "test:e2e": "playwright test",
     "check": "bun run typecheck && bun run lint && bun run test:coverage && bun run build",
     "worker:check": "wrangler deploy --dry-run --outdir output/worker",
+    "check:security": "osv-scanner scan source --lockfile bun.lock && gitleaks git --redact --no-banner .",
+    "deploy": "bun scripts/deploy.ts",
+    "verify:production": "bun scripts/verify-deployment.ts",
+    "release": "bun scripts/release.ts",
     "prepare": "husky"
   },
   "dependencies": {
