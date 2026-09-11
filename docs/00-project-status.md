@@ -15,6 +15,8 @@
 | 05 | [运行契约与验收记录](05-runtime-contract-and-verification.md) | 已记录覆盖率、浏览器结果和支持边界 |
 | 06 | [本地运行、PAT 轮换与部署](06-running-and-deployment.md) | 本地已验证，生产步骤待执行 |
 | 07 | [Basalt 侧栏与路径导航](07-basalt-navigation.md) | 已实现，147 UT / 16 浏览器测试通过 |
+| 08 | [视觉规范](08-visual-identity.md) | 已采用新品牌图标与双语 README |
+| 09 | [身份展示、版本与持续交付](09-identity-and-delivery.md) | 实施中；CD Token 已保存，上线已授权 |
 
 ## 交付状态
 
