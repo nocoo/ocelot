@@ -6,9 +6,12 @@
 部署目标为 Cloudflare Workers，访问由 Cloudflare Access 保护。采用
 Basalt 2.1.7 的控件与布局、Kami 的文档排版原则和 Pierre Trees 文件树。
 
-当前处于**架构讨论阶段**，已建立产品与工程约定。
+当前处于**架构讨论阶段**，已完成建仓、需求记录和首轮参考项目调研。
 
+- [00 · 项目状态与文档索引](docs/00-project-status.md)
 - [01 · 产品与工程约定](docs/01-product-contract.md)
+- [02 · GitHub 认证、缓存与更新提案](docs/02-github-auth-cache-and-sync.md)
+- [03 · 类似项目调研](docs/03-reference-projects.md)
 - [开发协作约定](AGENTS.md)
 
 工程目标：Vite、React、TypeScript 7.0.2、MVVM、Biome、Husky；非 View
