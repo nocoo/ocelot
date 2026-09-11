@@ -194,17 +194,14 @@ function Reader({ model }: { model: ReaderViewModel }) {
           )}
           <SidebarHeader className={`brand-header ${railCollapsed ? "is-collapsed" : ""}`}>
             <a className="brand" href="/" aria-label="Ocelot 首页" title={`Ocelot v${version}`}>
-              <Mark small={railCollapsed} />
+              <Mark />
               {!railCollapsed && (
-                <span>
-                  <span className="brand-name">
-                    ocelot
-                    <Badge variant="secondary" className="version-pill">
-                      v{version}
-                    </Badge>
-                  </span>
-                  <small>YOUR PRIVATE READING ROOM</small>
-                </span>
+                <>
+                  <span className="brand-name">ocelot</span>
+                  <Badge variant="secondary" className="version-pill">
+                    v{version}
+                  </Badge>
+                </>
               )}
             </a>
           </SidebarHeader>
