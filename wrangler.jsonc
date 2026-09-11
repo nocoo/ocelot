@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ocelot",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "secrets": { "required": ["GITHUB_TOKEN"] },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "observability": { "enabled": true, "head_sampling_rate": 0.1 },
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "https://configure-your-team.cloudflareaccess.com",
+    "ACCESS_AUD": "configure-before-deployment",
+    "OWNER_EMAIL": "configure-before-deployment",
+    "GITHUB_TOKEN_EXPIRES_AT": ""
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ocelot",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "CACHE", "bucket_name": "ocelot-private-cache" }],
+  "triggers": { "crons": ["17 3 * * *"] }
+}

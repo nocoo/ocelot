@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ocelot-local",
+  "main": "worker/local.ts",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "https://local.invalid",
+    "ACCESS_AUD": "local",
+    "OWNER_EMAIL": "reader@ocelot.local",
+    "GITHUB_TOKEN_EXPIRES_AT": "",
+    "GITHUB_TOKEN": "synthetic-local-credential"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ocelot-local",
+      "database_id": "00000000-0000-0000-0000-000000000002",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "CACHE", "bucket_name": "ocelot-local-cache" }]
+}

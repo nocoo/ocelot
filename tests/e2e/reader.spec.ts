@@ -1,0 +1,406 @@
+import AxeBuilder from "@axe-core/playwright";
+import { type APIRequestContext, test as base, expect, type Page } from "@playwright/test";
+import type { Repository, Scenario, Snapshot } from "../../src/models/contracts";
+
+const test = base.extend<{ pageErrors: undefined }>({
+  pageErrors: [
+    async ({ page }, use) => {
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await use(undefined);
+      expect(errors, "Unexpected browser errors").toEqual([]);
+    },
+    { auto: true },
+  ],
+});
+
+const origin = "http://127.0.0.1:5174";
+const headers = { Origin: origin, "X-Ocelot-Request": "1" };
+const welcome = "阅读，是一场安静的探索";
+const laboratory = "04 工具与实践/Markdown 排版实验室.md";
+
+async function scenario(request: APIRequestContext, value: Scenario) {
+  const response = await request.post("/api/local", { headers, data: { scenario: value } });
+  expect(response.ok()).toBe(true);
+}
+
+async function open(page: Page, path = "README.md", repository = 101) {
+  await page.goto(`/?repo=${repository}&note=${encodeURIComponent(path)}`);
+  await expect(page.locator("#document-title")).toBeVisible();
+  await expect(page.locator(".loading-line")).toHaveCount(0);
+}
+
+async function search(page: Page, query: string) {
+  await page.keyboard.press("ControlOrMeta+k");
+  const input = page.getByRole("textbox", { name: "搜索笔记" });
+  await expect(input).toBeFocused();
+  await input.fill(query);
+  await input.press("Enter");
+}
+
+async function chooseScenario(page: Page, label: string) {
+  await page.getByRole("button", { name: "本地体验场景" }).click();
+  const button = page.getByRole("button", { name: label, exact: true });
+  const rechecked = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/connection/check") && response.request().method() === "POST",
+  );
+  await button.click();
+  await rechecked;
+  await expect(button).toBeEnabled();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+}
+
+async function settleMotion(page: Page) {
+  await page.evaluate(async () => {
+    const finite = document
+      .getAnimations()
+      .filter((animation) => animation.effect?.getTiming().iterations !== Number.POSITIVE_INFINITY);
+    await Promise.allSettled(finite.map((animation) => animation.finished));
+  });
+}
+
+test.beforeEach(async ({ request }) => {
+  await scenario(request, "healthy");
+  const repositories: Repository[] = await (await request.get("/api/repositories")).json();
+  for (const [id, name] of [
+    [101, "fieldnotes"],
+    [102, "studio-notes"],
+  ] as const) {
+    if (!repositories.some((repository) => repository.id === id)) {
+      const response = await request.post("/api/repositories", {
+        headers,
+        data: { repository: `ocelot-demo/${name}` },
+      });
+      expect(response.ok()).toBe(true);
+    }
+  }
+  const response = await request.post("/api/repositories/101/sync?force=1", { headers });
+  expect(response.ok()).toBe(true);
+});
+
+test("Chinese and English reading, wikilinks, deep links and browser history", async ({ page }) => {
+  await open(page);
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  await expect(page.getByText("1,173 篇", { exact: true })).toBeVisible();
+  await search(page, "On paying attention");
+  await expect(page.locator("#document-title")).toHaveText("On paying attention");
+  await expect(page.locator(".prose")).toContainText(
+    "Attention does not always ask us to do more.",
+  );
+  await expect(page).toHaveURL(
+    (url) => url.searchParams.get("note") === "03 The Reading Room/On paying attention.md",
+  );
+  await page.locator(".prose").getByRole("link", { name: "progressive summarization" }).click();
+  await expect(page.locator("#document-title")).toHaveText("渐进式总结");
+  await expect(page.getByRole("treeitem", { name: "渐进式总结.md", exact: true })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page.goBack();
+  await expect(page.locator("#document-title")).toHaveText("On paying attention");
+  await page.goForward();
+  await expect(page.locator("#document-title")).toHaveText("渐进式总结");
+  await page.reload();
+  await expect(page.locator("#document-title")).toHaveText("渐进式总结");
+});
+
+test("Pierre directory supports keyboard navigation and large-vault search", async ({ page }) => {
+  await open(page);
+  const folder = page.getByRole("treeitem", { name: "01 思考的方法", exact: true });
+  await folder.focus();
+  await folder.press("ArrowRight");
+  await expect(folder).toHaveAttribute("aria-expanded", "true");
+  await folder.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#document-title")).toHaveText("一张笔记的生命周期");
+  await search(page, "学习日志 1149");
+  await expect(page.locator("#document-title")).toHaveText("学习日志 1149");
+  await expect(
+    page.getByRole("treeitem", { name: "学习日志 1149.md", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  expect(await page.getByRole("treeitem").count()).toBeLessThan(80);
+  await expect(page.locator(".prose")).toContainText("第 1149 则合成笔记");
+});
+
+test("renders math, diagrams, pinned images, note embeds and safe semantic HTML", async ({
+  page,
+}, info) => {
+  await open(page, laboratory);
+  await expect(page.locator("#document-title")).toHaveText("Markdown 排版实验室");
+  await expect(page.locator(".katex")).toHaveCount(2);
+  await expect(page.getByRole("img", { name: "笔记中的 Mermaid 图示" })).toHaveAttribute(
+    "src",
+    /^data:image\/svg\+xml/,
+  );
+  const image = page.getByRole("img", { name: "暮色中的山峦" });
+  await image.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => image.evaluate((element) => (element as HTMLImageElement).naturalWidth))
+    .toBe(1200);
+  await expect(image).toHaveAttribute("src", /\/api\/repositories\/101\/asset\?tree=/);
+  await expect(page.getByRole("complementary", { name: "嵌入笔记" })).toContainText(
+    "下次在哪种情境里",
+  );
+  await page.getByText("展开一条补充说明", { exact: true }).click();
+  await expect(page.getByText("简单的语义 HTML 可以丰富表达。", { exact: false })).toBeVisible();
+  await page.screenshot({ path: info.outputPath("laboratory.png") });
+  await page.locator(".prose").getByRole("link", { name: "一个具体例子", exact: true }).click();
+  await expect(page.locator("#document-title")).toHaveText("渐进式总结");
+  await expect(page).toHaveURL(/#note-/);
+  await expect(page.getByRole("heading", { name: "一个例子", exact: true })).toBeInViewport();
+  expect(
+    await page.locator(".reading-scroll").evaluate((element) => element.scrollTop),
+  ).toBeGreaterThan(0);
+});
+
+test("adds and removes a private vault with a slash in its branch", async ({ page, request }) => {
+  await request.delete("/api/repositories/103", { headers });
+  await open(page);
+  await page.locator(".repository-switch").click();
+  await page
+    .getByRole("textbox", { name: "添加 GitHub 知识库" })
+    .fill("https://github.com/ocelot-demo/reading-room");
+  await page.getByRole("button", { name: "添加", exact: true }).click();
+  await expect(page.locator("#document-title")).toHaveText("The reading room");
+  await expect(page.locator(".reading-status")).toContainText("notes/2026");
+  await page.locator(".prose").getByRole("link", { name: "如何阅读一本书", exact: true }).click();
+  await expect(page.locator("#document-title")).toHaveText("如何阅读一本书");
+  await page.locator(".repository-switch").click();
+  await page.getByRole("button", { name: "移除 reading-room", exact: true }).click();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  const repositories: Repository[] = await (await request.get("/api/repositories")).json();
+  expect(repositories.some((repository) => repository.id === 103)).toBe(false);
+});
+
+test("slow Worker responses retain the old article until the new one is ready", async ({
+  page,
+}) => {
+  await open(page);
+  await chooseScenario(page, "慢速加载");
+  await search(page, "实验记录 1152");
+  await expect(
+    page.getByRole("status").filter({ hasText: "正在打开 实验记录 1152" }),
+  ).toBeVisible();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  await expect(page.locator(".reading-status")).toContainText("正在准备下一份笔记");
+  await expect(page.locator("#document-title")).toHaveText("实验记录 1152");
+  await expect(page.locator(".loading-line")).toHaveCount(0);
+});
+
+test("PAT renewal stays quiet and invalid credentials cannot read cached private content", async ({
+  page,
+  request,
+}, info) => {
+  await open(page);
+  await chooseScenario(page, "3 天后到期");
+  await expect(page.getByRole("button", { name: "3 天后需要轮换", exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "3 天后需要轮换", exact: true }).click();
+  await expect(
+    page.getByText("找一个方便的时候更新即可，阅读可以继续。", { exact: false }),
+  ).toBeVisible();
+  await page.getByText("如何更新连接", { exact: false }).click();
+  await expect(page.getByText("GITHUB_TOKEN", { exact: true })).toBeVisible();
+  await page.screenshot({ path: info.outputPath("renewal.png") });
+  await page.keyboard.press("Escape");
+  const snapshot: Snapshot = await (await request.get("/api/repositories/101/snapshot")).json();
+  const path = `/api/repositories/101/document?tree=${snapshot.treeSha}&path=README.md`;
+  expect((await request.get(path)).ok()).toBe(true);
+  await chooseScenario(page, "凭据失效");
+  await expect(page.getByRole("button", { name: "连接需要更新", exact: true })).toBeVisible();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  const denied = await request.get(path);
+  expect(denied.status()).toBe(424);
+  expect((await denied.json()).error.code).toBe("github_invalid");
+  await scenario(request, "healthy");
+  await page.getByRole("button", { name: "连接需要更新", exact: true }).click();
+  await page.getByRole("button", { name: "重新检查", exact: true }).click();
+  await expect(page.locator(".connection-card")).toContainText("GitHub 已连接");
+  await page.keyboard.press("Escape");
+  await search(page, "On paying attention");
+  await expect(page.locator("#document-title")).toHaveText("On paying attention");
+});
+
+test("new Git revisions wait for explicit handoff without moving text or collapsing folders", async ({
+  page,
+}) => {
+  await open(page);
+  const folder = page.getByRole("treeitem", { name: "02 观察与记录", exact: true });
+  await folder.click();
+  await expect(folder).toHaveAttribute("aria-expanded", "true");
+  await page.locator(".reading-scroll").evaluate((element) => {
+    element.scrollTop = 440;
+  });
+  const before = await page
+    .locator(".reading-scroll")
+    .evaluate((element) => ({ y: element.getBoundingClientRect().top, scroll: element.scrollTop }));
+  await chooseScenario(page, "收到新提交");
+  await expect(page.getByRole("button", { name: "应用更新，3 份文件", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "一次新的重访", exact: true })).toHaveCount(0);
+  const pending = await page
+    .locator(".reading-scroll")
+    .evaluate((element) => ({ y: element.getBoundingClientRect().top, scroll: element.scrollTop }));
+  expect(pending).toEqual(before);
+  await page.getByRole("button", { name: "应用更新，3 份文件", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "一次新的重访", exact: true })).toHaveCount(1);
+  expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(
+    before.scroll,
+  );
+  await expect(folder).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("treeitem", { name: /今天的新发现\.md/ })).toBeVisible();
+  await expect(page.getByRole("treeitem", { name: /书店的一角\.md/ })).toHaveCount(0);
+});
+
+test("unchanged checks reuse cached blobs and transfer only version metadata", async ({
+  page,
+  request,
+}) => {
+  await open(page);
+  const before = await (await request.get("/api/local")).json();
+  const response = page.waitForResponse(
+    (value) => value.url().includes("/sync?") && value.url().includes("known="),
+  );
+  await page.getByRole("button", { name: "检查更新", exact: true }).click();
+  const unchanged = await (await response).json();
+  expect(unchanged.unchanged).toBe(true);
+  expect(unchanged.files).toBeUndefined();
+  await expect(page.locator(".reading-status")).toContainText("已经是最新版本");
+  const after = await (await request.get("/api/local")).json();
+  expect(after.requests.blob).toBe(before.requests.blob);
+  expect(after.requests.tree).toBe(before.requests.tree);
+  expect(after.requests["not-modified"]).toBeGreaterThan(before.requests["not-modified"] ?? 0);
+});
+
+test("rate limits back off and an offline upstream recovers without losing the article", async ({
+  page,
+  request,
+}) => {
+  await open(page);
+  await chooseScenario(page, "GitHub 限流");
+  await expect(page.getByRole("button", { name: "稍后继续检查", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "检查更新", exact: true })).toBeDisabled();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  await chooseScenario(page, "上游离线");
+  await expect(page.getByRole("button", { name: "连接暂不可用", exact: true })).toBeVisible();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  await scenario(request, "healthy");
+  await page.getByRole("button", { name: "连接暂不可用", exact: true }).click();
+  await page.getByRole("button", { name: "重新检查", exact: true }).click();
+  await expect(page.locator(".connection-card")).toContainText("GitHub 已连接");
+});
+
+test("untrusted note content cannot execute scripts, clobber anchors or load trackers", async ({
+  page,
+}) => {
+  const external: string[] = [];
+  page.on("request", (request) => {
+    if (/^https?:/.test(request.url()) && !request.url().startsWith(`${origin}/`))
+      external.push(request.url());
+  });
+  await page.route("**/api/repositories/101/document?*", async (route) => {
+    const response = await route.fetch();
+    const document = await response.json();
+    await route.fulfill({
+      json: {
+        ...document,
+        content: [
+          "# Safety garden",
+          "<script>window.ocelotInjected = true</script>",
+          '<img src="https://tracking.invalid/pixel" onerror="window.ocelotInjected = true" alt="External image">',
+          '<iframe srcdoc="<script>parent.ocelotInjected = true</script>"></iframe>',
+          '<form action="https://tracking.invalid/send"><input name="location"></form>',
+          '<a id="document-title" href="javascript:window.ocelotInjected=true">Unsafe link</a>',
+          "<details><summary>Safe details</summary><p>A readable explanation.</p></details>",
+          "## Still readable",
+          "A safe paragraph and [a safe link](https://example.com).",
+        ].join("\n\n"),
+      },
+    });
+  });
+  await open(page);
+  await expect(page.locator("#document-title")).toHaveText("Safety garden");
+  await expect(
+    page.locator(".prose script, .prose iframe, .prose form, .prose [onerror]"),
+  ).toHaveCount(0);
+  await expect(page.locator(".image-unavailable")).toContainText("External image");
+  await page.getByText("Safe details", { exact: true }).click();
+  await expect(page.getByText("A readable explanation.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "a safe link", exact: true })).toHaveAttribute(
+    "rel",
+    "noopener noreferrer",
+  );
+  expect(await page.evaluate(() => "ocelotInjected" in window)).toBe(false);
+  expect(external).toEqual([]);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`${theme} desktop has accessible contrast, keyboard dialogs and persistent preferences`, async ({
+    page,
+  }, info) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await open(page);
+    await expect(page.locator(".ocelot-sidebar")).toHaveCSS(
+      "background-color",
+      theme === "dark" ? "rgb(17, 24, 32)" : "rgb(245, 247, 249)",
+    );
+    await settleMotion(page);
+    const audit = await new AxeBuilder({ page }).analyze();
+    await info.attach("axe", {
+      body: JSON.stringify(audit.violations, null, 2),
+      contentType: "application/json",
+    });
+    expect(audit.violations).toEqual([]);
+    await page.screenshot({ path: info.outputPath(`reader-${theme}.png`) });
+    const preferences = page.getByRole("button", { name: "阅读偏好", exact: true });
+    await preferences.click();
+    await page.getByRole("button", { name: "Aa 舒展", exact: true }).click();
+    await page.keyboard.press("Escape");
+    await expect(preferences).toBeFocused();
+    await page.reload();
+    await expect(page.locator(".article")).toHaveCSS("--reading-scale", "1.15");
+    await page
+      .getByRole("button", { name: theme === "dark" ? "切换到浅色" : "切换到深色", exact: true })
+      .click();
+    await settleMotion(page);
+    await page.reload();
+    await expect(
+      page.getByRole("button", {
+        name: theme === "dark" ? "切换到深色" : "切换到浅色",
+        exact: true,
+      }),
+    ).toBeVisible();
+    expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(
+      expect.arrayContaining(["ocelot-font-scale", "ocelot-theme"]),
+    );
+  });
+}
+
+test("mobile drawer and outline are keyboard accessible and respect reduced motion", async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+  await open(page);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  await page.getByRole("button", { name: "切换知识库导航", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "知识库导航", exact: true });
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("treeitem", { name: "03 The Reading Room", exact: true }).click();
+  await drawer.getByRole("treeitem", { name: "On paying attention.md", exact: true }).click();
+  await expect(page.locator("#document-title")).toHaveText("On paying attention");
+  await expect(drawer).toHaveCount(0);
+  await page.getByRole("button", { name: "文章大纲", exact: true }).click();
+  await page.getByRole("button", { name: "Leaving room", exact: true }).click();
+  await expect(page.locator(".mobile-outline")).toHaveCount(0);
+  await page.getByRole("button", { name: "回到文章顶部", exact: true }).click();
+  expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(0);
+  const audit = await new AxeBuilder({ page }).analyze();
+  await info.attach("axe-mobile", {
+    body: JSON.stringify(audit.violations, null, 2),
+    contentType: "application/json",
+  });
+  expect(audit.violations).toEqual([]);
+  await page.screenshot({ path: info.outputPath("reader-mobile.png") });
+});
