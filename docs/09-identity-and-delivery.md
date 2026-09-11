@@ -102,6 +102,9 @@
   合入已发布的新品牌后，受影响的 7 项浏览器流程再次通过，并刷新三张截图。
 - `bun run worker:check` 通过，65.45 KiB / gzip 18.08 KiB。
 - OSV 2.5.1、Gitleaks 8.30.1 通过；workflow YAML 已解析并核对部署依赖。
+  提交后全历史扫描将公开的 Access AUD 识别为 Generic API Key。AUD 是验证
+  JWT 的公开应用标识，不能独立登录；`.gitleaksignore` 仅记录该提交、文件、
+  行号和规则的精确 fingerprint，不排除整份配置、其他提交或实际凭据。
 - 只读 release 预检及临时 Git 仓库测试通过；部署编排测试验证先迁移后部署、
   已有资源复用、迁移失败停止发布和账号检查。
 
