@@ -1,0 +1,3 @@
+set -e
+bun x biome check --staged --error-on-warnings --no-errors-on-unmatched
+bun run typecheck

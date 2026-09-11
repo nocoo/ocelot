@@ -1,0 +1,4 @@
+# Only for separately configured local testing of worker/index.ts with real Access JWTs.
+# Do not copy for `bun run dev`: the default demo always uses synthetic GitHub data.
+# Production uses `wrangler secret put GITHUB_TOKEN`. See docs/06-running-and-deployment.md.
+GITHUB_TOKEN=replace-with-a-fine-grained-read-only-token
