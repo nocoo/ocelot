@@ -730,6 +730,7 @@ a {
 }
 .prose p {
   margin: 0 0 1.35em;
+  text-align: justify;
   text-wrap: pretty;
 }
 .prose h1,

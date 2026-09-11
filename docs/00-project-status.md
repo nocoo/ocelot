@@ -2,7 +2,7 @@
 
 更新：2026-09-12
 
-当前阶段：**线上身份请求已修复，Cloudflare 实测及完整 CI/CD 均通过并已部署；Y+1 发行约定见 09**。
+当前阶段：**v0.2.0 已发布；正文两端对齐已通过手机与桌面验收，交付见对应 main CI/CD**。
 
 ## 文档
 
@@ -17,7 +17,7 @@
 | 07 | [Basalt 侧栏与路径导航](07-basalt-navigation.md) | 已验收并获用户确认，logo 固定起点，960 帧无位移 |
 | 08 | [视觉规范](08-visual-identity.md) | 已采用新品牌图标与双语 README |
 | 09 | [身份展示、版本与持续交付](09-identity-and-delivery.md) | 远程 Verify / Security / Deploy 均通过 |
-| 10 | [阅读器交互与典型样例](10-reader-interactions.md) | 九项修复、无框选项、GitHub 文件入口与进度布局已本地验收 |
+| 10 | [阅读器交互与典型样例](10-reader-interactions.md) | 交互与正文两端对齐已本地验收；320–768px 中英文无横向溢出 |
 | 11 | [本地 HTTPS 与端口登记](11-local-https.md) | 可信 HTTPS、HMR 与真实浏览器操作已验证 |
 | 12 | [线上作者身份资料恢复](12-author-profile-recovery.md) | 云端真实姓名/头像、177 UT、27 浏览器流程及完整 CI/CD 通过，已部署 |
 

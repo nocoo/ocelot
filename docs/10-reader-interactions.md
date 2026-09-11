@@ -103,3 +103,17 @@ GitHub 地址另以本公开仓库的
 安全扫描和对应 `main` 提交的远程 Verify / Security / Deploy 结果以
 [持续交付记录](https://github.com/nocoo/ocelot/actions/workflows/verify.yml) 为准。
 上述浏览器证据使用合成知识库，不代替登录生产环境后的真实私有知识库验收。
+
+## 正文两端对齐（追加反馈）
+
+状态：**已实现并通过本地验收；交付见对应 main CI/CD**。用户要求阅读器采用两端对齐，尤其是移动端。
+正文段落使用浏览器原生 `text-align: justify`，段末保留默认的起始对齐；
+沿用现有 `text-wrap: pretty` 和长文本换行策略。桌面与手机使用同一条段落规则，
+标题、代码块和表格继续由各自的排版样式控制。
+
+验证：完整 Chromium 流程 `27/27` 通过，43.4 秒，明暗/手机 axe 无违规，Biome
+通过。在可信本地 HTTPS 额外检查中英文文章：320、390、768px 均无页面或正文
+横向溢出；逐字符测量确认段落非末行右边缘与容器边缘一致。已检查手机
+[中文截图](assets/reader-mobile-justified-zh.png)与
+[英文截图](assets/reader-mobile-justified-en.png)，段末自然收尾、字间距和换行可读。
+本次仅修改一条段落 CSS 规则，无需新增镜像 CSS 的单元测试。
