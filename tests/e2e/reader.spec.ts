@@ -572,7 +572,7 @@ test("untrusted note content cannot execute scripts, clobber anchors or load tra
 
 test("Access identity loads after reading, hides local controls and handles a failed avatar", async ({
   page,
-}) => {
+}, info) => {
   let revealProfile!: () => void;
   const profileReady = new Promise<void>((resolve) => {
     revealProfile = resolve;
@@ -621,6 +621,9 @@ test("Access identity loads after reading, hides local controls and handles a fa
   expect(alignment).toBeLessThanOrEqual(1);
   expect(alignment).toBeGreaterThanOrEqual(0);
   await expect(page.locator("#document-title")).toHaveText(welcome);
+  await page
+    .locator(".ocelot-sidebar")
+    .screenshot({ path: info.outputPath("public-identity.png") });
   available = false;
   const failedAvatar = page.waitForResponse(
     (response) => response.url().endsWith("/api/avatar") && response.status() === 404,

@@ -31,7 +31,7 @@ describe("optional author profiles behind Access", () => {
       "https://lizheng.blog/api/authors/profile?hash=2cecb651356e138bd83a5215c4d7c5a3ebfb923a0c316de1b218797417911c5e",
     );
     expect(String(url)).not.toContain(email);
-    expect(init).toMatchObject({ redirect: "error", signal: expect.any(AbortSignal) });
+    expect(init).toMatchObject({ redirect: "manual", signal: expect.any(AbortSignal) });
     expect(init?.headers).toEqual({
       Accept: "application/json, image/*;q=0.9",
       "User-Agent": "Ocelot (+https://github.com/nocoo/ocelot)",
@@ -67,6 +67,28 @@ describe("optional author profiles behind Access", () => {
     );
   });
 
+  it.each(["open", "match", "put"] as const)(
+    "still loads the public identity when Cache API %s is unavailable",
+    async (operation) => {
+      const cache = await caches.open("ocelot-public-profiles");
+      const unavailable = new Error("Cache API is unavailable behind Access");
+      vi.spyOn(caches, "open").mockImplementation(async () => {
+        if (operation === "open") throw unavailable;
+        return cache;
+      });
+      if (operation !== "open") vi.spyOn(cache, operation).mockRejectedValue(unavailable);
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+        String(input).startsWith("https://lizheng.blog/")
+          ? Response.json({ name: "Reader", avatar })
+          : new Response("synthetic-image", { headers: { "Content-Type": "image/jpeg" } }),
+      );
+      expect(await authorProfile(email)).toEqual({ name: "Reader", avatar });
+      const image = await authorAvatar(email);
+      expect(image.headers.get("Content-Type")).toBe("image/jpeg");
+      expect(new TextDecoder().decode(await image.arrayBuffer())).toBe("synthetic-image");
+    },
+  );
+
   it("backs off for a minute after 429 and can recover after the temporary cache expires", async () => {
     const outgoing = vi
       .spyOn(globalThis, "fetch")
@@ -85,6 +107,26 @@ describe("optional author profiles behind Access", () => {
     expect(await authorProfile(limitedEmail)).toEqual({ name: "Recovered reader", avatar: null });
     expect(outgoing).toHaveBeenCalledTimes(2);
   });
+
+  it.each(["open", "put"] as const)(
+    "falls back on rate limits and recovers when Cache API %s is unavailable",
+    async (operation) => {
+      const cache = await caches.open("ocelot-public-profiles");
+      const unavailable = new Error("Cache API is unavailable behind Access");
+      vi.spyOn(caches, "open").mockImplementation(async () => {
+        if (operation === "open") throw unavailable;
+        return cache;
+      });
+      if (operation === "put") vi.spyOn(cache, "put").mockRejectedValue(unavailable);
+      const outgoing = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(new Response(null, { status: 429 }));
+      expect(await authorProfile(email)).toEqual(empty);
+      outgoing.mockResolvedValueOnce(Response.json({ name: "Recovered reader", avatar: null }));
+      expect(await authorProfile(email)).toEqual({ name: "Recovered reader", avatar: null });
+      expect(outgoing).toHaveBeenCalledTimes(2);
+    },
+  );
 
   it("rejects untrusted image origins, credentials, schemes and malformed profile values", async () => {
     const outgoing = vi.spyOn(globalThis, "fetch");
@@ -110,6 +152,19 @@ describe("optional author profiles behind Access", () => {
     }
     outgoing.mockResolvedValueOnce(Response.json({ name: "中".repeat(200), avatar: null }));
     expect((await authorProfile(email)).name).toHaveLength(120);
+  });
+
+  it("rejects profile and avatar redirects with the edge-supported manual policy", async () => {
+    const outgoing = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(Response.redirect("https://redirect.example.test/profile", 302));
+    expect(await authorProfile(email)).toEqual(empty);
+    expect(outgoing).toHaveBeenCalledOnce();
+    outgoing.mockResolvedValueOnce(Response.json({ name: "Reader", avatar }));
+    outgoing.mockResolvedValueOnce(Response.redirect("https://redirect.example.test/avatar", 307));
+    await expect(authorAvatar(email)).rejects.toMatchObject({ code: "avatar_unavailable" });
+    expect(outgoing).toHaveBeenCalledTimes(3);
+    expect(outgoing.mock.calls.every(([, init]) => init?.redirect === "manual")).toBe(true);
   });
 
   it("falls back on timeouts, server errors, invalid JSON, MIME types and oversized bodies", async () => {

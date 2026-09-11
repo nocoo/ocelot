@@ -47,6 +47,8 @@
   退避缓存，保留服务超时、大小限制、HTTPS 固定 origin、禁止重定向和回退。
   只发送经 Access 验证的邮箱哈希，头像/资料缓存访问前继续验证身份。
   测试仅用合成邮箱、姓名和图片，不记录真实头像路径或身份凭据。
+  后续生产反馈复现了 Workers 不支持 `redirect: "error"` 的异常；本机公开
+  请求不代表边缘请求已成功。实际云端复现、修复及复测见 [12](12-author-profile-recovery.md)。
 - 底部继续使用 `SidebarFooter`、`SidebarUser`、`Avatar`，恢复模板的
   字号、间距与头像大小，清除 standalone CSS 模式下段落默认 margin 的干扰。
   收起状态也保留身份头像；品牌位置仍固定在左侧 24px。

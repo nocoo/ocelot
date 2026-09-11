@@ -5,12 +5,17 @@ const profileEndpoint = "https://lizheng.blog/api/authors/profile";
 const empty: AuthorProfile = { name: null, avatar: null };
 
 async function publicResource(url: string, type: RegExp, limit: number): Promise<Response | null> {
+  let cache: Cache | undefined;
   try {
-    const cache = await caches.open("ocelot-public-profiles");
+    cache = await caches.open("ocelot-public-profiles");
     const cached = await cache.match(url);
     if (cached) return cached.headers.has("Retry-After") ? null : cached;
+  } catch {
+    // Cache API is optional and may be unavailable behind Cloudflare Access.
+  }
+  try {
     const response = await fetch(url, {
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(5000),
       headers: {
         Accept: "application/json, image/*;q=0.9",
@@ -20,7 +25,7 @@ async function publicResource(url: string, type: RegExp, limit: number): Promise
     if (response.status === 429) {
       await response.body?.cancel();
       // Store a cacheable backoff marker; it is never forwarded as a profile or avatar.
-      await cache.put(
+      await cache?.put(
         url,
         Response.json(null, {
           headers: { "Cache-Control": "public, max-age=60", "Retry-After": "60" },
@@ -36,7 +41,11 @@ async function publicResource(url: string, type: RegExp, limit: number): Promise
     const result = new Response(await readLimited(response, limit), {
       headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=3600" },
     });
-    await cache.put(url, result.clone());
+    try {
+      await cache?.put(url, result.clone());
+    } catch {
+      // Keep the validated network response even when the cache cannot store it.
+    }
     return result;
   } catch {
     return null;
