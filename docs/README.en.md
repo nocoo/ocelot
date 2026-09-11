@@ -65,9 +65,10 @@ Local verification records **163 unit tests and 17 browser tests passed**, with 
 coverage of **100% / 98.62% / 100% / 100%** and light, dark and mobile axe checks.
 The [runtime and verification record](05-runtime-contract-and-verification.md) documents the evidence and support boundaries.
 
-Production is configured at **<https://ocelot.hexly.ai>**; the first deployment is in progress.
-After verification and security checks, trusted `main` provisions D1/private R2, migrates and deploys. Releases require successful CD.
-Follow [Running and deployment](06-running-and-deployment.md) to configure the separate GitHub PAT as a Worker Secret.
+Production is live at **<https://ocelot.hexly.ai>**, protected by nocoo Cloudflare Access.
+After verification and security checks, trusted `main` reuses D1/private R2, migrates, deploys and verifies the running revision.
+Releases require successful CI/CD for the matching commit; see the [production acceptance record](09-identity-and-delivery.md).
+Real vault access still requires a separate GitHub PAT in the `GITHUB_TOKEN` Worker Secret; follow [Running and deployment](06-running-and-deployment.md).
 The default local demo does not connect to real GitHub repositories.
 
 ## Documentation

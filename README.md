@@ -64,9 +64,10 @@ bun run release -- --dry-run
 源码，语句/分支/函数/行覆盖率分别为 **100% / 98.62% / 100% / 100%**。
 浅色、深色和移动端 axe 扫描通过。详细证据与支持边界见 [05](docs/05-runtime-contract-and-verification.md)。
 
-生产地址为 **<https://ocelot.hexly.ai>**，首次部署正在执行。可信 `main` 通过
-验证和安全扫描后，CD 自动准备 D1、私有 R2、迁移并发布；成功后才创建版本 tag。
-GitHub PAT 独立存放在 Worker Secret，配置方式见
+已部署至 **<https://ocelot.hexly.ai>**，受 nocoo Cloudflare Access 保护。可信 `main`
+通过验证和安全扫描后，CD 复用 D1、私有 R2，先迁移再发布，并核对运行版本。
+Release 只在对应提交的 CI/CD 成功后创建；远程验收证据见 [09](docs/09-identity-and-delivery.md)。
+实际知识库还需将 GitHub PAT 配置为 Worker Secret `GITHUB_TOKEN`，配置方式见
 [06 · 运行与部署](docs/06-running-and-deployment.md)。默认本地 mock 不连接真实 GitHub。
 
 ## 文档

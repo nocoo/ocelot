@@ -2,13 +2,13 @@
 
 更新：2026-09-11
 
-当前阶段：**阅读与身份界面已验收；生产持续交付执行中**。
+当前阶段：**生产持续交付已验收；真实知识库待 PAT 配置**。
 
 ## 文档
 
 | 编号 | 文档 | 状态 |
 | --- | --- | --- |
-| 01 | [产品与工程约定](01-product-contract.md) | 本地实现完成，首次上线执行中 |
+| 01 | [产品与工程约定](01-product-contract.md) | 本地实现与生产交付已验收 |
 | 02 | [GitHub 认证、缓存与更新](02-github-auth-cache-and-sync.md) | PAT + D1/R2 已实现并本地验证 |
 | 03 | [类似项目调研](03-reference-projects.md) | 首轮完成，含固定版本源码依据 |
 | 04 | [实现与本地验收](04-implementation-and-local-testing.md) | 本地验收完成 |
@@ -16,7 +16,7 @@
 | 06 | [本地运行、PAT 轮换与部署](06-running-and-deployment.md) | 已对齐实际配置与自动部署 |
 | 07 | [Basalt 侧栏与路径导航](07-basalt-navigation.md) | 已验收并获用户确认，logo 固定起点，960 帧无位移 |
 | 08 | [视觉规范](08-visual-identity.md) | 已采用新品牌图标与双语 README |
-| 09 | [身份展示、版本与持续交付](09-identity-and-delivery.md) | 本地验收完成，远程部署执行中 |
+| 09 | [身份展示、版本与持续交付](09-identity-and-delivery.md) | 远程 Verify / Security / Deploy 均通过 |
 
 ## 交付状态
 
@@ -31,11 +31,11 @@
 | 选择 GitHub 凭据方案 | 已完成 | 用户接受细粒度 PAT 与定期轮换 |
 | 确定存储、渲染与同步 | 已确定 | 02；D1 + 私有 R2、按需缓存和条件检查 |
 | Vite/Worker、MVVM 基础工程 | 已完成 | Wrangler 本地 Worker、SQLite D1、磁盘 R2 和 3 个合成仓库 |
-| Biome、Husky、CI 与 UT 门禁 | 已配置，本地通过 | 163 UT，四项覆盖率 100 / 98.62 / 100 / 100%，OSV / Gitleaks 通过 |
+| Biome、Husky、CI 与 UT 门禁 | 本地与远程均通过 | 163 UT，四项覆盖率 100 / 98.62 / 100 / 100%，OSV / Gitleaks 通过 |
 | 阅读界面与 Obsidian 兼容性 | 本地已验证 | 17 浏览器测试，明暗/移动端 axe 无违规；边界见 05 |
 | Access 身份与作者头像 | 已实现并测试 | 独立加载、同源受保护头像、服务异常回退 |
 | 版本与 release | 已实现并本地验证 | 单一版本来源、只读 dry run、CI/CD 成功后不可变 tag |
-| Cloudflare 部署与 Access 策略 | 资源已创建，Worker 已部署；验证进行中 | D1 迁移、私有 R2、控制面版本已通过；首次 DNS 生效记录见 09 |
+| Cloudflare 部署与 Access 策略 | 已交付并验证 | D1 迁移、私有 R2、完整 Git 标签和 Access 入口通过；远程证据见 09 |
 
 ## 已确认的实施范围
 
@@ -50,9 +50,10 @@
 
 本地类型、Biome、完整 UT 覆盖率、生产前端构建、Worker dry run 与 Playwright
 均已通过。具体测试数量、覆盖分母与交互证据见 05；启动和部署步骤见 06。
-域名、Access 参数与 CD 凭据已配置；远程资源和运行版本由部署脚本核验。
+域名、Access 参数与 CD 凭据已配置；远程资源、运行版本及 Access 入口已通过
+部署脚本核验。已确认的 sidebar 修正也已随对应提交通过完整 CI/CD。
 尚未提供 GitHub PAT，不能将本地模拟通过视为真实私有仓库已经接入。
-远程 CI/CD 证据将在首次部署后记录于 09。
+远程 CI/CD 证据见 09；正式发行记录以 GitHub Release 及其不可变 tag 为准。
 
 每次提交前运行 `git diff --cached --check`；推送后核对 `origin/main`
 与本地提交一致。原子提交及推送状态以 Git 记录为准。

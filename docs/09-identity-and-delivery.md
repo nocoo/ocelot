@@ -1,6 +1,6 @@
 # 09 · 身份展示、版本与持续交付
 
-状态：**D1/R2 已创建，Worker 已部署；域名首次生效与交付验证进行中** · 2026-09-11
+状态：**生产资源、域名与自动部署已验收；真实知识库待 PAT** · 2026-09-11
 
 ## 用户要求
 
@@ -116,5 +116,30 @@ Verify / Security，创建 APAC D1 `39b12de7-4b0d-4e30-b212-c28fd43a44a0` 并执
 
 改进约定：域名探测对网络失败和 5xx 最多尝试 12 次，间隔 10 秒；非 Access
 的成功页面、错误跳转或拒绝响应立即失败。不能把等待结束当作验证通过，也不
-因为 Worker 已上传就创建 Release。远程成功证据在最终验证后补齐。
-尚未提供 GitHub vault PAT，也未宣称真实私有知识库已完成线上验收。
+因为 Worker 已上传就创建 Release。后续控制面与域名检查均已成功，结果如下。
+
+## 生产交付结果
+
+- 用户已确认 07 中的最终 sidebar 修正。对应提交
+  `efaacfe89ddfd3029e326c33abcc1cf1c24f695e` 的
+  [push CI/CD](https://github.com/nocoo/ocelot/actions/runs/34600573634)
+  **Verify / Security / Deploy 全部成功**；此前
+  [2837c87 的交付](https://github.com/nocoo/ocelot/actions/runs/34599998095)
+  也已通过完整版本与域名核验。
+  本次校验的 Worker 版本为 `2339b8e4-f478-4bdf-b0b5-28e07600ff99`。
+- D1 `ocelot`：`39b12de7-4b0d-4e30-b212-c28fd43a44a0`，APAC，
+  `0001_reader.sql` 已应用；私有 R2 `ocelot-private-cache` 已创建。
+  后续发布按名称复用资源，不导入本地合成种子。
+- `https://ocelot.hexly.ai` 已启用；部署脚本验证 100% 流量使用对应完整 Git
+  标签的版本，并成功进入 `nocoo.cloudflareaccess.com` 的 Access 登录。
+- 额外匿名探测：`/`、`/api/session`、`/api/repositories`、`/logo-80.png`
+  返回 Access 登录的 302；`/api/live` 返回应用层 `401 access_required`，
+  未公开版本信息。测试使用公共 DNS 返回的地址且保留 HTTPS 主机名与证书验证；
+  本机 DNS 当时仍缓存新域名的 NXDOMAIN，未修改系统 DNS 设置。
+- 发行版本与最终发布提交以 [GitHub Releases](https://github.com/nocoo/ocelot/releases)
+  中的不可变 tag 为准。release 脚本在该提交的 push CI/CD 成功后创建 tag，
+  并在 Release 正文附上匹配的验证链接；不把以上先行部署当作最终发行提交。
+
+尚未提供 GitHub vault PAT。首次部署交付受保护的空阅读室；按 06 配置 Worker
+Secret `GITHUB_TOKEN` 后才接入选定的真实仓库。真实本人/非本人登录、私有笔记
+与附件、PAT 轮换的完整线上验收仍需实际 Access 会话和 PAT，当前未宣称完成。
