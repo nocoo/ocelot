@@ -16,7 +16,7 @@ const test = base.extend<{ pageErrors: undefined }>({
 });
 
 const version = manifest.version;
-const origin = "http://127.0.0.1:5174";
+const origin = "http://127.0.0.1:27049";
 const headers = { Origin: origin, "X-Ocelot-Request": "1" };
 const welcome = "阅读，是一场安静的探索";
 const laboratory = "04 工具与实践/Markdown 排版实验室.md";

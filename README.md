@@ -27,10 +27,12 @@ bun install --frozen-lockfile
 bun run dev
 ```
 
-打开 **<http://127.0.0.1:5173>**。使用真实 Wrangler 本地 Worker、SQLite D1
+打开 **<https://ocelot.dev.hexly.ai/>**（[Caddy 配置](docs/11-local-https.md)，
+直连诊断端口 `7049`）。使用真实 Wrangler 本地 Worker、SQLite D1
 和磁盘 R2，无需 PAT 或 Cloudflare 账户。开发数据保存在 `.wrangler/state`。
 
-示例包含 3 个合成仓库、1,173 篇可见主库笔记、原创图片和两个 Git 版本。
+示例包含 3 个合成仓库、1,177 篇可见主库笔记、原创图片和两个 Git 版本。
+入口提供 48 章长文、144 项目录、各种比例的图片及 Markdown 图文排版样例。
 右上角的烧瓶按钮可以体验慢加载、到期提醒、凭据失效、限流、离线及新提交。
 “我的知识库”支持添加第三个示例 `ocelot-demo/reading-room`。
 
@@ -38,6 +40,7 @@ bun run dev
 
 - GFM、frontmatter、Obsidian 双链/别名、标题和块锚点、callout、表格、代码、公式、Mermaid。
 - 笔记嵌入与附件固定到同一 Git 版本；外部追踪图片与可执行内容被阻止。
+- 阅读器控件单独分组，直接切换全宽、字号与 Raw；长目录独立滚动，支持回顶与图片放大。
 - 文件名与路径搜索：⌘K / Ctrl+K。目录支持键盘选择、展开与变化标记。
 - 按需缓存正文；可见时每 60 秒条件检查，隐藏时暂停。未更新时不重新传输目录。
 - 更新由读者显式应用，保留当前位置与展开目录；慢加载期间保留原文。

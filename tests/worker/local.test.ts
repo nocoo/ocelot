@@ -69,11 +69,15 @@ describe("local API boundaries and scenarios", () => {
     expect((await api("/api/repositories", "PATCH")).status).toBe(404);
     expect((await api("/api/repositories/101/document")).status).toBe(400);
   });
-  it("accepts only loopback hosts and the explicitly supported Vite proxy origins", async () => {
+  it("accepts only loopback hosts and the registered HTTPS or Vite proxy origins", async () => {
     expect(
       (await local.fetch(new Request("https://exposed.example.test/api/session"), env)).status,
     ).toBe(403);
-    for (const origin of ["http://127.0.0.1:5173", "http://localhost:5174"])
+    for (const origin of [
+      "https://ocelot.dev.hexly.ai",
+      "http://127.0.0.1:7049",
+      "http://localhost:27049",
+    ])
       expect(
         (
           await local.fetch(
@@ -82,14 +86,20 @@ describe("local API boundaries and scenarios", () => {
           )
         ).status,
       ).toBe(200);
-    expect(
-      (
-        await local.fetch(
-          request("/api/local", "POST", { scenario: "healthy" }, { Origin: "https://evil.test" }),
-          env,
-        )
-      ).status,
-    ).toBe(403);
+    for (const origin of [
+      "https://evil.test",
+      "https://ocelot.dev.hexly.ai.evil.test",
+      "http://ocelot.dev.hexly.ai",
+      "http://127.0.0.1:5173",
+    ])
+      expect(
+        (
+          await local.fetch(
+            request("/api/local", "POST", { scenario: "healthy" }, { Origin: origin }),
+            env,
+          )
+        ).status,
+      ).toBe(403);
     expect(
       (
         await local.fetch(
@@ -97,7 +107,7 @@ describe("local API boundaries and scenarios", () => {
             "/api/local",
             "POST",
             { scenario: "healthy" },
-            { Origin: "http://127.0.0.1:5173", "Sec-Fetch-Site": "cross-site" },
+            { Origin: "https://ocelot.dev.hexly.ai", "Sec-Fetch-Site": "cross-site" },
           ),
           env,
         )

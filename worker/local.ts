@@ -10,10 +10,14 @@ export default {
       const url = new URL(request.url);
       if (!["127.0.0.1", "localhost", "[::1]"].includes(url.hostname))
         throw new HttpError(403, "local_only", "本地阅读器仅接受本机连接。");
-      // Wrangler rewrites the request's port. Restore only the two known local
-      // Vite origins before the shared CSRF check; production never imports this entry.
+      // The proxies change Host/port. Restore only the registered local origins
+      // before the shared CSRF check; production never imports this entry.
       const origin = request.headers.get("Origin");
-      if (origin && /^http:\/\/(127\.0\.0\.1|localhost):(5173|5174)$/u.test(origin)) {
+      if (
+        origin &&
+        (origin === "https://ocelot.dev.hexly.ai" ||
+          /^http:\/\/(127\.0\.0\.1|localhost):(7049|27049)$/u.test(origin))
+      ) {
         request = new Request(`${origin}${url.pathname}${url.search}`, request);
       }
       const response =

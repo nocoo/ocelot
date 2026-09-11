@@ -27,10 +27,12 @@ bun install --frozen-lockfile
 bun run dev
 ```
 
-Open <http://127.0.0.1:5173>. The demo uses a real local Wrangler Worker, SQLite D1 and disk-backed R2.
+Open <https://ocelot.dev.hexly.ai/> with [local Caddy HTTPS](11-local-https.md)
+(direct diagnostic port: `7049`). The demo uses a real local Wrangler Worker, SQLite D1 and disk-backed R2.
 It needs no PAT or Cloudflare account and stores its data under `.wrangler/state`.
 
-Synthetic fixtures provide three repositories, 1,173 visible notes in the main vault, original images and two Git revisions.
+Synthetic fixtures provide three repositories, 1,177 visible notes in the main vault, original images and two Git revisions.
+The welcome note links to a 48-chapter article with 144 outline entries and illustrated Markdown examples with varied image dimensions.
 The top-right flask button demonstrates slow loading, expiry reminders, invalid credentials, rate limits, offline behavior and new commits.
 Add the third example, `ocelot-demo/reading-room`, through the repository dialog.
 
@@ -38,6 +40,7 @@ Add the third example, `ocelot-demo/reading-room`, through the repository dialog
 
 - Render GFM, frontmatter, Obsidian wiki links and aliases, heading/block anchors, callouts, tables, code, math and Mermaid diagrams.
 - Keep embedded notes and attachments on the same Git revision. External tracking images and executable content are blocked.
+- Use a separate reader control group for full width, typography and Raw Markdown; scroll long outlines independently, return to the top and enlarge images in a lightbox.
 - Search filenames and paths with `⌘K` / `Ctrl+K`. The tree supports keyboard selection, expansion and change indicators.
 - Cache note content on demand. Conditional checks run every 60 seconds while the page is visible and pause when hidden. Unchanged trees are not transferred again.
 - Apply updates explicitly while preserving the reading position and expanded folders. Slow requests keep the current article visible.

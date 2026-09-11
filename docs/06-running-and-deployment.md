@@ -1,6 +1,6 @@
 # 06 · 本地运行、PAT 轮换与部署
 
-状态：**本地流程与生产自动部署均已验证** · 2026-09-11
+状态：**本地 HTTPS、独立端口与生产自动部署均已验证** · 2026-09-12
 
 ## 本地启动
 
@@ -11,8 +11,11 @@ bun install --frozen-lockfile
 bun run dev
 ```
 
-打开 <http://127.0.0.1:5173>。Vite 提供前端热更新，API 代理到 `127.0.0.1:8787`
-的 `wrangler dev --local`。退出时按 Ctrl+C。脚本先应用 D1 migrations，再幂等
+打开 <https://ocelot.dev.hexly.ai/>。本机 Caddy 终止 HTTPS 并反向代理到
+`127.0.0.1:7049`；Vite 提供前端热更新，API 代理到 `127.0.0.1:37049`
+的 `wrangler dev --local`。端口已登记到 nmem，完整配置见 [11](11-local-https.md)。
+其他机器需要先配置 Caddy 与受信任的 mkcert 通配符证书；直接诊断入口为
+<http://127.0.0.1:7049>。退出时按 Ctrl+C。脚本先应用 D1 migrations，再幂等
 写入合成种子；数据保存在 `.wrangler/state`。无需 Cloudflare 登录、PAT 或远程数据库。
 启动脚本等待 Worker 的 session API 就绪后才启动 Vite，避免首个页面请求早于后端。
 
@@ -39,6 +42,9 @@ bun run dev
 
 修改 `fixtures/notes/` 后运行 `node scripts/generate-fixtures.mjs` 重建确定性的
 Git tree/blob 数据。脚本和示例均不读取私人 Obsidian 仓库。
+花园入口的“阅读器体验路线”链接到 48 章长文、144 项多级目录、图文版式图鉴、
+无标题短笺与只有标题的笔记。版式图鉴包括竖图、方图、全景、长图、小图、
+缺失图片、宽表格、代码、公式及 Mermaid。
 
 ## 本地验收
 
@@ -51,8 +57,9 @@ bun run check:security
 ```
 
 `check` 包含类型、Biome、非 View 完整覆盖率和生产前端构建。`worker:check`
-只打包生产 Worker，不部署。Playwright 会构建前端，在 `5174 / 8788` 启动
+只打包生产 Worker，不部署。Playwright 会构建前端，在 `27049 / 17049` 启动
 Vite preview 与独立 Wrangler，并重建 `.wrangler/e2e`；不会清空开发数据库。
+测试无需 Caddy 或本机证书；开发/测试 inspector 分别为 `38049 / 18049`。
 不要同时启动两次浏览器验收，因为端口与测试数据库固定。
 
 覆盖率报告在 `coverage/index.html`，浏览器报告在 `playwright-report/index.html`，

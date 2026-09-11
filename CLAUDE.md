@@ -14,6 +14,7 @@ aligned with actual scripts and numbered documents. Read
 | Requirements, MVVM, coverage | `AGENTS.md`, `docs/01-product-contract.md` |
 | PAT, immutable cache, authorization freshness | `docs/02-github-auth-cache-and-sync.md` |
 | Running locally and rotating PATs | `docs/06-running-and-deployment.md` |
+| Caddy HTTPS and registered local ports | `docs/11-local-https.md` |
 | Basalt/Pierre navigation and typography | `docs/07-basalt-navigation.md` |
 | Identity, versioning and CI/CD | `docs/09-identity-and-delivery.md` |
 | Version | Root `package.json` only; store `X.Y.Z`, display `vX.Y.Z` |
@@ -49,8 +50,10 @@ binary checksums. Do not bypass hooks, coverage thresholds or security scans.
 - The author service receives SHA-256 of the verified normalized email. Load
   profile details separately from reading. Proxy only the configured public
   avatar origin, with bounded raster content; preserve the restrictive CSP.
-- Local UI/API ports are 5173/8787; browser tests use 5174/8788 with independent
-  SQLite D1 and R2 state. Never reuse the developer or production resources for
+- Local entry is `https://ocelot.dev.hexly.ai/`, Caddy → Vite 7049 → Worker 37049.
+  Browser tests use UI/API ports 27049/17049; inspectors use 38049/18049.
+  Ports are registered in nmem. Tests have independent SQLite D1 and R2 state.
+  Never reuse the developer or production resources for
   tests. Preserve other worktrees and their running servers.
 - Tests include all unexecuted non-View runtime source and release policy.
   Minimum statements/branches/functions/lines: 95%. Views use Playwright and axe.

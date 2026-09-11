@@ -4,8 +4,9 @@ import { setTimeout as pause } from "node:timers/promises";
 
 const test = process.argv.includes("--test");
 const persist = test ? ".wrangler/e2e" : ".wrangler/state";
-const workerPort = test ? "8788" : "8787";
-const webPort = test ? "5174" : "5173";
+const workerPort = test ? "17049" : "37049";
+const webPort = test ? "27049" : "7049";
+const inspectorPort = test ? "18049" : "38049";
 const environment = {
   ...process.env,
   WRANGLER_SEND_METRICS: "false",
@@ -43,7 +44,18 @@ function launch(args) {
   });
   child.on("exit", (code) => stop(code ?? 0));
 }
-launch(["x", "wrangler", "dev", ...config, "--ip", "127.0.0.1", "--port", workerPort]);
+launch([
+  "x",
+  "wrangler",
+  "dev",
+  ...config,
+  "--ip",
+  "127.0.0.1",
+  "--port",
+  workerPort,
+  "--inspector-port",
+  inspectorPort,
+]);
 const deadline = Date.now() + 30_000;
 while (!stopping) {
   let ready = false;
@@ -59,6 +71,7 @@ while (!stopping) {
   if (stopping) break;
   if (ready) {
     launch(["x", "vite", ...(test ? ["preview"] : []), "--host", "127.0.0.1", "--port", webPort]);
+    if (!test) console.info("Local reader: https://ocelot.dev.hexly.ai/");
     break;
   }
   if (Date.now() >= deadline) {

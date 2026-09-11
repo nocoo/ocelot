@@ -4,6 +4,7 @@
   "main": "worker/local.ts",
   "compatibility_date": "2026-09-11",
   "compatibility_flags": ["nodejs_compat"],
+  "dev": { "ip": "127.0.0.1", "port": 37049, "inspector_port": 38049 },
   "version_metadata": { "binding": "VERSION_METADATA" },
   "vars": {
     "ACCESS_TEAM_DOMAIN": "https://local.invalid",
