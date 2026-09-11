@@ -2,7 +2,8 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
+import { setTimeout as pause } from "node:timers/promises";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   assertDeploymentTag,
   chooseVersion,
@@ -11,7 +12,14 @@ import {
   releaseNotes,
   releaseOptions,
   updateChangelog,
+  verifyAccessDomain,
 } from "../../scripts/release-model";
+
+vi.mock("node:timers/promises", () => ({ setTimeout: vi.fn().mockResolvedValue(undefined) }));
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.mocked(pause).mockClear();
+});
 
 describe("nmem release policy", () => {
   const now = Date.parse("2026-09-11T12:00:00Z");
@@ -120,6 +128,53 @@ describe("nmem release policy", () => {
     expect(() => assertDeploymentTag({ annotations: { "workers/tag": tag } }, tag)).not.toThrow();
     for (const value of [null, {}, { annotations: {} }, { annotations: { "workers/tag": "old" } }])
       expect(() => assertDeploymentTag(value, tag)).toThrow();
+  });
+  it("waits for initial DNS and edge readiness before accepting the Access login", async () => {
+    const outgoing = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValueOnce(new TypeError("ENOTFOUND"))
+      .mockResolvedValueOnce(new Response("Not ready", { status: 503 }))
+      .mockResolvedValueOnce(
+        new Response(null, {
+          status: 302,
+          headers: { Location: "https://nocoo.cloudflareaccess.com/cdn-cgi/access/login" },
+        }),
+      );
+    await verifyAccessDomain();
+    expect(outgoing).toHaveBeenCalledTimes(3);
+    expect(outgoing).toHaveBeenLastCalledWith("https://ocelot.hexly.ai/", {
+      redirect: "manual",
+      signal: expect.any(AbortSignal),
+    });
+    expect(pause).toHaveBeenCalledTimes(2);
+    expect(pause).toHaveBeenCalledWith(10_000);
+  });
+  it("fails closed on unexpected responses and limits retries for unreachable domains", async () => {
+    const outgoing = vi.spyOn(globalThis, "fetch");
+    for (const [status, location] of [
+      [200, ""],
+      [401, ""],
+      [302, "https://another.cloudflareaccess.com/cdn-cgi/access/login"],
+      [302, "https://nocoo.cloudflareaccess.com/unexpected"],
+    ] as const) {
+      outgoing
+        .mockClear()
+        .mockResolvedValue(
+          new Response(null, { status, headers: location ? { Location: location } : {} }),
+        );
+      await expect(verifyAccessDomain()).rejects.toThrow(/must redirect/);
+      expect(outgoing).toHaveBeenCalledTimes(1);
+      expect(pause).not.toHaveBeenCalled();
+    }
+    outgoing.mockClear().mockImplementation(async () => new Response(null, { status: 503 }));
+    await expect(verifyAccessDomain()).rejects.toThrow(/must redirect/);
+    expect(outgoing).toHaveBeenCalledTimes(12);
+    expect(pause).toHaveBeenCalledTimes(11);
+    vi.mocked(pause).mockClear();
+    outgoing.mockClear().mockRejectedValue(new TypeError("ENOTFOUND"));
+    await expect(verifyAccessDomain()).rejects.toThrow("ENOTFOUND");
+    expect(outgoing).toHaveBeenCalledTimes(12);
+    expect(pause).toHaveBeenCalledTimes(11);
   });
 });
 

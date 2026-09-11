@@ -61,8 +61,8 @@ bun run release -- --dry-run
 ```
 
 These commands cover static checks, non-View code coverage, the frontend build, a Worker dry run and browser acceptance.
-Local verification records **161 unit tests and 17 browser tests passed**, with non-View statement/branch/function/line
-coverage of **100% / 98.6% / 100% / 100%** and light, dark and mobile axe checks.
+Local verification records **163 unit tests and 17 browser tests passed**, with non-View statement/branch/function/line
+coverage of **100% / 98.62% / 100% / 100%** and light, dark and mobile axe checks.
 The [runtime and verification record](05-runtime-contract-and-verification.md) documents the evidence and support boundaries.
 
 Production is configured at **<https://ocelot.hexly.ai>**; the first deployment is in progress.

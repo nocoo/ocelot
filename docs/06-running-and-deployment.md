@@ -98,6 +98,8 @@ R2 不启用 `r2.dev` 或公开域名。生产只运行 migrations，不导入 `
 
 随后上传前端与 Worker，写入 `vX.Y.Z-完整GitSHA` 部署标签。验证脚本核对
 100% 流量所用的 Worker 版本与标签，并检查匿名请求跳转到 nocoo Access。
+首次 DNS 或边缘尚未就绪时，网络错误/5xx 最多重试 12 次、间隔 10 秒；出现
+公开页面或错误跳转立即失败，耗尽等待也不会标记为部署验证成功。
 这不代替真实 Access 会话与私有知识库的端到端验收。
 
 保留 `assets.run_worker_first: true`、`workers_dev: false`、`preview_urls: false`。

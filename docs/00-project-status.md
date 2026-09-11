@@ -31,11 +31,11 @@
 | 选择 GitHub 凭据方案 | 已完成 | 用户接受细粒度 PAT 与定期轮换 |
 | 确定存储、渲染与同步 | 已确定 | 02；D1 + 私有 R2、按需缓存和条件检查 |
 | Vite/Worker、MVVM 基础工程 | 已完成 | Wrangler 本地 Worker、SQLite D1、磁盘 R2 和 3 个合成仓库 |
-| Biome、Husky、CI 与 UT 门禁 | 已配置，本地通过 | 161 UT，四项覆盖率 100 / 98.6 / 100 / 100%，OSV / Gitleaks 通过 |
+| Biome、Husky、CI 与 UT 门禁 | 已配置，本地通过 | 163 UT，四项覆盖率 100 / 98.62 / 100 / 100%，OSV / Gitleaks 通过 |
 | 阅读界面与 Obsidian 兼容性 | 本地已验证 | 17 浏览器测试，明暗/移动端 axe 无违规；边界见 05 |
 | Access 身份与作者头像 | 已实现并测试 | 独立加载、同源受保护头像、服务异常回退 |
 | 版本与 release | 已实现并本地验证 | 单一版本来源、只读 dry run、CI/CD 成功后不可变 tag |
-| Cloudflare 部署与 Access 策略 | 首次交付执行中 | 域名/team/AUD/owner 已配置；CD Token 已保存，资源创建与上线已授权 |
+| Cloudflare 部署与 Access 策略 | 资源已创建，Worker 已部署；验证进行中 | D1 迁移、私有 R2、控制面版本已通过；首次 DNS 生效记录见 09 |
 
 ## 已确认的实施范围
 

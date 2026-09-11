@@ -1,3 +1,5 @@
+import { setTimeout as pause } from "node:timers/promises";
+
 export function parseVersion(value: string): [number, number, number] {
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u.test(value))
     throw new Error(`Expected X.Y.Z, received: ${value}`);
@@ -124,4 +126,30 @@ export function assertDeploymentTag(value: unknown, expected: string): void {
   ];
   if (tag !== expected)
     throw new Error("The deployed Worker does not match this version and Git revision.");
+}
+
+export async function verifyAccessDomain(): Promise<void> {
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const response = await fetch("https://ocelot.hexly.ai/", {
+      redirect: "manual",
+      signal: AbortSignal.timeout(15_000),
+    }).catch((error) => {
+      if (attempt === 11) throw error;
+      return null;
+    });
+    await response?.body?.cancel();
+    if (response && (response.status < 500 || attempt === 11)) {
+      const login = new URL(response.headers.get("Location") ?? "/", "https://ocelot.hexly.ai");
+      if (
+        ![302, 303, 307].includes(response.status) ||
+        login.origin !== "https://nocoo.cloudflareaccess.com" ||
+        !login.pathname.startsWith("/cdn-cgi/access/login")
+      )
+        throw new Error(
+          "The production domain must redirect anonymous readers to nocoo Cloudflare Access.",
+        );
+      return;
+    }
+    await pause(10_000);
+  }
 }

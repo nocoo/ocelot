@@ -60,8 +60,8 @@ bun run check:security     # OSV 依赖检查与 Gitleaks 历史扫描
 bun run release -- --dry-run
 ```
 
-本地验收：**161 项 UT、17 项浏览器测试通过**。非 View 代码包含 Worker 与未执行
-源码，语句/分支/函数/行覆盖率分别为 **100% / 98.6% / 100% / 100%**。
+本地验收：**163 项 UT、17 项浏览器测试通过**。非 View 代码包含 Worker 与未执行
+源码，语句/分支/函数/行覆盖率分别为 **100% / 98.62% / 100% / 100%**。
 浅色、深色和移动端 axe 扫描通过。详细证据与支持边界见 [05](docs/05-runtime-contract-and-verification.md)。
 
 生产地址为 **<https://ocelot.hexly.ai>**，首次部署正在执行。可信 `main` 通过

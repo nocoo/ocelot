@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { version } from "../package.json";
-import { assertDeploymentTag, deploymentVersion } from "./release-model.ts";
+import { assertDeploymentTag, deploymentVersion, verifyAccessDomain } from "./release-model.ts";
 
 process.chdir(resolve(import.meta.dirname, ".."));
 const revision =
@@ -14,20 +14,7 @@ function wranglerJson(...args: string[]): unknown {
 }
 const id = deploymentVersion(wranglerJson("deployments", "status"));
 assertDeploymentTag(wranglerJson("versions", "view", id), `v${version}-${revision}`);
-const response = await fetch("https://ocelot.hexly.ai/", {
-  redirect: "manual",
-  signal: AbortSignal.timeout(15_000),
-});
-await response.body?.cancel();
-const login = new URL(response.headers.get("Location") ?? "/", "https://ocelot.hexly.ai");
-if (
-  ![302, 303, 307].includes(response.status) ||
-  login.origin !== "https://nocoo.cloudflareaccess.com" ||
-  !login.pathname.startsWith("/cdn-cgi/access/login")
-)
-  throw new Error(
-    "The production domain must redirect anonymous readers to nocoo Cloudflare Access.",
-  );
+await verifyAccessDomain();
 console.info(
   `Verified Ocelot v${version}, Git ${revision}, Worker ${id}, and the Access login boundary.`,
 );

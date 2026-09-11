@@ -56,8 +56,8 @@ Markdown）、两个 Git 版本、原创 PNG 附件。所有内容与路径均�
 - 工具版本已固定：Basalt 2.1.7、TypeScript 7.0.2；Cloudflare 当前测试插件
   `@cloudflare/vitest-plugin` 1.1.7 与 Wrangler 4.131.0 使用同版本 Miniflare。
 - `bun run typecheck`、`bun run lint` 通过。
-- `bun run test:coverage`：**10 个测试文件，161 项通过**；语句 **100% (1041/1041)**、
-  分支 **98.6% (846/858)**、函数 **100% (189/189)**、行 **100% (925/925)**。
+- `bun run test:coverage`：**10 个测试文件，163 项通过**；语句 **100% (1054/1054)**、
+  分支 **98.62% (860/872)**、函数 **100% (191/191)**、行 **100% (936/936)**。
   统计包含未执行的 Models、ViewModels、services、Worker 与 mock；只排除
   `src/views/`、单独的 bootstrap `src/main.tsx` 及生成/声明类型。发布决策模型
   也计入覆盖率；CLI 另以临时 Git 仓库和可控命令验证 dry run 与部署顺序。
@@ -77,6 +77,7 @@ Markdown）、两个 Git 版本、原创 PNG 附件。所有内容与路径均�
 - `bun run build`、`bun run worker:check` 通过。生产 Worker **65.45 KiB / gzip 18.08 KiB**，
   打包入口不包含 mock 数据。Mermaid 按需加载；前端仍有大于 500 kB 的 JS chunk
   构建提示，首屏与低端移动设备的网络性能需要在真实部署后进一步测量。
+  首次 Linux CD 上传记录为 **65.45 KiB / gzip 18.20 KiB**，启动时间 **4 ms**。
 
 报告位置：`coverage/`、`playwright-report/`、`test-results/`；它们是本地生成
 产物，不进入公开 Git。GitHub Actions 已配置，远程执行状态以仓库运行记录为准。
