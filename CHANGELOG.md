@@ -2,6 +2,24 @@
 
 Release entries are generated from Git commits by `bun run release`.
 
+## [0.2.0] - 2026-09-11
+
+### Fixes
+
+- report missing credentials and stop idle sidebar loading ([c9fbaff](https://github.com/nocoo/ocelot/commit/c9fbaff715f123e27bb851b20710d68cb1718d66))
+- complete reader controls and long-article navigation ([5809154](https://github.com/nocoo/ocelot/commit/58091545861d51072d228d1fce5db538175548f7))
+- flatten reader controls and open Markdown on GitHub ([b7d15bc](https://github.com/nocoo/ocelot/commit/b7d15bca517d77a48a17a3b7374e734f7122eb4b))
+- restore public author profiles in Cloudflare Workers ([2da14ad](https://github.com/nocoo/ocelot/commit/2da14ad5e72e74b6ce26ce185b24cba0830da2a1))
+
+### Maintenance
+
+- feature the complete Ocelot artwork in the empty reader ([ac4a05d](https://github.com/nocoo/ocelot/commit/ac4a05daee4a43f0040e68aa6918d1aba16ed722))
+- register isolated local ports and Caddy HTTPS ([22d652f](https://github.com/nocoo/ocelot/commit/22d652f72b939a9498861ebbbb58bc1b8d5af969))
+
+### Documentation
+
+- record profile deployment and minor release plan ([3187f1e](https://github.com/nocoo/ocelot/commit/3187f1e7ff2888c25d5853f724283227b6c09ee6))
+
 ## [0.1.0] - 2026-09-11
 
 ### Documentation
