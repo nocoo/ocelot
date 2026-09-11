@@ -47,7 +47,7 @@ export async function handleApi(
     }
   }
   const match = url.pathname.match(
-    /^\/api\/repositories\/([1-9]\d{0,15})(?:\/(snapshot|sync|document|asset))?$/u,
+    /^\/api\/repositories\/([1-9]\d{0,15})(?:\/(sync|document|asset))?$/u,
   );
   if (match && Number.isSafeInteger(Number(match[1]))) {
     const id = Number(match[1]);
@@ -64,8 +64,6 @@ export async function handleApi(
           : snapshot,
       );
     }
-    if (action === "snapshot" && request.method === "GET")
-      return json(await store.snapshot(id, url.searchParams.get("tree") ?? undefined));
     if ((action === "document" || action === "asset") && request.method === "GET")
       return store.content(
         id,

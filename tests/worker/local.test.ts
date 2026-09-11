@@ -31,8 +31,6 @@ describe("local API boundaries and scenarios", () => {
     const added = await api("/api/repositories", "POST", { repository: "ocelot-demo/fieldnotes" });
     expect(added.status).toBe(201);
     const snapshot = await added.json<Snapshot>();
-    expect((await api("/api/repositories/101/snapshot")).status).toBe(200);
-    expect((await api(`/api/repositories/101/snapshot?tree=${snapshot.treeSha}`)).status).toBe(200);
     const unchanged = await api(`/api/repositories/101/sync?known=${snapshot.treeSha}`, "POST");
     expect(await unchanged.json()).toMatchObject({ unchanged: true, repository: { id: 101 } });
     expect(
@@ -44,7 +42,7 @@ describe("local API boundaries and scenarios", () => {
     ).toBe("image/png");
     expect((await api("/api/connection/check", "POST")).status).toBe(200);
     expect((await api("/api/repositories/101", "DELETE")).status).toBe(200);
-    expect((await api("/api/repositories/101/snapshot")).status).toBe(404);
+    expect((await api("/api/repositories/101/sync", "POST")).status).toBe(404);
   });
   it("validates body type, size, method, IDs and endpoint parameters", async () => {
     for (const body of [null, {}, { repository: 1 }])
@@ -60,10 +58,11 @@ describe("local API boundaries and scenarios", () => {
     );
     for (const path of [
       "/api/unknown",
-      "/api/repositories/0/snapshot",
-      "/api/repositories/9999999999999999/snapshot",
+      "/api/repositories/0/sync",
+      "/api/repositories/9999999999999999/sync",
       "/api/repositories/1",
       "/api/repositories/1/sync",
+      "/api/repositories/1/snapshot",
     ])
       expect((await api(path)).status).toBe(404);
     expect((await api("/api/repositories", "PATCH")).status).toBe(404);

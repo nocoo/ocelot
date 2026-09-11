@@ -400,7 +400,9 @@ test("PAT renewal stays quiet and invalid credentials cannot read cached private
   await expect(page.getByText("GITHUB_TOKEN", { exact: true })).toBeVisible();
   await page.screenshot({ path: info.outputPath("renewal.png") });
   await page.keyboard.press("Escape");
-  const snapshot: Snapshot = await (await request.get("/api/repositories/101/snapshot")).json();
+  const snapshot: Snapshot = await (
+    await request.post("/api/repositories/101/sync", { headers })
+  ).json();
   const path = `/api/repositories/101/document?tree=${snapshot.treeSha}&path=README.md`;
   expect((await request.get(path)).ok()).toBe(true);
   await chooseScenario(page, "凭据失效");
@@ -558,7 +560,7 @@ test("Access identity loads after reading, hides local controls and handles a fa
     await expect(page.locator(".space-identity p").first()).toHaveText("reader@example.test");
     await expect(page.getByRole("button", { name: "本地体验场景" })).toHaveCount(0);
     const snapshot: Snapshot = await (
-      await page.request.get("/api/repositories/101/snapshot")
+      await page.request.post("/api/repositories/101/sync", { headers })
     ).json();
     const image = await page.request.get(
       `/api/repositories/101/asset?${new URLSearchParams({ tree: snapshot.treeSha, path: "附件/blue-hour.png" })}`,
