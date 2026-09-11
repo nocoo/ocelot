@@ -83,5 +83,5 @@ Pierre 使用公开 CSS variables 与 React API，关闭文件修改能力。
 | 依赖与工程门禁 | 固定版本、Biome、Husky、GitHub Actions 已配置 |
 | Worker、数据库、缓存和 mock | 已实现；真实本地 D1/R2 与 3 个合成仓库 |
 | MVVM 与阅读界面 | 已实现；中英文、明暗主题、移动端与安全 Markdown |
-| UT / 浏览器 / 视觉验收 | 145 UT、13 浏览器测试通过，axe 无违规；详见 05 |
+| UT / 浏览器 / 视觉验收 | 147 UT、16 浏览器测试通过，axe 无违规；详见 05、07 |
 | 运行说明与最终状态 | 00、05、06 与 README 已同步 |

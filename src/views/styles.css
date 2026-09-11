@@ -23,7 +23,7 @@
     -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   --basalt-font-display: var(--basalt-font-sans);
   --paper: #fefefd;
-  --rail: #f5f7f9;
+  --rail: hsl(var(--basalt-background));
   --ink: #283440;
   --muted: #5b6b7a;
   --faint: #627180;
@@ -61,7 +61,6 @@
   --basalt-border: 214 19% 22%;
   --basalt-input: 214 18% 26%;
   --paper: #151c24;
-  --rail: #111820;
   --ink: #d8e0e7;
   --muted: #9aaab8;
   --faint: #8b9baa;
@@ -117,7 +116,8 @@ a {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-.basalt-ui:disabled {
+.basalt-ui:disabled,
+.sidebar-shortcuts button:disabled {
   opacity: 1;
   color: var(--disabled-text);
   background: var(--disabled-surface);
@@ -138,14 +138,30 @@ a {
   border: 0;
 }
 .brand-header {
-  height: 94px;
-  padding: 27px 25px 21px;
-  flex-shrink: 0;
+  padding-inline: 24px;
+}
+.brand-header.is-collapsed,
+.sidebar-bottom.is-collapsed {
+  justify-content: center;
+  padding-inline: 0;
+}
+.sidebar-bottom.is-collapsed {
+  display: flex;
+}
+.sidebar-expanded[hidden],
+.navigation-area[hidden] {
+  display: none;
+}
+.sidebar-shortcuts {
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
 }
 .brand {
   display: flex;
   align-items: center;
   gap: 11px;
+  min-width: 0;
   text-decoration: none;
 }
 .ocelot-mark {
@@ -159,6 +175,7 @@ a {
   height: 23px;
 }
 .brand > span {
+  min-width: 0;
   color: var(--ink);
   font-size: 27px;
   font-weight: 650;
@@ -168,13 +185,16 @@ a {
 .brand small {
   display: block;
   color: var(--muted);
-  font-size: 7.5px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 1.2px;
+  letter-spacing: 0.5px;
   margin-top: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .sidebar-tools {
-  padding: 5px 18px 0;
+  padding: 12px 18px 0;
   display: grid;
   gap: 13px;
 }
@@ -213,7 +233,7 @@ a {
 .repo-title small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
   margin-top: 2px;
   overflow: hidden;
@@ -233,17 +253,15 @@ a {
   margin-left: auto;
   font-family: var(--basalt-font-sans);
   color: var(--faint);
-  font-size: 10px;
+  font-size: 11px;
 }
 .tree-caption {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 25px 27px 11px;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
+  margin: 0;
+  padding-top: 22px;
+  padding-bottom: 10px;
 }
 .tree-caption > span:last-child {
   font-weight: 400;
@@ -251,9 +269,6 @@ a {
   font-variant-numeric: tabular-nums;
 }
 .navigation-area {
-  flex: 1;
-  display: flex;
-  min-height: 0;
   padding: 0 17px;
   overflow: hidden;
 }
@@ -291,7 +306,7 @@ a {
   gap: 8px;
   justify-content: flex-start;
   padding: 0 9px;
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--muted);
 }
 .connection-button > svg {
@@ -304,20 +319,26 @@ a {
   border-radius: 50%;
   background: var(--faint);
 }
-.connection-button.good .status-dot {
+.connection-button.good .status-dot,
+.connection-shortcut.good .status-dot {
   background: var(--good);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 8%, transparent);
 }
-.connection-button.warning {
+.connection-button.warning,
+.connection-shortcut.warning {
   color: var(--warning);
   background: var(--warning-soft);
 }
-.connection-button.warning .status-dot {
+.connection-button.warning .status-dot,
+.connection-shortcut.warning .status-dot {
   background: var(--warning);
 }
+.connection-shortcut .status-dot {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+}
 .space-identity {
-  display: flex;
-  align-items: center;
   gap: 10px;
   margin-top: 12px;
   border-top: 1px solid var(--hairline);
@@ -332,19 +353,12 @@ a {
   place-items: center;
   color: var(--accent);
 }
-.space-identity > div {
-  flex: 1;
+.space-identity p {
+  font-size: 11px;
 }
-.space-identity strong {
-  display: block;
-  font-size: 10px;
-  font-weight: 500;
-}
-.space-identity small {
-  display: block;
+.space-identity p + p {
   margin-top: 3px;
-  font-size: 9px;
-  color: var(--muted);
+  font-size: 11px;
 }
 .space-identity > button {
   width: 26px;
@@ -352,23 +366,90 @@ a {
   color: var(--muted);
 }
 .reader-toolbar {
-  height: 66px;
+  background: var(--rail);
   padding: 0 25px 0 13px;
   gap: 12px;
 }
-.reader-toolbar h1 {
-  font-size: 11px;
-  color: var(--muted);
-  max-width: 240px;
-}
-.breadcrumb-repo {
-  font-size: 11px;
-  color: var(--faint);
-}
 .reader-toolbar > div:first-child {
+  flex: 1;
   gap: 13px;
 }
+.reader-breadcrumbs {
+  flex: 1;
+  min-width: 0;
+}
+.reader-breadcrumbs > span,
+.reader-breadcrumbs > span > span {
+  min-width: 0;
+}
+.reader-breadcrumbs > span:last-child {
+  flex: 1;
+  min-width: 3em;
+}
+.reader-breadcrumbs > span:has(.breadcrumb-overflow),
+.reader-breadcrumbs > span > svg {
+  flex-shrink: 0;
+}
+.breadcrumb-current {
+  display: block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--ink);
+}
+.breadcrumb-button {
+  height: 30px;
+  max-width: 160px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+}
+.breadcrumb-button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.breadcrumb-overflow {
+  width: 30px;
+  height: 30px;
+  color: var(--muted);
+}
+.breadcrumb-menu {
+  min-width: 220px;
+  max-width: min(28rem, calc(100vw - 24px));
+  max-height: var(--radix-dropdown-menu-content-available-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.breadcrumb-menu-caption,
+.breadcrumb-menu-current {
+  padding: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.breadcrumb-menu-current {
+  margin-top: 4px;
+  border-top: 1px solid var(--hairline);
+  overflow-wrap: anywhere;
+}
+.breadcrumb-menu-item {
+  gap: 9px;
+}
+.breadcrumb-menu-item > svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.breadcrumb-menu-item > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .chrome-button {
+  flex-shrink: 0;
   width: 32px;
   height: 32px;
   color: var(--muted);
@@ -386,7 +467,7 @@ a {
 }
 .sync-button {
   gap: 6px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   height: 30px;
   padding: 0 8px;
@@ -408,7 +489,7 @@ a {
   overflow: hidden;
   position: absolute;
   z-index: 4;
-  top: 64px;
+  top: 54px;
   left: 0;
   right: 18px;
   pointer-events: none;
@@ -462,15 +543,18 @@ a {
 }
 .article-eyebrow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 9px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 1.2px;
   margin-bottom: 24px;
+  overflow-wrap: anywhere;
 }
 .eyebrow-line {
+  flex-shrink: 0;
   width: 21px;
   height: 1px;
   background: var(--accent);
@@ -508,7 +592,7 @@ a {
   border-bottom: 1px solid var(--hairline);
   margin-bottom: 28px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 .article-meta > span {
   display: inline-flex;
@@ -528,7 +612,7 @@ a {
 }
 .article-meta .read-only {
   margin-left: auto;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--faint);
 }
 .prose {
@@ -610,7 +694,7 @@ a {
 }
 .prose blockquote p:last-child {
   margin: 0;
-  font-size: 0.85em;
+  font-size: max(11px, 0.85em);
 }
 .prose ul,
 .prose ol {
@@ -642,7 +726,7 @@ a {
 }
 .prose pre {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.74em;
+  font-size: max(11px, 0.74em);
   line-height: 1.85;
   padding: 21px 24px;
   border: 1px solid var(--hairline);
@@ -654,12 +738,17 @@ a {
 }
 .prose code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.77em;
+  font-size: max(11px, 0.77em);
   letter-spacing: 0;
   background: var(--accent-soft);
   color: var(--accent);
   padding: 0.15em 0.3em;
   border-radius: 3px;
+}
+.prose small,
+.prose sub,
+.prose sup {
+  font-size: max(11px, 0.8em);
 }
 .prose pre code {
   font-size: inherit;
@@ -694,7 +783,7 @@ a {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--basalt-font-sans);
-  font-size: 0.73em;
+  font-size: max(11px, 0.73em);
   line-height: 1.85;
   letter-spacing: 0;
 }
@@ -718,7 +807,7 @@ a {
   border-radius: 8px;
   padding: 16px 20px;
   margin: 1.5em 0;
-  font-size: 0.87em;
+  font-size: max(11px, 0.87em);
 }
 .prose aside[data-callout="warning"],
 .prose aside[data-callout="danger"] {
@@ -730,7 +819,7 @@ a {
 }
 .prose .callout-title {
   font-family: var(--basalt-font-sans);
-  font-size: 0.83em;
+  font-size: max(11px, 0.83em);
   color: var(--accent);
   margin-bottom: 0.6em;
   letter-spacing: 0;
@@ -753,7 +842,7 @@ a {
   gap: 7px;
   font-family: var(--basalt-font-sans);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   margin-bottom: 9px;
 }
 .prose .note-embed > strong {
@@ -762,7 +851,7 @@ a {
   margin-bottom: 8px;
 }
 .prose .note-embed p {
-  font-size: 0.9em;
+  font-size: max(11px, 0.9em);
   margin-bottom: 10px;
 }
 .prose .note-embed > a {
@@ -789,7 +878,7 @@ a {
 .prose summary {
   cursor: pointer;
   font-family: var(--basalt-font-sans);
-  font-size: 0.8em;
+  font-size: max(11px, 0.8em);
   color: var(--accent);
 }
 .prose details p {
@@ -839,7 +928,7 @@ a {
   margin-top: 40px;
   border-top: 1px solid var(--hairline);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
 }
 .article-footer .ocelot-mark {
   opacity: 0.6;
@@ -863,7 +952,7 @@ a {
 .section-eyebrow {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.9px;
 }
@@ -880,7 +969,7 @@ a {
   width: 100%;
   text-align: left;
   padding: 7px 0 7px 15px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   line-height: 1.7;
   position: relative;
@@ -905,11 +994,11 @@ a {
 }
 .article-outline .outline-sub button {
   padding-left: 26px;
-  font-size: 9px;
+  font-size: 11px;
 }
 .outline-empty {
   color: var(--faint);
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 16px;
 }
 .reading-progress {
@@ -919,7 +1008,7 @@ a {
   margin-top: 35px;
   gap: 11px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 .reading-progress > div {
@@ -959,7 +1048,7 @@ a {
   justify-content: space-between;
   padding: 0 22px 0 4px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 11px;
 }
 .reading-status > span {
   display: inline-flex;
@@ -967,7 +1056,7 @@ a {
   gap: 5px;
 }
 .reading-status code {
-  font-size: 8px;
+  font-size: 11px;
   color: var(--faint);
 }
 .status-separator {
@@ -1005,7 +1094,7 @@ a {
   flex: 1;
 }
 .reader-error button {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--warning);
 }
 .empty-reading {
@@ -1023,7 +1112,7 @@ a {
   margin-bottom: 32px;
 }
 .empty-reading .section-eyebrow {
-  font-size: 8px;
+  font-size: 11px;
   letter-spacing: 2px;
 }
 .empty-reading h1 {
@@ -1097,7 +1186,7 @@ a {
 .repository-open small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 4px;
   font-weight: 400;
 }
@@ -1120,7 +1209,7 @@ a {
   font-weight: 550;
 }
 .add-repository p {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   margin: 6px 0 14px;
 }
@@ -1140,7 +1229,7 @@ a {
   align-items: center;
   gap: 5px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   flex-wrap: wrap;
 }
 .local-suggestion button {
@@ -1148,12 +1237,12 @@ a {
   background: transparent;
   padding: 0;
   color: var(--accent);
-  font-size: 9px;
+  font-size: 11px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 .subtle-note {
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.85;
   color: var(--muted);
   margin: 20px 0 0;
@@ -1203,7 +1292,7 @@ a {
   justify-content: space-between;
   gap: 14px;
   padding: 9px 0;
-  font-size: 10px;
+  font-size: 11px;
 }
 .connection-details dt {
   display: flex;
@@ -1218,7 +1307,7 @@ a {
   border-top: 1px solid var(--hairline);
   border-bottom: 1px solid var(--hairline);
   padding: 14px 0;
-  font-size: 10px;
+  font-size: 11px;
 }
 .rotation-details summary {
   display: flex;
@@ -1254,7 +1343,7 @@ a {
   margin-top: 22px;
 }
 .dialog-actions > span {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
 }
 .dialog-actions button {
@@ -1309,7 +1398,7 @@ a {
 }
 .search-results .section-eyebrow {
   padding: 11px 8px 5px;
-  font-size: 9px;
+  font-size: 11px;
 }
 .search-result {
   width: 100%;
@@ -1334,7 +1423,7 @@ a {
 .search-result small {
   display: block;
   margin-top: 3px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1352,11 +1441,11 @@ a {
   margin-top: 11px;
   border-top: 1px solid var(--hairline);
   padding: 13px 0 0;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
 }
 .dialog-footnote kbd {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--accent);
   padding: 2px 4px;
   border: 1px solid var(--hairline);
@@ -1377,7 +1466,7 @@ a {
   color: var(--ink);
 }
 .dialog-empty small {
-  font-size: 10px;
+  font-size: 11px;
 }
 .reading-sample {
   font-family: var(--serif);
@@ -1395,7 +1484,7 @@ a {
 .reading-sample p {
   margin-top: 12px;
   margin-bottom: 0;
-  font-size: 0.85em;
+  font-size: max(11px, 0.85em);
 }
 .font-options {
   border: 0;
@@ -1410,7 +1499,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
 }
 .font-option-symbol {
@@ -1439,7 +1528,7 @@ a {
   width: 100%;
 }
 .mock-stats > span:not(.section-eyebrow) {
-  font-size: 10px;
+  font-size: 11px;
   display: flex;
   gap: 6px;
   border-radius: 5px;
@@ -1448,7 +1537,7 @@ a {
   color: var(--muted);
 }
 .mock-stats code {
-  font-size: 10px;
+  font-size: 11px;
 }
 .shimmer {
   background: linear-gradient(
@@ -1609,20 +1698,14 @@ a {
     width: 280px;
   }
   .reader-toolbar {
-    height: 58px;
     padding: 0 11px;
     gap: 5px;
   }
   .reader-toolbar > div:first-child {
     gap: 6px;
   }
-  .reader-toolbar h1 {
-    max-width: 130px;
-    font-size: 10px;
-  }
-  .reader-toolbar nav,
-  .reader-toolbar .breadcrumb-repo {
-    display: none;
+  .breadcrumb-current {
+    font-size: 11px;
   }
   .reader-toolbar .toolbar-divider {
     display: none;
@@ -1652,7 +1735,7 @@ a {
     padding: 34px 24px 26px;
   }
   .article-eyebrow {
-    font-size: 7px;
+    font-size: 11px;
     letter-spacing: 1px;
     gap: 6px;
     margin-bottom: 22px;
@@ -1673,7 +1756,7 @@ a {
     gap: 8px;
     padding-bottom: 22px;
     margin-bottom: 24px;
-    font-size: 9px;
+    font-size: 11px;
   }
   .article-meta .read-only {
     display: none;
@@ -1687,7 +1770,7 @@ a {
   }
   .prose pre {
     padding: 16px;
-    font-size: 0.72em;
+    font-size: max(11px, 0.72em);
   }
   .prose td,
   .prose th {
@@ -1698,16 +1781,16 @@ a {
     padding: 15px;
   }
   .article-footer {
-    font-size: 9px;
+    font-size: 11px;
     gap: 7px;
   }
   .reading-status {
     height: 28px;
     padding: 0 14px;
-    font-size: 8px;
+    font-size: 11px;
   }
   .loading-line {
-    top: 56px;
+    top: 54px;
     left: 8px;
     right: 8px;
   }
@@ -1715,7 +1798,7 @@ a {
     left: 16px;
     right: 16px;
     bottom: 37px;
-    font-size: 10px;
+    font-size: 11px;
     gap: 6px;
     padding: 8px 10px;
   }
@@ -1739,7 +1822,7 @@ a {
     padding-left: 0;
   }
   .repository-open small {
-    font-size: 9px;
+    font-size: 11px;
   }
   .add-repository > div {
     flex-wrap: wrap;
@@ -1749,10 +1832,10 @@ a {
     min-width: 190px;
   }
   .connection-details > div {
-    font-size: 9px;
+    font-size: 11px;
   }
   .dialog-actions > span {
-    font-size: 9px;
+    font-size: 11px;
   }
   .font-options {
     gap: 6px;

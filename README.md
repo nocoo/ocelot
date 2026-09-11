@@ -50,8 +50,8 @@ bun x playwright install chromium
 bun run test:e2e           # 独立 Wrangler + 生产前端的浏览器验收
 ```
 
-本地验收：**145 项 UT、13 项浏览器测试通过**。非 View 代码包含 Worker 与未执行
-源码，语句/分支/函数/行覆盖率分别为 **100% / 98.33% / 100% / 100%**。
+本地验收：**147 项 UT、16 项浏览器测试通过**。非 View 代码包含 Worker 与未执行
+源码，语句/分支/函数/行覆盖率分别为 **100% / 98.34% / 100% / 100%**。
 浅色、深色和移动端 axe 扫描通过。详细证据与支持边界见 [05](docs/05-runtime-contract-and-verification.md)。
 
 生产入口和配置已准备；**尚未部署**。需要实际域名、Access、D1/R2 与 PAT，

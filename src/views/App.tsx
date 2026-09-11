@@ -8,9 +8,12 @@ import {
   Sidebar,
   SidebarFooter,
   SidebarHeader,
+  SidebarIconItem,
   SidebarNav,
+  SidebarPartition,
   SidebarProvider,
   SidebarSearch,
+  SidebarUser,
 } from "@nocoo/basalt/components/sidebar";
 import { ThemeProvider } from "@nocoo/basalt/providers/theme";
 import {
@@ -32,6 +35,7 @@ import {
   PanelLeft,
   Plus,
   RotateCw,
+  Search,
   ShieldCheck,
   Sun,
   X,
@@ -53,6 +57,7 @@ import { Dialogs } from "./Dialogs";
 import { Mark } from "./Mark";
 import { Markdown } from "./Markdown";
 import { NavigationTree } from "./NavigationTree";
+import { ReaderBreadcrumbs } from "./ReaderBreadcrumbs";
 import { useResolvedTheme } from "./useResolvedTheme";
 
 export function App({ model }: { model: ReaderViewModel }) {
@@ -84,6 +89,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
   const state = useSyncExternalStore(model.subscribe, model.getSnapshot);
   const [compact, setCompact] = useState(() => window.matchMedia("(max-width: 767px)").matches);
   const [collapsed, setCollapsed] = useState(() => window.matchMedia("(max-width: 767px)").matches);
+  const railCollapsed = collapsed && !compact;
   const [outlineOpen, setOutlineOpen] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ progress: 0, heading: "" });
@@ -117,6 +123,9 @@ function Reader({ model }: { model: ReaderViewModel }) {
   useEffect(() => {
     if (compact) setCollapsed(true);
   }, [compact, state.navigation.version]);
+  useEffect(() => {
+    if (state.directoryFocus) setCollapsed(false);
+  }, [state.directoryFocus]);
   useEffect(() => {
     const container = scroller.current;
     if (!container) return;
@@ -171,59 +180,91 @@ function Reader({ model }: { model: ReaderViewModel }) {
     >
       <AppShell className="ocelot-shell">
         <AppSkipLink>跳到正文</AppSkipLink>
-        <Sidebar className="ocelot-sidebar">
+        <Sidebar id="vault-sidebar" className="ocelot-sidebar">
           {compact && (
             <>
               <DialogTitle className="sr-only">知识库导航</DialogTitle>
               <DialogDescription className="sr-only">选择知识库或打开一份笔记。</DialogDescription>
             </>
           )}
-          <SidebarHeader className="brand-header">
+          <SidebarHeader className={`brand-header ${railCollapsed ? "is-collapsed" : ""}`}>
             <a className="brand" href="/" aria-label="Ocelot 首页">
-              <Mark />
-              <span>
-                ocelot<small>YOUR PRIVATE READING ROOM</small>
-              </span>
+              <Mark small={railCollapsed} />
+              {!railCollapsed && (
+                <span>
+                  ocelot<small>YOUR PRIVATE READING ROOM</small>
+                </span>
+              )}
             </a>
           </SidebarHeader>
-          <div className="sidebar-tools">
-            <Button
-              variant="outline"
-              className="repository-switch"
-              onClick={() => model.openDialog("repositories")}
-            >
-              <span className="repo-icon">
-                <BookOpen size={18} aria-hidden="true" />
+          <div className="sidebar-expanded" hidden={railCollapsed}>
+            <div className="sidebar-tools">
+              <Button
+                variant="outline"
+                className="repository-switch"
+                onClick={() => model.openDialog("repositories")}
+              >
+                <span className="repo-icon">
+                  <BookOpen size={18} aria-hidden="true" />
+                </span>
+                <span className="repo-title">
+                  <strong>{snapshot?.repository.name ?? "我的知识库"}</strong>
+                  <small>
+                    {snapshot
+                      ? `${snapshot.repository.owner} / ${snapshot.repository.branch}`
+                      : "添加一座自己的数字花园"}
+                  </small>
+                </span>
+                <ChevronsUpDown size={14} aria-hidden="true" />
+              </Button>
+              <SidebarSearch onClick={() => model.openDialog("search")} disabled={!snapshot}>
+                <span>搜索笔记</span>
+              </SidebarSearch>
+            </div>
+            <SidebarPartition className="tree-caption">
+              <span>知识库目录</span>
+              <span>
+                {snapshot
+                  ? `${snapshot.files.filter((file) => isMarkdown(file.path)).length.toLocaleString()} 篇`
+                  : ""}
               </span>
-              <span className="repo-title">
-                <strong>{snapshot?.repository.name ?? "我的知识库"}</strong>
-                <small>
-                  {snapshot
-                    ? `${snapshot.repository.owner} / ${snapshot.repository.branch}`
-                    : "添加一座自己的数字花园"}
-                </small>
-              </span>
-              <ChevronsUpDown size={14} aria-hidden="true" />
-            </Button>
-            <SidebarSearch onClick={() => model.openDialog("search")} disabled={!snapshot}>
-              <span>搜索笔记</span>
-            </SidebarSearch>
+            </SidebarPartition>
           </div>
-          <div className="tree-caption">
-            <span>知识库目录</span>
-            <span>
-              {snapshot
-                ? `${snapshot.files.filter((file) => isMarkdown(file.path)).length.toLocaleString()} 篇`
-                : ""}
-            </span>
-          </div>
-          <SidebarNav className="navigation-area" aria-label="笔记导航">
+          {railCollapsed && (
+            <SidebarNav className="sidebar-shortcuts" aria-label="知识库快捷导航">
+              <SidebarIconItem
+                aria-label="展开知识库目录"
+                title="展开知识库目录"
+                onClick={() => setCollapsed(false)}
+              >
+                <ListTree size={19} />
+              </SidebarIconItem>
+              <SidebarIconItem
+                aria-label="搜索笔记"
+                title="搜索笔记 · ⌘K"
+                disabled={!snapshot}
+                onClick={() => model.openDialog("search")}
+              >
+                <Search size={18} />
+              </SidebarIconItem>
+              <SidebarIconItem
+                aria-label="切换知识库"
+                title="切换知识库"
+                onClick={() => model.openDialog("repositories")}
+              >
+                <BookOpen size={18} />
+              </SidebarIconItem>
+            </SidebarNav>
+          )}
+          <SidebarNav className="navigation-area" aria-label="笔记导航" hidden={railCollapsed}>
             {snapshot ? (
               <NavigationTree
                 key={snapshot.repository.id}
                 snapshot={snapshot}
                 selected={reading?.path}
                 changes={state.changes}
+                visible={!railCollapsed}
+                reveal={state.directoryFocus}
                 onSelect={navigate}
               />
             ) : (
@@ -238,61 +279,82 @@ function Reader({ model }: { model: ReaderViewModel }) {
               </div>
             )}
           </SidebarNav>
-          <SidebarFooter className="sidebar-bottom">
-            <Button
-              variant="ghost"
-              className={`connection-button ${connection.tone}`}
-              onClick={() => model.openDialog("connection")}
-            >
-              <span className="status-dot" />
-              <span>{connection.label}</span>
-              <ChevronRight size={14} aria-hidden="true" />
-            </Button>
-            <div className="space-identity">
-              <span className="identity-icon">
-                <LockKeyhole size={15} aria-hidden="true" />
-              </span>
-              <div>
-                <strong>我的私人阅读室</strong>
-                <small>安静，只读，自由探索</small>
-              </div>
-              {state.session?.local ? (
+          <SidebarFooter className={`sidebar-bottom ${railCollapsed ? "is-collapsed" : ""}`}>
+            {railCollapsed ? (
+              <SidebarIconItem
+                className={`connection-shortcut ${connection.tone}`}
+                aria-label={`阅读连接：${connection.label}`}
+                title={connection.label}
+                onClick={() => model.openDialog("connection")}
+              >
+                <Link2 size={18} />
+                <span className="status-dot" />
+              </SidebarIconItem>
+            ) : (
+              <>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  aria-label="本地体验场景"
-                  title="本地体验场景"
-                  onClick={() => model.openDialog("local")}
+                  className={`connection-button ${connection.tone}`}
+                  onClick={() => model.openDialog("connection")}
                 >
-                  <FlaskConical size={16} />
+                  <span className="status-dot" />
+                  <span>{connection.label}</span>
+                  <ChevronRight size={14} aria-hidden="true" />
                 </Button>
-              ) : (
-                <ShieldCheck size={17} aria-label="受登录保护" />
-              )}
-            </div>
+                <SidebarUser
+                  className="space-identity"
+                  name="我的私人阅读室"
+                  email="安静，只读，自由探索"
+                  avatar={
+                    <span className="identity-icon">
+                      <LockKeyhole size={15} aria-hidden="true" />
+                    </span>
+                  }
+                  action={
+                    state.session?.local ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="本地体验场景"
+                        title="本地体验场景"
+                        onClick={() => model.openDialog("local")}
+                      >
+                        <FlaskConical size={16} />
+                      </Button>
+                    ) : (
+                      <ShieldCheck size={17} aria-label="受登录保护" />
+                    )
+                  }
+                />
+              </>
+            )}
           </SidebarFooter>
         </Sidebar>
         <AppMain className="reader-main" tabIndex={-1}>
           <AppHeader
             className="reader-toolbar"
             leading={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="chrome-button"
-                title="切换知识库导航"
-                aria-label="切换知识库导航"
-                onClick={() => setCollapsed(!collapsed)}
-              >
-                <PanelLeft size={18} />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="chrome-button"
+                  title="切换知识库导航"
+                  aria-label="切换知识库导航"
+                  aria-expanded={!collapsed}
+                  aria-controls="vault-sidebar"
+                  onClick={() => setCollapsed(!collapsed)}
+                >
+                  <PanelLeft size={18} />
+                </Button>
+                <ReaderBreadcrumbs
+                  snapshot={snapshot}
+                  path={reading?.path}
+                  compact={compact}
+                  onReveal={(path) => model.revealDirectory(path)}
+                />
+              </>
             }
-            breadcrumbs={
-              snapshot
-                ? [{ label: <span className="breadcrumb-repo">{snapshot.repository.name}</span> }]
-                : undefined
-            }
-            title={reading ? fileTitle(reading.path) : "阅读空间"}
             actions={
               <>
                 <Button

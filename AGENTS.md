@@ -38,6 +38,9 @@ The application runs on Cloudflare Workers behind Cloudflare Access.
   registrations, and cache writes do not authorize writes to a source vault.
 - Use a restrained cool blue-gray identity with distinct surface, text,
   selected, focused, loading, and disabled states. Respect reduced motion.
+- Sidebar and header share the Basalt L0 background. Interface text must be
+  at least 11px. Keep visible spacing between adjacent hovered/selected tree
+  backgrounds without changing virtual row geometry.
 
 ## Security boundaries
 

@@ -61,6 +61,32 @@ async function settleMotion(page: Page) {
   });
 }
 
+async function expectReadableText(page: Page) {
+  const small = await page.evaluate(() => {
+    const found: { text: string; size: string }[] = [];
+    const scan = (root: Document | ShadowRoot) => {
+      for (const element of root.querySelectorAll("*")) {
+        if (element.shadowRoot) scan(element.shadowRoot);
+        const hasText = [...element.childNodes].some(
+          (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+        );
+        if (
+          !hasText ||
+          element.closest(".katex") ||
+          !element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
+        )
+          continue;
+        const size = getComputedStyle(element).fontSize;
+        if (Number.parseFloat(size) < 11)
+          found.push({ text: element.textContent?.trim().slice(0, 80) ?? "", size });
+      }
+    };
+    scan(document);
+    return found;
+  });
+  expect(small, "Visible interface text must be at least 11px").toEqual([]);
+}
+
 test.beforeEach(async ({ request }) => {
   await scenario(request, "healthy");
   const repositories: Repository[] = await (await request.get("/api/repositories")).json();
@@ -122,6 +148,127 @@ test("Pierre directory supports keyboard navigation and large-vault search", asy
   ).toHaveAttribute("aria-selected", "true");
   expect(await page.getByRole("treeitem").count()).toBeLessThan(80);
   await expect(page.locator(".prose")).toContainText("第 1149 则合成笔记");
+});
+
+test("Basalt breadcrumbs reveal folders and the collapsed rail preserves the Pierre tree", async ({
+  page,
+}) => {
+  await open(page, "01 思考的方法/渐进式总结.md");
+  const breadcrumb = page.getByRole("navigation", { name: "Breadcrumb", exact: true });
+  await expect(breadcrumb.locator('[aria-current="page"]')).toHaveText("渐进式总结");
+  await expect(breadcrumb.getByRole("button", { name: "在目录中定位 fieldnotes" })).toBeVisible();
+  const other = page.getByRole("treeitem", { name: "02 观察与记录", exact: true });
+  await other.click();
+  await expect(other).toHaveAttribute("aria-expanded", "true");
+  const scroll = await page.locator(".reading-scroll").evaluate((element) => {
+    element.scrollTop = 200;
+    return element.scrollTop;
+  });
+  const url = page.url();
+  const documents: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/document?")) documents.push(request.url());
+  });
+  await page.getByRole("button", { name: "切换知识库导航", exact: true }).click();
+  await expect(page.getByRole("navigation", { name: "知识库快捷导航" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "笔记导航", exact: true })).toBeHidden();
+  await expect(page.getByRole("button", { name: "搜索笔记", exact: true })).toBeVisible();
+  await expect(page.locator(".ocelot-sidebar")).toHaveCSS("width", "68px");
+  await breadcrumb.getByRole("button", { name: "在目录中定位 01 思考的方法" }).click();
+  const folder = page.getByRole("treeitem", { name: "01 思考的方法", exact: true });
+  await expect(folder).toBeFocused();
+  await expect(folder).toHaveAttribute("aria-expanded", "true");
+  await expect(other).toHaveAttribute("aria-expanded", "true");
+  await expect(page).toHaveURL(url);
+  expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(
+    scroll,
+  );
+  expect(documents).toEqual([]);
+  await expect(page.getByRole("treeitem", { name: "渐进式总结.md", exact: true })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await folder.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#document-title")).toHaveText("一张笔记的生命周期");
+});
+
+test("adjacent hovered and selected tree rows keep a gap without shifting virtual positions", async ({
+  page,
+}, info) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await open(page, "05 长期档案/01 月/创作练习/创作练习 0032.md");
+  const selected = page.getByRole("treeitem", { name: "创作练习 0032.md", exact: true });
+  const previous = page.getByRole("treeitem", { name: "创作练习 0020.md", exact: true });
+  await previous.hover();
+  await expect(selected).toHaveAttribute("aria-selected", "true");
+  const before = await previous.boundingBox();
+  const after = await selected.boundingBox();
+  if (!before || !after) throw new Error("The adjacent tree rows must be visible.");
+  expect(after.y - before.y - before.height).toBe(4);
+  expect(after.y - before.y).toBe(36);
+  await expectReadableText(page);
+  await page.locator(".ocelot-sidebar").screenshot({ path: info.outputPath("tree-row-gap.png") });
+  await search(page, "创作练习 1148");
+  await expect(
+    page.getByRole("treeitem", { name: "创作练习 1148.md", exact: true }),
+  ).toBeInViewport();
+  await expect(page.locator("#document-title")).toHaveText("创作练习 1148");
+});
+
+test("long Unicode breadcrumbs keep the full path accessible at every viewport", async ({
+  page,
+}) => {
+  const path =
+    "资料 & References/100% 原样的 %2F 文件夹/中文与 English 的长期阅读记录/Long-unbroken-directory-name-for-layout-checks/一份很长的中英文笔记 Reading with attention.md";
+  await page.route("**/api/repositories/101/sync*", async (route) => {
+    const response = await route.fetch();
+    const snapshot: Snapshot = await response.json();
+    snapshot.files.push({ path, sha: "a".repeat(40), size: 100 });
+    await route.fulfill({ response, json: snapshot });
+  });
+  await page.route("**/api/repositories/101/document?*", async (route) => {
+    const url = new URL(route.request().url());
+    if (url.searchParams.get("path") !== path) return route.continue();
+    await route.fulfill({
+      json: {
+        path,
+        sha: "a".repeat(40),
+        treeSha: url.searchParams.get("tree"),
+        content: "# 一份很长的中英文笔记 Reading with attention\n\n一份合成的路径布局样例。",
+      },
+    });
+  });
+  await open(page, path);
+  for (const width of [1440, 1024, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await settleMotion(page);
+    const breadcrumb = page.getByRole("navigation", { name: "Breadcrumb", exact: true });
+    await expect(breadcrumb.locator('[aria-current="page"]')).toHaveText(
+      "一份很长的中英文笔记 Reading with attention",
+    );
+    await expect(page.getByRole("button", { name: "检查更新", exact: true })).toBeInViewport();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    const trigger = breadcrumb.getByRole("button", { name: "浏览完整路径" });
+    await trigger.click();
+    const menu = page.getByRole("menu", { name: "完整路径" });
+    await expect(menu).toContainText(path);
+    await expect(menu.getByRole("menuitem")).toHaveCount(5);
+    await expectReadableText(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+    await page.keyboard.press("Escape");
+    await expect(trigger).toBeFocused();
+  }
+  await page.getByRole("button", { name: "浏览完整路径" }).click();
+  await page
+    .getByRole("menuitem", { name: "资料 & References/100% 原样的 %2F 文件夹", exact: true })
+    .click();
+  await expect(page.getByRole("dialog", { name: "知识库导航" })).toBeVisible();
+  await expect(
+    page.getByRole("treeitem", { name: "100% 原样的 %2F 文件夹", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "浏览完整路径" })).toBeFocused();
 });
 
 test("renders math, diagrams, pinned images, note embeds and safe semantic HTML", async ({
@@ -352,9 +499,11 @@ for (const theme of ["light", "dark"] as const) {
       contentType: "application/json",
     });
     expect(audit.violations).toEqual([]);
+    await expectReadableText(page);
     await page.screenshot({ path: info.outputPath(`reader-${theme}.png`) });
     const preferences = page.getByRole("button", { name: "阅读偏好", exact: true });
     await preferences.click();
+    await expectReadableText(page);
     await page.getByRole("button", { name: "Aa 舒展", exact: true }).click();
     await page.keyboard.press("Escape");
     await expect(preferences).toBeFocused();
@@ -384,9 +533,12 @@ test("mobile drawer and outline are keyboard accessible and respect reduced moti
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   await open(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
-  await page.getByRole("button", { name: "切换知识库导航", exact: true }).click();
+  await page.getByRole("button", { name: "浏览完整路径" }).click();
+  await page.getByRole("menuitem", { name: "fieldnotes", exact: true }).click();
   const drawer = page.getByRole("dialog", { name: "知识库导航", exact: true });
   await expect(drawer).toBeVisible();
+  await expectReadableText(page);
+  await expect(drawer.getByRole("treeitem", { name: "01 思考的方法", exact: true })).toBeFocused();
   await drawer.getByRole("treeitem", { name: "03 The Reading Room", exact: true }).click();
   await drawer.getByRole("treeitem", { name: "On paying attention.md", exact: true }).click();
   await expect(page.locator("#document-title")).toHaveText("On paying attention");
@@ -402,5 +554,6 @@ test("mobile drawer and outline are keyboard accessible and respect reduced moti
     contentType: "application/json",
   });
   expect(audit.violations).toEqual([]);
+  await expectReadableText(page);
   await page.screenshot({ path: info.outputPath("reader-mobile.png") });
 });

@@ -125,6 +125,43 @@ describe("reading state and navigation", () => {
     expect(api.sync).not.toHaveBeenCalled();
     expect(model.getSnapshot().booting).toBe(false);
   });
+  it("reveals only existing directories without replacing the reading or making requests", async () => {
+    const { api, model, browser, current } = setup();
+    model.revealDirectory("");
+    expect(model.getSnapshot().directoryFocus).toBeNull();
+    current.files.push({ path: "Folder/子目录/100%.md", sha: hash("d"), size: 30 });
+    vi.mocked(api.sync).mockImplementation(async (id) => (id === 101 ? current : snapshot(id)));
+    await model.start();
+    vi.mocked(api.document).mockClear();
+    vi.mocked(api.sync).mockClear();
+    vi.mocked(browser.navigate).mockClear();
+    const before = model.getSnapshot();
+    model.revealDirectory("Folder");
+    expect(model.getSnapshot().directoryFocus).toEqual({ path: "Folder" });
+    const first = model.getSnapshot().directoryFocus;
+    model.revealDirectory("Folder");
+    expect(model.getSnapshot().directoryFocus).not.toBe(first);
+    for (const path of ["Fold", "Missing", "Folder/", "README.md", "Folder/子目录/100%.md"])
+      model.revealDirectory(path);
+    expect(model.getSnapshot().directoryFocus).toEqual({ path: "Folder" });
+    model.revealDirectory("Folder/子目录");
+    expect(model.getSnapshot().directoryFocus).toEqual({ path: "Folder/子目录" });
+    model.revealDirectory("");
+    expect(model.getSnapshot().directoryFocus).toEqual({ path: "" });
+    expect(model.getSnapshot().reading).toBe(before.reading);
+    expect(model.getSnapshot().navigation).toBe(before.navigation);
+    expect(api.document).not.toHaveBeenCalled();
+    expect(api.sync).not.toHaveBeenCalled();
+    expect(browser.navigate).not.toHaveBeenCalled();
+    await model.selectNote("README.md");
+    expect(model.getSnapshot().directoryFocus).toBeNull();
+    model.revealDirectory("Folder");
+    await model.selectNote("Folder/子目录/100%.md");
+    expect(model.getSnapshot().directoryFocus).toBeNull();
+    model.revealDirectory("Folder");
+    await model.selectRepository(102);
+    expect(model.getSnapshot().directoryFocus).toBeNull();
+  });
   it("keeps bootstrap errors actionable and ignores superseded starts", async () => {
     const { api, model } = setup();
     vi.mocked(api.session).mockRejectedValueOnce(new ApiError("access_required", "Sign in"));

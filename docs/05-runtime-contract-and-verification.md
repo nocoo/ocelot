@@ -55,18 +55,19 @@ Markdown）、两个 Git 版本、原创 PNG 附件。所有内容与路径均�
 - 工具版本已固定：Basalt 2.1.7、TypeScript 7.0.2；Cloudflare 当前测试插件
   `@cloudflare/vitest-plugin` 1.1.7 与 Wrangler 4.131.0 使用同版本 Miniflare。
 - `bun run typecheck`、`bun run lint` 通过。
-- `bun run test:coverage`：**8 个测试文件，145 项通过**；语句 **100% (916/916)**、
-  分支 **98.33% (708/720)**、函数 **100% (166/166)**、行 **100% (814/814)**。
+- `bun run test:coverage`：**8 个测试文件，147 项通过**；语句 **100% (924/924)**、
+  分支 **98.34% (713/725)**、函数 **100% (170/170)**、行 **100% (820/820)**。
   统计包含未执行的 Models、ViewModels、services、Worker 与 mock；只排除
   `src/views/`、单独的 bootstrap `src/main.tsx` 及生成/声明类型。
 - 覆盖真实 Worker/D1/R2 的授权窗口、缓存命中、304、版本固定、lease 丢失、
   截断目录补全、撤销权限、限流、30 天清理及 501 对象的分页删除。
-- `bun run test:e2e`：**13 项 Chromium 流程通过**，使用生产前端与独立 Wrangler，
-  最后一轮约 20 秒。验证中英文、深链接/历史、目录键盘、千篇搜索、富文本、
+- `bun run test:e2e`：**16 项 Chromium 流程通过**，使用生产前端与独立 Wrangler，
+  最后一轮约 25 秒。验证中英文、深链接/历史、目录键盘、千篇搜索、富文本、
   私有仓库管理、慢加载、PAT 轮换/失效、更新不挤动正文及目录展开保留。
+  补充完整路径、目录定位、菜单焦点、11px 最小字号和目录行距检查，见 07。
 - 浅色、深色、390 × 844 移动端 axe 扫描 **0 violations**；检查截图、横向溢出、
   弹层焦点恢复与 reduced motion。浏览器测试无未处理的页面异常。
-- `bun run build`、`bun run worker:check` 通过。生产 Worker 约 **17.25 KiB gzip**，
+- `bun run build`、`bun run worker:check` 通过。生产 Worker 约 **17.26 KiB gzip**，
   打包入口不包含 mock 数据。Mermaid 按需加载；前端仍有大于 500 kB 的 JS chunk
   构建提示，首屏与低端移动设备的网络性能需要在真实部署后进一步测量。
 

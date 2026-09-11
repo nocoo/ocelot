@@ -16,6 +16,7 @@ import {
 } from "../../src/models/document";
 import { anchorId, headingSlug, renderUrl, resolveLink, routeUrl } from "../../src/models/links";
 import {
+  ancestorDirectories,
   attachmentType,
   canonicalPath,
   changedFiles,
@@ -115,6 +116,15 @@ describe("vault boundaries and navigation", () => {
       ),
     ).toEqual({ "old.md": "deleted", "change.md": "modified", "new.md": "added" });
     expect(changedFiles([], [])).toEqual({});
+  });
+  it("keeps breadcrumb ancestors in order without decoding or shortening directory names", () => {
+    expect(ancestorDirectories("")).toEqual([]);
+    expect(ancestorDirectories("README.md")).toEqual([]);
+    expect(ancestorDirectories("资料 & Notes/100% %2F/2026.09/一篇笔记.md")).toEqual([
+      { path: "资料 & Notes", label: "资料 & Notes" },
+      { path: "资料 & Notes/100% %2F", label: "100% %2F" },
+      { path: "资料 & Notes/100% %2F/2026.09", label: "2026.09" },
+    ]);
   });
   it("searches every query term without reading document bodies and bounds results", () => {
     expect(searchFiles(files, " FOLDER  space ")).toEqual([files[3]]);

@@ -14,6 +14,7 @@
 | 04 | [实现与本地验收](04-implementation-and-local-testing.md) | 本地验收完成 |
 | 05 | [运行契约与验收记录](05-runtime-contract-and-verification.md) | 已记录覆盖率、浏览器结果和支持边界 |
 | 06 | [本地运行、PAT 轮换与部署](06-running-and-deployment.md) | 本地已验证，生产步骤待执行 |
+| 07 | [Basalt 侧栏与路径导航](07-basalt-navigation.md) | 已实现，147 UT / 16 浏览器测试通过 |
 
 ## 交付状态
 
@@ -28,8 +29,8 @@
 | 选择 GitHub 凭据方案 | 已完成 | 用户接受细粒度 PAT 与定期轮换 |
 | 确定存储、渲染与同步 | 已确定 | 02；D1 + 私有 R2、按需缓存和条件检查 |
 | Vite/Worker、MVVM 基础工程 | 已完成 | Wrangler 本地 Worker、SQLite D1、磁盘 R2 和 3 个合成仓库 |
-| Biome、Husky、CI 与 UT 门禁 | 已配置，本地通过 | 145 UT，四项覆盖率 100 / 98.33 / 100 / 100% |
-| 阅读界面与 Obsidian 兼容性 | 本地已验证 | 13 浏览器测试，明暗/移动端 axe 无违规；边界见 05 |
+| Biome、Husky、CI 与 UT 门禁 | 已配置，本地通过 | 147 UT，四项覆盖率 100 / 98.34 / 100 / 100% |
+| 阅读界面与 Obsidian 兼容性 | 本地已验证 | 16 浏览器测试，明暗/移动端 axe 无违规；边界见 05 |
 | Cloudflare 部署与 Access 策略 | 入口已实现，尚未部署 | JWT 校验与生产 dry run 通过；真实资源和域名待配置 |
 
 ## 已确认的实施范围

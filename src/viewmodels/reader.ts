@@ -55,6 +55,7 @@ export interface ReaderState {
   query: string;
   repositoryInput: string;
   fontScale: number;
+  directoryFocus: { path: string } | null;
   navigation: { version: number; anchor: string; preserve: boolean };
   local: { scenario: Scenario; requests: Record<string, number>; repositories: string[] } | null;
 }
@@ -91,6 +92,7 @@ export class ReaderViewModel {
       query: "",
       repositoryInput: "",
       fontScale: browser.readScale(),
+      directoryFocus: null,
       navigation: { version: 0, anchor: "", preserve: false },
       local: null,
     };
@@ -166,7 +168,14 @@ export class ReaderViewModel {
   ): Promise<void> {
     this.controller?.abort();
     const ticket = ++this.epoch;
-    this.set({ loading: true, error: null, pendingPath: null, dialog: null, checking: false });
+    this.set({
+      loading: true,
+      error: null,
+      pendingPath: null,
+      dialog: null,
+      checking: false,
+      directoryFocus: null,
+    });
     try {
       const snapshot = await this.api.sync(id);
       if (ticket !== this.epoch) return;
@@ -188,7 +197,7 @@ export class ReaderViewModel {
   async selectNote(path: string, anchor = "", replace = false): Promise<void> {
     const snapshot = this.state.snapshot;
     if (!snapshot) return;
-    this.set({ dialog: null, error: null, notice: "" });
+    this.set({ dialog: null, error: null, notice: "", directoryFocus: null });
     if (this.state.reading?.path === path && !this.state.loading) {
       this.browser.navigate(routeUrl(snapshot.repository.id, path, anchor), replace);
       this.set({
@@ -248,6 +257,7 @@ export class ReaderViewModel {
           sameRepo && this.state.pending?.treeSha !== snapshot.treeSha ? this.state.pending : null,
         changes,
         notice: "",
+        directoryFocus: null,
         navigation: { version: this.state.navigation.version + 1, anchor, preserve },
       });
       this.browser.navigate(routeUrl(snapshot.repository.id, path, anchor), replace);
@@ -393,6 +403,12 @@ export class ReaderViewModel {
     this.set({ dialog, query: "", error: null });
     if (dialog === "local") void this.loadLocal();
   }
+  revealDirectory(path: string): void {
+    const snapshot = this.state.snapshot;
+    if (!snapshot || (path && !snapshot.files.some((file) => file.path.startsWith(`${path}/`))))
+      return;
+    this.set({ directoryFocus: { path } });
+  }
   dismissError(): void {
     this.set({ error: null });
   }
@@ -430,6 +446,7 @@ export class ReaderViewModel {
           loading: false,
           pendingPath: null,
           changes: {},
+          directoryFocus: null,
         });
     } catch (error) {
       if (ticket === this.epoch) this.report(error);
@@ -449,7 +466,14 @@ export class ReaderViewModel {
       if (this.state.snapshot?.repository.id === id) {
         this.controller?.abort();
         this.epoch++;
-        this.set({ snapshot: null, reading: null, pending: null, changes: {}, loading: false });
+        this.set({
+          snapshot: null,
+          reading: null,
+          pending: null,
+          changes: {},
+          loading: false,
+          directoryFocus: null,
+        });
         const first = repositories[0];
         if (first) await this.selectRepository(first.id);
         else this.browser.navigate("/", true);

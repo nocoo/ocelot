@@ -27,6 +27,11 @@ export function fileTitle(path: string): string {
   return path.slice(path.lastIndexOf("/") + 1).replace(/\.(md|markdown)$/iu, "");
 }
 
+export function ancestorDirectories(path: string): { path: string; label: string }[] {
+  const parts = path.split("/").slice(0, -1);
+  return parts.map((label, index) => ({ path: parts.slice(0, index + 1).join("/"), label }));
+}
+
 export function initialDocument(files: VaultFile[]): string | null {
   const notes = files.filter((file) => isMarkdown(file.path));
   return (
