@@ -34,6 +34,7 @@ import {
   ChevronsUpDown,
   CircleHelp,
   Clock3,
+  ExternalLink,
   FlaskConical,
   GitBranch,
   Link2,
@@ -109,6 +110,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
   const identity = model.identity();
   const snapshot = state.snapshot;
   const reading = state.reading;
+  const githubDocumentUrl = model.githubDocumentUrl();
   const updateCount = useMemo(
     () =>
       state.pending
@@ -404,7 +406,6 @@ function Reader({ model }: { model: ReaderViewModel }) {
             actions={
               <>
                 <fieldset className="reader-options" aria-label="阅读器选项">
-                  <span className="reader-options-label">阅读器</span>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -442,15 +443,19 @@ function Reader({ model }: { model: ReaderViewModel }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="chrome-button copy-button"
-                    aria-label="复制阅读链接"
-                    title="复制阅读链接"
-                    onClick={() => {
-                      void model.copyLink();
-                    }}
-                    disabled={!reading}
+                    className="chrome-button"
+                    aria-label="在 GitHub 打开 Markdown"
+                    title="在 GitHub 打开 Markdown"
+                    asChild={!!githubDocumentUrl}
+                    disabled={!githubDocumentUrl}
                   >
-                    <Link2 size={17} />
+                    {githubDocumentUrl ? (
+                      <a href={githubDocumentUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink size={17} />
+                      </a>
+                    ) : (
+                      <ExternalLink size={17} />
+                    )}
                   </Button>
                   <Button
                     variant="ghost"

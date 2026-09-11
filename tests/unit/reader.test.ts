@@ -78,8 +78,6 @@ function setup(local = true) {
     writeScale: vi.fn(),
     readFullWidth: vi.fn(() => false),
     writeFullWidth: vi.fn(),
-    copy: vi.fn(async () => undefined),
-    origin: vi.fn(() => "https://reader.test"),
   };
   const model = new ReaderViewModel(api, browser);
   return { api, model, browser, current, session };
@@ -177,7 +175,7 @@ describe("reading state and navigation", () => {
     vi.mocked(api.repositories).mockResolvedValue([]);
     await model.selectNote("README.md");
     await model.applyUpdate();
-    await model.copyLink();
+    expect(model.githubDocumentUrl()).toBeNull();
     await model.check();
     expect(model.searchResults()).toEqual([]);
     await model.start();
@@ -292,6 +290,7 @@ describe("reading state and navigation", () => {
     vi.mocked(api.sync).mockResolvedValueOnce({ ...snapshot(103), files: [] });
     await model.selectRepository(103);
     expect(model.getSnapshot()).toMatchObject({ reading: null, pending: null, loading: false });
+    expect(model.githubDocumentUrl()).toBeNull();
   });
   it("rejects unsupported or absent files without replacing the current article", async () => {
     const { model, api } = setup();
@@ -308,6 +307,7 @@ describe("reading state and navigation", () => {
       assetType: "image/png",
       assetUrl: expect.stringContaining("/asset?"),
     });
+    expect(model.githubDocumentUrl()).toBeNull();
   });
   it("handles aborted or failed requests and unavailable status refreshes", async () => {
     const { model, api } = setup();
@@ -413,15 +413,22 @@ describe("version handoff and connection recovery", () => {
     const { model, api } = setup();
     await model.start();
     const next = snapshot(101, "d");
+    next.commitSha = hash("e");
     next.files[0].sha = hash("e");
     next.files.push({ path: "New.md", sha: hash("f"), size: 20 });
     vi.mocked(api.sync).mockResolvedValue(next);
     await model.check(true);
     expect(model.getSnapshot().pending?.treeSha).toBe(hash("d"));
     expect(model.getSnapshot().reading?.treeSha).toBe(hash("a"));
+    expect(model.githubDocumentUrl()).toBe(
+      `https://github.com/demo/garden-101/blob/${hash("c")}/README.md`,
+    );
     await model.applyUpdate();
     expect(model.getSnapshot().pending).toBeNull();
     expect(model.getSnapshot().reading?.treeSha).toBe(hash("d"));
+    expect(model.githubDocumentUrl()).toBe(
+      `https://github.com/demo/garden-101/blob/${hash("e")}/README.md`,
+    );
     expect(model.getSnapshot().navigation.preserve).toBe(true);
     expect(model.getSnapshot().changes).toEqual({ "README.md": "modified", "New.md": "added" });
     await model.check(true);
@@ -683,7 +690,7 @@ describe("repository and reading preferences", () => {
     await model.removeRepository(102);
     expect(model.getSnapshot().reading?.path).toBe("README.md");
   });
-  it("bounds type size and offers copy confirmation without storing note content", async () => {
+  it("bounds type size without storing note content", async () => {
     const { model, browser } = setup();
     await model.start();
     model.setFontScale(99);
@@ -694,12 +701,22 @@ describe("repository and reading preferences", () => {
     expect(model.getSnapshot().fontScale).toBe(0.9);
     model.setFontScale(1.15);
     expect(browser.writeScale).toHaveBeenLastCalledWith(1.15);
-    await model.copyLink();
-    expect(browser.copy).toHaveBeenCalledWith("https://reader.test/?repo=101&note=README.md");
-    expect(model.getSnapshot().notice).toBe("阅读链接已复制");
-    vi.mocked(browser.copy).mockRejectedValueOnce(new Error("Permission denied"));
-    await model.copyLink();
-    expect(model.getSnapshot().error?.code).toBe("clipboard");
+  });
+  it("opens the selected Markdown on GitHub with literal Unicode and reserved path characters", async () => {
+    const { model, api, current } = setup();
+    const path = "专题/100% #问答?.md";
+    current.files.push({ path, sha: hash("d"), size: 30 });
+    vi.mocked(api.sync).mockResolvedValueOnce(current);
+    await model.start();
+    await model.selectNote(path);
+    const url = `https://github.com/demo/garden-101/blob/${hash("c")}/%E4%B8%93%E9%A2%98/100%25%20%23%E9%97%AE%E7%AD%94%3F.md`;
+    expect(model.githubDocumentUrl()).toBe(url);
+    model.setRaw(true);
+    expect(model.githubDocumentUrl()).toBe(url);
+    await model.selectRepository(102);
+    expect(model.githubDocumentUrl()).toBe(
+      `https://github.com/demo/garden-102/blob/${hash("c")}/README.md`,
+    );
   });
   it("keeps scenario controls local and supports controlled failure paths", async () => {
     const { model, api } = setup();

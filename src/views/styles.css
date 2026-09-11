@@ -425,15 +425,8 @@ a {
   border: 0;
 }
 .reader-options {
-  padding: 3px;
-  border: 1px solid var(--hairline);
-  border-radius: 10px;
-  background: var(--paper);
-}
-.reader-options-label {
-  padding: 0 7px;
-  font-size: 11px;
-  color: var(--muted);
+  padding-right: 16px;
+  border-right: 1px solid var(--hairline);
 }
 .reader-breadcrumbs {
   flex: 1;
@@ -1949,9 +1942,10 @@ a {
   }
   .reader-options {
     grid-area: reader;
-  }
-  .reader-options-label {
-    margin-right: auto;
+    justify-content: flex-end;
+    padding: 4px 0 0;
+    border-right: 0;
+    border-top: 1px solid var(--hairline);
   }
   .global-actions {
     grid-area: global;

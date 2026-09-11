@@ -119,6 +119,7 @@ test("an empty sidebar offers a repository action instead of an idle loading ani
   await expect(sidebar.getByText("还没有知识库", { exact: true })).toBeVisible();
   await expect(sidebar.locator(".tree-skeleton")).toHaveCount(0);
   await expect(page.locator(".loading-line")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "在 GitHub 打开 Markdown" })).toBeDisabled();
   await sidebar.getByRole("button", { name: "添加知识库", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "添加 GitHub 知识库" })).toBeVisible();
 });
@@ -266,14 +267,16 @@ test("adjacent hovered and selected tree rows keep a gap without shifting virtua
   await expect(page.locator("#document-title")).toHaveText("创作练习 1148");
 });
 
-test("long Unicode breadcrumbs keep the full path accessible at every viewport", async ({
+test("long Unicode paths remain accessible in breadcrumbs and GitHub links at every viewport", async ({
   page,
 }) => {
   const path =
     "资料 & References/100% 原样的 %2F 文件夹/中文与 English 的长期阅读记录/Long-unbroken-directory-name-for-layout-checks/一份很长的中英文笔记 Reading with attention.md";
+  let currentCommit = "";
   await page.route("**/api/repositories/101/sync*", async (route) => {
     const response = await route.fetch();
     const snapshot: Snapshot = await response.json();
+    currentCommit = snapshot.commitSha;
     snapshot.files.push({ path, sha: "a".repeat(40), size: 100 });
     await route.fulfill({ response, json: snapshot });
   });
@@ -290,6 +293,15 @@ test("long Unicode breadcrumbs keep the full path accessible at every viewport",
     });
   });
   await open(page, path);
+  const github = page.getByRole("link", { name: "在 GitHub 打开 Markdown", exact: true });
+  await expect(github).toHaveAttribute("target", "_blank");
+  await expect(github).toHaveAttribute("rel", "noopener noreferrer");
+  const sourceUrl = new URL((await github.getAttribute("href")) ?? "");
+  expect(sourceUrl.origin).toBe("https://github.com");
+  expect(decodeURIComponent(sourceUrl.pathname)).toBe(
+    `/ocelot-demo/fieldnotes/blob/${currentCommit}/${path}`,
+  );
+  expect(sourceUrl.search + sourceUrl.hash).toBe("");
   for (const width of [1440, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     await settleMotion(page);
@@ -298,6 +310,7 @@ test("long Unicode breadcrumbs keep the full path accessible at every viewport",
       "一份很长的中英文笔记 Reading with attention",
     );
     await expect(page.getByRole("button", { name: "检查更新", exact: true })).toBeInViewport();
+    await expect(github).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     const trigger = breadcrumb.getByRole("button", { name: "浏览完整路径" });
     await trigger.click();
@@ -309,6 +322,18 @@ test("long Unicode breadcrumbs keep the full path accessible at every viewport",
     await page.keyboard.press("Escape");
     await expect(trigger).toBeFocused();
   }
+  await page
+    .context()
+    .route("https://github.com/**", (route) =>
+      route.fulfill({ contentType: "text/html", body: "Synthetic GitHub destination" }),
+    );
+  const opened = page.waitForEvent("popup");
+  await github.click();
+  const destination = await opened;
+  await expect(destination).toHaveURL(sourceUrl.toString());
+  expect(await destination.evaluate(() => window.opener === null)).toBe(true);
+  await destination.close();
+  await expect(page).toHaveURL((url) => url.searchParams.get("note") === path);
   await page.getByRole("button", { name: "浏览完整路径" }).click();
   await page
     .getByRole("menuitem", { name: "资料 & References/100% 原样的 %2F 文件夹", exact: true })
@@ -886,6 +911,7 @@ test("image attachments and Mermaid use the same lightbox with a readable failur
   );
   await open(page, "附件/small.png");
   await expect(page.getByRole("button", { name: "查看 Markdown 原文" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "在 GitHub 打开 Markdown" })).toBeDisabled();
   await page.getByRole("button", { name: "放大图片：small.png" }).click();
   await expect(dialog.getByRole("status")).toContainText("图片暂时无法加载");
   await expect(dialog.getByRole("button", { name: "查看原图尺寸" })).toBeDisabled();
@@ -933,7 +959,7 @@ for (const theme of ["light", "dark"] as const) {
     const global = page.getByRole("group", { name: "全局操作", exact: true });
     await expect(options.getByRole("button", { name: "全宽阅读", exact: true })).toBeInViewport();
     await expect(
-      options.getByRole("button", { name: "复制阅读链接", exact: true }),
+      options.getByRole("link", { name: "在 GitHub 打开 Markdown", exact: true }),
     ).toBeInViewport();
     const readerBounds = await options.boundingBox();
     const globalBounds = await global.boundingBox();

@@ -17,7 +17,7 @@
 | 07 | [Basalt 侧栏与路径导航](07-basalt-navigation.md) | 已验收并获用户确认，logo 固定起点，960 帧无位移 |
 | 08 | [视觉规范](08-visual-identity.md) | 已采用新品牌图标与双语 README |
 | 09 | [身份展示、版本与持续交付](09-identity-and-delivery.md) | 远程 Verify / Security / Deploy 均通过 |
-| 10 | [阅读器交互与典型样例](10-reader-interactions.md) | 九项修复与追加的控件分组、进度布局已本地验收 |
+| 10 | [阅读器交互与典型样例](10-reader-interactions.md) | 九项修复、无框选项、GitHub 文件入口与进度布局已本地验收 |
 | 11 | [本地 HTTPS 与端口登记](11-local-https.md) | 可信 HTTPS、HMR 与真实浏览器操作已验证 |
 
 ## 交付状态
@@ -33,7 +33,7 @@
 | 选择 GitHub 凭据方案 | 已完成 | 用户接受细粒度 PAT 与定期轮换 |
 | 确定存储、渲染与同步 | 已确定 | 02；D1 + 私有 R2、按需缓存和条件检查 |
 | Vite/Worker、MVVM 基础工程 | 已完成 | Wrangler 本地 Worker、SQLite D1、磁盘 R2 和 3 个合成仓库 |
-| Biome、Husky、CI 与 UT 门禁 | 本轮本地通过；远程见对应 main CI/CD | 170 UT，四项覆盖率 100 / 98.66 / 100 / 100%，见 10 |
+| Biome、Husky、CI 与 UT 门禁 | 本轮本地通过；远程见对应 main CI/CD | 171 UT，四项覆盖率 100 / 98.66 / 100 / 100%，见 10 |
 | 阅读界面与 Obsidian 兼容性 | 本地已验证 | 27 浏览器测试，明暗/移动端 axe 无违规；新增交互见 10，边界见 05 |
 | Access 身份与作者头像 | 已实现并测试 | 独立加载、同源受保护头像、服务异常回退 |
 | 版本与 release | 已实现并本地验证 | 单一版本来源、只读 dry run、CI/CD 成功后不可变 tag |

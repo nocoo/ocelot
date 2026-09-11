@@ -74,8 +74,6 @@ export function browserServices(win: Window, doc: Document) {
         /* Preferences still work for this session. */
       }
     },
-    copy: (text: string) => win.navigator.clipboard.writeText(text),
-    origin: () => win.location.origin,
   };
 }
 

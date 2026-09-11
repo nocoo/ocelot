@@ -635,17 +635,17 @@ export class ReaderViewModel {
     if (this.state.lightbox) this.set({ lightbox: { ...this.state.lightbox, failed: true } });
   }
 
-  async copyLink(): Promise<void> {
-    if (!this.state.reading || !this.state.snapshot) return;
-    try {
-      await this.browser.copy(
-        this.browser.origin() +
-          routeUrl(this.state.snapshot.repository.id, this.state.reading.path),
-      );
-      this.set({ notice: "阅读链接已复制" });
-    } catch {
-      this.report(new ApiError("clipboard", "浏览器没有允许复制，请从地址栏复制链接。"));
-    }
+  githubDocumentUrl(): string | null {
+    const { snapshot, reading } = this.state;
+    if (!snapshot || !reading || reading.assetType) return null;
+    const segments = [
+      snapshot.repository.owner,
+      snapshot.repository.name,
+      "blob",
+      snapshot.commitSha,
+      ...reading.path.split("/"),
+    ];
+    return `https://github.com/${segments.map(encodeURIComponent).join("/")}`;
   }
 
   private async loadLocal(): Promise<void> {

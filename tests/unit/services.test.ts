@@ -101,10 +101,8 @@ describe("browser integration", () => {
     const win = Object.assign(new EventTarget() as Window, {
       location: {
         href: "https://reader.test/?repo=101&note=hello.md#note-hi",
-        origin: "https://reader.test",
       },
       history: { pushState: vi.fn(), replaceState: vi.fn() },
-      navigator: { clipboard: { writeText: vi.fn(async () => undefined) } },
       localStorage: {
         getItem: vi.fn((key: string) => storage.get(key) ?? null),
         setItem: vi.fn((key: string, value: string) => {
@@ -128,7 +126,7 @@ describe("browser integration", () => {
       expect(readRoute(`https://reader.test/?repo=${id}#%zz`).repository).toBeNull();
     expect(readRoute("https://reader.test/#%zz").anchor).toBe("");
   });
-  it("stores only bounded reading preferences, with storage-denied fallbacks", async () => {
+  it("stores only bounded reading preferences, with storage-denied fallbacks", () => {
     const { services, win, storage } = platform();
     expect(services.readScale()).toBe(1);
     services.writeScale(1.15);
@@ -146,9 +144,6 @@ describe("browser integration", () => {
     });
     expect(() => services.writeScale(1)).not.toThrow();
     expect([...storage.keys()]).toEqual(["ocelot-font-scale"]);
-    await services.copy("https://reader.test/?repo=101");
-    expect(win.navigator.clipboard.writeText).toHaveBeenCalledWith("https://reader.test/?repo=101");
-    expect(services.origin()).toBe("https://reader.test");
     expect(services.route().path).toBe("hello.md");
     services.navigate("/?repo=101", false);
     services.navigate("/", true);
