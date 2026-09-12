@@ -107,6 +107,49 @@ export function updateChangelog(
   ].join("\n\n")}\n`;
 }
 
+export interface WorkflowEvidence {
+  headSha: string;
+  status: string;
+  conclusion: string;
+  event: string;
+  displayTitle: string;
+  url: string;
+  jobs: { name: string; conclusion: string; steps: { name: string; conclusion: string }[] }[];
+}
+
+export function assertWorkflowSuccess(
+  workflow: WorkflowEvidence,
+  revision: string,
+  sourceRunId?: number,
+): void {
+  if (
+    workflow.headSha !== revision ||
+    workflow.status !== "completed" ||
+    workflow.conclusion !== "success"
+  )
+    throw new Error(
+      "The workflow did not successfully finish for this Git revision. No tag was created.",
+    );
+  if (sourceRunId === undefined) {
+    if (workflow.event !== "push")
+      throw new Error("Publication requires the matching push CI run.");
+    return;
+  }
+  if (
+    !["workflow_run", "workflow_dispatch"].includes(workflow.event) ||
+    workflow.displayTitle !== `Deploy CI ${sourceRunId}` ||
+    !workflow.jobs.some(
+      (job) =>
+        job.name === "Deploy / Deploy Worker" &&
+        job.conclusion === "success" &&
+        job.steps.some(
+          (step) => step.name === "Run project deploy script" && step.conclusion === "success",
+        ),
+    )
+  )
+    throw new Error("Production deployment for this CI run did not succeed. No tag was created.");
+}
+
 export function deploymentVersion(value: unknown): string {
   const versions = (value as { versions?: { version_id?: unknown; percentage?: unknown }[] } | null)
     ?.versions;

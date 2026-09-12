@@ -20,6 +20,7 @@
 | 10 | [阅读器交互与典型样例](10-reader-interactions.md) | 交互与正文两端对齐已本地验收；320–768px 中英文无横向溢出 |
 | 11 | [本地 HTTPS 与端口登记](11-local-https.md) | 可信 HTTPS、HMR 与真实浏览器操作已验证 |
 | 12 | [线上作者身份资料恢复](12-author-profile-recovery.md) | 云端真实姓名/头像、177 UT、27 浏览器流程及完整 CI/CD 通过，已部署 |
+| 13 | [移动导航与最近更新](13-mobile-navigation-and-recent-notes.md) | 实现中；本轮修复与 v0.3.0 发行尚未验收 |
 
 ## 交付状态
 

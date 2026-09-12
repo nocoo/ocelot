@@ -6,6 +6,7 @@ import { setTimeout as pause } from "node:timers/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   assertDeploymentTag,
+  assertWorkflowSuccess,
   chooseVersion,
   deploymentVersion,
   parseVersion,
@@ -13,6 +14,7 @@ import {
   releaseOptions,
   updateChangelog,
   verifyAccessDomain,
+  type WorkflowEvidence,
 } from "../../scripts/release-model";
 
 vi.mock("node:timers/promises", () => ({ setTimeout: vi.fn().mockResolvedValue(undefined) }));
@@ -129,6 +131,52 @@ describe("nmem release policy", () => {
     for (const value of [null, {}, { annotations: {} }, { annotations: { "workers/tag": "old" } }])
       expect(() => assertDeploymentTag(value, tag)).toThrow();
   });
+  it("requires the matching push CI and a successful deployment explicitly linked to that CI run", () => {
+    const revision = "a".repeat(40);
+    const workflow: WorkflowEvidence = {
+      headSha: revision,
+      status: "completed",
+      conclusion: "success",
+      event: "push",
+      displayTitle: "CI",
+      url: "https://example.test/ci",
+      jobs: [],
+    };
+    expect(() => assertWorkflowSuccess(workflow, revision)).not.toThrow();
+    for (const patch of [
+      { headSha: "old" },
+      { status: "in_progress" },
+      { conclusion: "failure" },
+      { event: "pull_request" },
+    ])
+      expect(() => assertWorkflowSuccess({ ...workflow, ...patch }, revision)).toThrow();
+    const job = {
+      name: "Deploy / Deploy Worker",
+      conclusion: "success",
+      steps: [{ name: "Run project deploy script", conclusion: "success" }],
+    };
+    const deployment = {
+      ...workflow,
+      event: "workflow_run",
+      displayTitle: "Deploy CI 42",
+      jobs: [job],
+    };
+    expect(() => assertWorkflowSuccess(deployment, revision, 42)).not.toThrow();
+    expect(() =>
+      assertWorkflowSuccess({ ...deployment, event: "workflow_dispatch" }, revision, 42),
+    ).not.toThrow();
+    for (const patch of [
+      { displayTitle: "Deploy CI 41" },
+      { event: "push" },
+      { jobs: [] },
+      { jobs: [{ ...job, name: "Deploy" }] },
+      { jobs: [{ ...job, conclusion: "skipped" }] },
+      { jobs: [{ ...job, steps: [] }] },
+      { jobs: [{ ...job, steps: [{ name: "Build", conclusion: "success" }] }] },
+      { jobs: [{ ...job, steps: [{ name: "Run project deploy script", conclusion: "failure" }] }] },
+    ])
+      expect(() => assertWorkflowSuccess({ ...deployment, ...patch }, revision, 42)).toThrow();
+  });
   it("waits for initial DNS and edge readiness before accepting the Access login", async () => {
     const outgoing = vi
       .spyOn(globalThis, "fetch")
@@ -226,8 +274,125 @@ describe("release CLI preflight and read-only preview", () => {
         encoding: "utf8",
         env: { ...cleanEnv, PATH: `${bin}:${process.env.PATH}` },
       });
-    return { cwd, git, cli, bin, cleanEnv };
+    return { cwd, git, cli, bin, cleanEnv, realGit };
   }
+  function publication(mode = "success") {
+    const target = fixture();
+    const { cwd, git, bin, realGit, cleanEnv } = target;
+    const log = join(bin, "publication.jsonl");
+    const notes = join(bin, "notes.md");
+    writeFileSync(join(cwd, "bun.lock"), "{}\n");
+    git("add", "bun.lock");
+    git("commit", "-m", "chore: lock dependencies");
+    git("update-ref", "refs/remotes/origin/main", "HEAD");
+    cleanEnv.OCELOT_RELEASE_TEST_MODE = mode;
+    writeFileSync(
+      join(bin, "git"),
+      `#!/usr/bin/env node
+const { spawnSync } = require("node:child_process");
+const fs = require("node:fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify(["git", ...args]) + "\\n");
+if (["fetch", "push"].includes(args[0])) process.exit(0);
+const result = spawnSync(${JSON.stringify(realGit)}, args, { stdio: "inherit" });
+process.exit(result.status ?? 1);
+`,
+      { mode: 0o755 },
+    );
+    writeFileSync(join(bin, "bun"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
+    writeFileSync(
+      join(bin, "gh"),
+      `#!/usr/bin/env node
+const fs = require("node:fs");
+const { execFileSync } = require("node:child_process");
+const args = process.argv.slice(2);
+fs.appendFileSync(${JSON.stringify(log)}, JSON.stringify(["gh", ...args]) + "\\n");
+const mode = process.env.OCELOT_RELEASE_TEST_MODE;
+const revision = execFileSync(${JSON.stringify(realGit)}, ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+const output = value => process.stdout.write(JSON.stringify(value));
+if (args[0] === "auth") process.exit(0);
+if (args[0] === "run" && args[1] === "list") {
+  output(args.includes("verify.yml") ? [{ databaseId: 11 }] : [
+    { databaseId: 99, displayTitle: "Deploy CI 10" },
+    { databaseId: 22, displayTitle: "Deploy CI 11" }
+  ]);
+} else if (args[0] === "run" && args[1] === "watch") {
+  if ((args[2] === "11" && mode === "ci-failure") || (args[2] === "22" && mode === "deploy-failure")) process.exit(1);
+} else if (args[0] === "run" && args[1] === "view") {
+  const deploy = args[2] === "22";
+  output({ headSha: mode === "wrong-sha" ? "bad" : revision, status: "completed", conclusion: "success",
+    event: deploy ? "workflow_run" : "push",
+    displayTitle: deploy ? (mode === "wrong-source" ? "Deploy CI 10" : "Deploy CI 11") : "CI",
+    url: "https://github.com/nocoo/ocelot/actions/runs/" + args[2],
+    jobs: deploy ? [{ name: "Deploy / Deploy Worker", conclusion: "success", steps: [
+      { name: "Run project deploy script", conclusion: mode === "skipped-deploy" ? "skipped" : "success" }
+    ] }] : [] });
+} else if (args[0] === "api") {
+  process.stdout.write(mode === "main-moved" ? "f".repeat(40) : revision);
+} else if (args[0] === "release" && args[1] === "create") {
+  fs.writeFileSync(${JSON.stringify(notes)}, fs.readFileSync(args[args.indexOf("--notes-file") + 1]));
+} else process.exit(99);
+`,
+      { mode: 0o755 },
+    );
+    return {
+      ...target,
+      notes,
+      commands: () =>
+        readFileSync(log, "utf8")
+          .trim()
+          .split("\n")
+          .map((line) => JSON.parse(line) as string[]),
+    };
+  }
+  it("publishes only after independent matching CI/CD and records both evidence URLs", () => {
+    const { cli, git, commands, notes } = publication();
+    const result = cli("minor");
+    expect(result.status, result.stderr).toBe(0);
+    expect(git("tag", "--list")).toBe("v0.2.0");
+    expect(git("rev-parse", "v0.2.0^{}")).toBe(git("rev-parse", "HEAD"));
+    expect(git("cat-file", "-t", "v0.2.0")).toBe("tag");
+    const calls = commands();
+    const deployment = calls.findIndex(
+      (call) => call[0] === "gh" && call[1] === "run" && call[2] === "watch" && call[3] === "22",
+    );
+    const tag = calls.findIndex(
+      (call) => call[0] === "git" && call[1] === "tag" && call[2] === "-a",
+    );
+    expect(tag).toBeGreaterThan(deployment);
+    expect(calls.some((call) => call[1] === "run" && call[2] === "watch" && call[3] === "99")).toBe(
+      false,
+    );
+    const body = readFileSync(notes, "utf8");
+    expect(body).toContain("[Verified CI](https://github.com/nocoo/ocelot/actions/runs/11)");
+    expect(body).toContain(
+      "[Verified production deployment](https://github.com/nocoo/ocelot/actions/runs/22)",
+    );
+  });
+  it.each([
+    "ci-failure",
+    "deploy-failure",
+    "wrong-sha",
+    "wrong-source",
+    "skipped-deploy",
+    "main-moved",
+  ])("does not create a tag or Release after %s", (mode) => {
+    const { cli, git, commands } = publication(mode);
+    expect(cli("minor").status).not.toBe(0);
+    expect(git("tag", "--list")).toBe("");
+    expect(commands().some((call) => call[0] === "gh" && call[1] === "release")).toBe(false);
+    expect(git("status", "--porcelain")).toBe("");
+  });
+  it("retries an untagged version after deployment recovery without another version increment", () => {
+    const { cli, git, cwd, cleanEnv } = publication("deploy-failure");
+    expect(cli("minor").status).not.toBe(0);
+    expect(JSON.parse(readFileSync(join(cwd, "package.json"), "utf8")).version).toBe("0.2.0");
+    cleanEnv.OCELOT_RELEASE_TEST_MODE = "success";
+    const result = cli("0.2.0");
+    expect(result.status, result.stderr).toBe(0);
+    expect(git("tag", "--list")).toBe("v0.2.0");
+    expect(git("log", "--format=%s").match(/chore: release v0.2.0/gu)).toHaveLength(1);
+  });
   it("previews a fresh repository without changing files or refs or calling remote commands", () => {
     const { cwd, git, cli } = fixture();
     const before = git("show-ref");

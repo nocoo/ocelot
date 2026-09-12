@@ -211,3 +211,27 @@ Verify / Security / Deploy 全部成功；独立生产复查确认 `v0.2.0`、�
 Worker `9c040a12-eca7-43c5-9c29-4ebb8aac52e3` 与 Access 登录边界。
 本地 HTTPS `/api/live` 同样返回 `0.2.0`。首次创建 Release 遇到 GitHub 连接
 重置，已按恢复约定从现有标签完成创建，未改写标签或再次递增版本。
+
+## v0.3.0 · 独立部署 workflow 的发布门禁
+
+状态：**发布门禁已实现并通过本地验证** · 2026-09-12。用户本轮明确授权 `0.2.0 → 0.3.0`、
+push main、tag、Release 与生产部署；完成一次生产验收后不继续监控。
+
+同步远端 7 个提交后，`CI` 与 `Release` 已拆成两个 workflow。旧发布脚本仍在
+CI 的 jobs 中寻找 `Deploy`，已不符合实际流程。本轮先修复门禁，再执行 minor：
+
+- `Release` 的 run-name 包含来源 CI run ID，避免把相同 head SHA 下由旧 CI
+  触发的部署误认为本次部署；手动恢复也使用指定 source-run-id。
+- 发布脚本等待该 SHA 的 push CI 成功，再等待明确引用该 CI run ID 的 Release；
+  核对两个 workflow 的 SHA、完成状态、结论及 `Deploy / Deploy Worker` 成功。
+- 再核对远端 main 未变化，才创建不可变 annotated tag 和 GitHub Release。
+  Release 正文同时保存独立的 CI 与生产部署链接。
+- 在临时隔离 Git 仓库中覆盖成功发布、错误来源、未成功部署、部署期间 main
+  改变及重试；保留真实本仓库 hooks，远端实际结果在完成后记录。
+
+本地验证：发布策略与真实 CLI 的隔离 Git 集成检查通过；覆盖成功发布、错误来源/
+SHA、失败或跳过部署、远端 main 变化与相同版本重试。Actionlint 1.7.12、类型检查、
+Biome、OSV Scanner 2.5.1 与 Gitleaks 8.30.1 通过。完整功能验收见 [13](13-mobile-navigation-and-recent-notes.md)。
+正式发行状态、远端 SHA 和生产验收以
+[v0.3.0 Release](https://github.com/nocoo/ocelot/releases/tag/v0.3.0) 中的实际记录为准；
+脚本只在匹配的独立 CI/CD 成功后发布该 Release。

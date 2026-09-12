@@ -1,4 +1,5 @@
 name: Release
+run-name: Deploy CI ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || inputs.source-run-id }}
 
 on:
   workflow_run:

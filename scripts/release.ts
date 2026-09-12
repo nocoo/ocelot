@@ -3,7 +3,14 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
-import { chooseVersion, releaseNotes, releaseOptions, updateChangelog } from "./release-model.ts";
+import {
+  assertWorkflowSuccess,
+  chooseVersion,
+  releaseNotes,
+  releaseOptions,
+  updateChangelog,
+  type WorkflowEvidence,
+} from "./release-model.ts";
 
 process.chdir(resolve(import.meta.dirname, ".."));
 const repository = "nocoo/ocelot";
@@ -149,11 +156,56 @@ await run(
   "--interval",
   "10",
 );
-const workflow: { jobs: { name: string; conclusion: string }[]; url: string } = JSON.parse(
-  output("gh", "run", "view", String(runId), "--repo", repository, "--json", "jobs,url"),
+const evidence = (id: number): WorkflowEvidence =>
+  JSON.parse(
+    output(
+      "gh",
+      "run",
+      "view",
+      String(id),
+      "--repo",
+      repository,
+      "--json",
+      "headSha,status,conclusion,event,displayTitle,jobs,url",
+    ),
+  );
+const workflow = evidence(runId);
+assertWorkflowSuccess(workflow, revision);
+let deploymentId: number | undefined;
+for (let attempt = 0; attempt < 18; attempt++) {
+  const runs: { databaseId: number; displayTitle: string }[] = JSON.parse(
+    output(
+      "gh",
+      "run",
+      "list",
+      "--repo",
+      repository,
+      "--workflow",
+      "release.yml",
+      "--json",
+      "databaseId,displayTitle",
+      "--limit",
+      "30",
+    ),
+  );
+  deploymentId = runs.find((run) => run.displayTitle === `Deploy CI ${runId}`)?.databaseId;
+  if (deploymentId) break;
+  await pause(10_000);
+}
+if (!deploymentId) throw new Error(`No deployment found for CI ${runId}. No tag was created.`);
+await run(
+  "gh",
+  "run",
+  "watch",
+  String(deploymentId),
+  "--repo",
+  repository,
+  "--exit-status",
+  "--interval",
+  "10",
 );
-if (!workflow.jobs.some((job) => job.name === "Deploy" && job.conclusion === "success"))
-  throw new Error("Production deployment did not succeed. No tag was created.");
+const deployment = evidence(deploymentId);
+assertWorkflowSuccess(deployment, revision, runId);
 if (output("gh", "api", `repos/${repository}/commits/main`, "--jq", ".sha") !== revision)
   throw new Error("main changed during this release. Review the newer deployment before tagging.");
 await run("git", "tag", "-a", tag, revision, "-m", `Ocelot ${tag}`);
@@ -161,7 +213,10 @@ await run("git", "push", "origin", `refs/tags/${tag}`);
 const temporary = await mkdtemp(join(tmpdir(), "ocelot-release-"));
 try {
   const notesFile = join(temporary, "notes.md");
-  await writeFile(notesFile, `${notes}\n\n[Verified CI and deployment](${workflow.url})\n`);
+  await writeFile(
+    notesFile,
+    `${notes}\n\n[Verified CI](${workflow.url}) · [Verified production deployment](${deployment.url})\n`,
+  );
   await run(
     "gh",
     "release",
