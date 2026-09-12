@@ -38,6 +38,7 @@ jobs:
       pre-command: |
         bun run types
         git diff --exit-code -- worker/worker-configuration.d.ts
+        bun x playwright install --with-deps webkit
       browser: chromium
       command: bun run test:e2e
       artifact-name: browser-verification

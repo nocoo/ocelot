@@ -140,6 +140,12 @@ a {
 .ocelot-sidebar {
   background: var(--rail);
   border: 0;
+  height: 100dvh;
+  min-height: 0;
+}
+.ocelot-sidebar[data-overlay] {
+  max-width: 100vw;
+  padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
 }
 .ocelot-sidebar > [role="separator"]:focus-visible {
   outline: none;
@@ -305,6 +311,8 @@ a {
 .navigation-area {
   padding: 0 17px;
   overflow: hidden;
+  min-height: 0;
+  flex: 1 1 0;
 }
 .tree-empty {
   padding: 28px 12px;

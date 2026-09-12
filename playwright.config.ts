@@ -19,6 +19,13 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1000 } },
     },
+    {
+      name: "webkit-mobile",
+      testMatch: "**/mobile-navigation.spec.ts",
+      // Playwright exposes native swipe injection only in Chromium; WebKit covers taps and keyboard scroll.
+      grepInvert: /native touch/u,
+      use: { ...devices["iPhone 13"], viewport: { width: 390, height: 844 } },
+    },
   ],
   webServer: {
     command: "bun run build && bun run dev --test",

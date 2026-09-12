@@ -199,6 +199,26 @@ test("Pierre directory supports keyboard navigation and large-vault search", asy
   ).toHaveAttribute("aria-selected", "true");
   expect(await page.getByRole("treeitem").count()).toBeLessThan(80);
   await expect(page.locator(".prose")).toContainText("第 1149 则合成笔记");
+  const treeScroll = page.locator('[data-file-tree-virtualized-scroll="true"]');
+  const before = await treeScroll.evaluate((element) => element.scrollTop);
+  const readingScroll = await page
+    .locator(".reading-scroll")
+    .evaluate((element) => element.scrollTop);
+  await treeScroll.hover();
+  await page.mouse.wheel(0, -400);
+  await expect
+    .poll(() => treeScroll.evaluate((element) => element.scrollTop))
+    .toBeLessThan(before - 100);
+  const up = await treeScroll.evaluate((element) => element.scrollTop);
+  await page.mouse.wheel(0, 400);
+  await expect
+    .poll(() => treeScroll.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(up + 100);
+  expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(
+    readingScroll,
+  );
+  await expect(page.locator(".ocelot-sidebar")).not.toHaveAttribute("data-collapsed", "");
+  expect((await page.locator(".brand").boundingBox())?.x).toBe(24);
 });
 
 test("Basalt breadcrumbs reveal folders and the collapsed rail preserves the Pierre tree", async ({

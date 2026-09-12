@@ -391,7 +391,11 @@ function Reader({ model }: { model: ReaderViewModel }) {
                   aria-label="切换知识库导航"
                   aria-expanded={!collapsed}
                   aria-controls="vault-sidebar"
-                  onClick={() => setCollapsed(!collapsed)}
+                  onClick={(event) => {
+                    // Safari does not focus a button on tap; give the drawer a real return target.
+                    event.currentTarget.focus({ preventScroll: true });
+                    setCollapsed(!collapsed);
+                  }}
                 >
                   <PanelLeft size={18} />
                 </Button>

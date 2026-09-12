@@ -19,9 +19,7 @@ export function NavigationTree({
   reveal: ReaderState["directoryFocus"];
   onSelect: (path: string) => void;
 }) {
-  const current = useRef({ onSelect, selected, files: snapshot.files });
   const previousFiles = useRef(snapshot.files);
-  current.current = { onSelect, selected, files: snapshot.files };
   const { model } = useFileTree({
     paths: snapshot.files.map((file) => file.path),
     initialExpansion: "closed",
@@ -32,6 +30,11 @@ export function NavigationTree({
     itemHeight: 36,
     // Keep each virtual slot 36px tall: a 32px target with 2px of space above and below.
     unsafeCSS: `
+      [data-file-tree-virtualized-scroll="true"] {
+        overscroll-behavior-y: contain;
+        touch-action: pan-y pinch-zoom;
+        -webkit-overflow-scrolling: touch;
+      }
       [data-type="item"] {
         height: calc(var(--trees-row-height) - 4px);
         min-height: calc(var(--trees-row-height) - 4px) !important;
@@ -42,15 +45,6 @@ export function NavigationTree({
       }
     `,
     search: false,
-    onSelectionChange: (paths) => {
-      const path = paths.at(-1);
-      if (
-        path &&
-        path !== current.current.selected &&
-        current.current.files.some((file) => file.path === path)
-      )
-        current.current.onSelect(path);
-    },
   });
   useEffect(() => {
     if (previousFiles.current === snapshot.files) return;
@@ -103,5 +97,22 @@ export function NavigationTree({
     });
     return () => cancelAnimationFrame(frame);
   }, [model, reveal, visible]);
-  return <FileTree model={model} className="vault-tree" aria-label="知识库文件目录" />;
+  return (
+    <FileTree
+      model={model}
+      className="vault-tree"
+      aria-label="知识库文件目录"
+      // Radix's document scroll lock sees the shadow host, not Pierre's inner scroller.
+      // Keep native gestures inside the tree; CSS contains scrolling at its boundaries.
+      onTouchMove={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const row = event.nativeEvent
+          .composedPath()
+          .find((element) => element instanceof HTMLElement && element.dataset.itemType === "file");
+        if (row instanceof HTMLElement && row.dataset.itemPath) onSelect(row.dataset.itemPath);
+      }}
+    />
+  );
 }

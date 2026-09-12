@@ -1,6 +1,6 @@
 # 13 · 移动导航与最近更新
 
-状态：**实施方案已选定；实现与验收记录随对应原子提交更新** · 2026-09-12
+状态：**移动导航已实现并通过本地验收；最近更新随对应原子提交记录** · 2026-09-12
 
 ## 用户要求
 
@@ -64,6 +64,32 @@ ViewModel 负责列表加载、切换快照及导航，View 仅展示状态和�
 
 ## 验证记录
 
-本次方案与发布门禁先提交，功能实现及其实际测试数量、覆盖率、移动手势测量、
-视觉与可访问性结果随对应实现提交记录。远端 SHA、CI/CD、Release URL、生产 URL
-和 HTTP/mobile smoke 以实际完成的验收记录为准。
+### 移动导航（已完成）
+
+根因已通过真实触摸输入复现：Radix/react-remove-scroll 在 document 处看到的是
+Pierre 的 Shadow DOM host，未识别内部滚动容器而取消 touchmove。Ocelot 在树
+host 处停止 touchmove/wheel 的事件传播，保留浏览器默认滚动；内部滚动区域明确
+设置 pan-y/pinch-zoom、overscroll contain 与 WebKit 惯性滚动。Drawer 使用 dvh、
+safe-area 和可收缩的 flex 导航区，未修改 Basalt/Pierre 或 36px 虚拟行几何。
+
+文章激活从“选中值改变”改为真实文件行 click，原生 Enter/Space 仍可激活；文件夹
+不会进入文章导航。完成导航后沿用 App 的移动侧栏关闭逻辑，因此当前文章可再次
+点击关闭；加载失败保留侧栏重试。Safari 菜单 tap 显式设置返回焦点。
+
+Chromium mobile 通过 CDP 原生触摸输入，未用赋值 scrollTop 冒充手势：
+
+| 视口 | 树可视高度 | 起点 → 向下滑后 → 向上滑后 scrollTop |
+| --- | --- | --- |
+| 390 × 844 | 500px | 328 → 43 → 341 |
+| 390 × 664 | 320px | 506 → 272 → 449 |
+| 390 × 480 | 136px | 598 → 531 → 598 |
+
+三个视口的 drawer 均等于视口高度，背景正文及 window 没有随边界手势滚动，logo
+左起点均为 24px。新增 9 项 Chromium/WebKit 移动流程全部通过，覆盖目录 tap、
+新文章与当前文章 tap、失败后重试、viewport resize、键盘滚动、Escape 及焦点恢复。
+桌面真实滚轮双向滚动与 Enter 选文通过，正文滚动位置和展开侧栏保持。既有相邻
+行间隔仍为 4px，行起点差 36px。Axe 无违规，已查看手机侧栏与文章截图。
+
+WebKit mobile 使用 iPhone 13 浏览器配置验证 tap、布局、键盘滚动及焦点；Playwright
+未提供该引擎的原生 swipe 注入。本轮没有物理 iPhone/iOS Safari 真机结果，不把
+WebKit 模拟或设置 scrollTop 当作真机触摸验收。
