@@ -11,21 +11,28 @@ permissions:
 
 jobs:
   verify:
-    uses: nocoo/base-ci/.github/workflows/quality.yml@3d2e9e55fdd60aa756df454ded53ef6d06d6653f
+    uses: nocoo/base-ci/.github/workflows/quality.yml@2857469cc5206e7a4988171a1282209617996a67
     with:
       runtime-version: "1.4.0"
       node-version: "26.8.1"
       install-policy: "project"
       coverage-path: "coverage"
-      prepare-command: "bun run types && git diff --exit-code -- worker/worker-configuration.d.ts"
+      prepare-command: |
+        bun run types
+        git diff --exit-code -- worker/worker-configuration.d.ts
       test-command: "bun run test:coverage"
       lint-command: "bun run lint"
       typecheck-command: "bun run typecheck"
       build: true
-      build-command: "bun run build && bun run worker:check"
+      build-command: |
+        bun run build
+        bun run worker:check
       l3: true
       l3-command: "bun run test:e2e"
       l3-browser: "chromium"
       artifact-name: verification
-      artifact-paths: "coverage/\nplaywright-report/\ntest-results/"
+      artifact-paths: |
+        coverage/
+        playwright-report/
+        test-results/
     secrets: inherit
