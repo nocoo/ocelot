@@ -35,4 +35,3 @@ jobs:
         coverage/
         playwright-report/
         test-results/
-    secrets: inherit
