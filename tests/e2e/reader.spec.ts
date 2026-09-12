@@ -479,13 +479,13 @@ test("new Git revisions wait for explicit handoff without moving text or collaps
     .locator(".reading-scroll")
     .evaluate((element) => ({ y: element.getBoundingClientRect().top, scroll: element.scrollTop }));
   await chooseScenario(page, "收到新提交");
-  await expect(page.getByRole("button", { name: "应用更新，3 份文件", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "应用更新，5 份文件", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "一次新的重访", exact: true })).toHaveCount(0);
   const pending = await page
     .locator(".reading-scroll")
     .evaluate((element) => ({ y: element.getBoundingClientRect().top, scroll: element.scrollTop }));
   expect(pending).toEqual(before);
-  await page.getByRole("button", { name: "应用更新，3 份文件", exact: true }).click();
+  await page.getByRole("button", { name: "应用更新，5 份文件", exact: true }).click();
   await expect(page.getByRole("heading", { name: "一次新的重访", exact: true })).toHaveCount(1);
   expect(await page.locator(".reading-scroll").evaluate((element) => element.scrollTop)).toBe(
     before.scroll,

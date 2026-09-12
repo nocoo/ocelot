@@ -47,7 +47,7 @@ export async function handleApi(
     }
   }
   const match = url.pathname.match(
-    /^\/api\/repositories\/([1-9]\d{0,15})(?:\/(snapshot|sync|document|asset))?$/u,
+    /^\/api\/repositories\/([1-9]\d{0,15})(?:\/(snapshot|sync|document|asset|recent))?$/u,
   );
   if (match && Number.isSafeInteger(Number(match[1]))) {
     const id = Number(match[1]);
@@ -59,13 +59,23 @@ export async function handleApi(
     if (action === "sync" && request.method === "POST") {
       const snapshot = await store.sync(id, url.searchParams.get("force") === "1");
       return json(
-        url.searchParams.get("known") === snapshot.treeSha
+        url.searchParams.get("known") === snapshot.treeSha &&
+          (!url.searchParams.has("knownCommit") ||
+            url.searchParams.get("knownCommit") === snapshot.commitSha)
           ? { unchanged: true, repository: snapshot.repository }
           : snapshot,
       );
     }
     if (action === "snapshot" && request.method === "GET")
       return json(await store.snapshot(id, url.searchParams.get("tree") ?? undefined));
+    if (action === "recent" && request.method === "GET")
+      return json(
+        await store.recent(
+          id,
+          url.searchParams.get("commit") ?? "",
+          Number(url.searchParams.get("cursor") ?? 0),
+        ),
+      );
     if ((action === "document" || action === "asset") && request.method === "GET")
       return store.content(
         id,

@@ -17,15 +17,18 @@ export function mockGitHub(env: Bindings): Transport {
     const state = await scenario(env);
     const url = new URL(request.url);
     const path = decodeURIComponent(url.pathname);
-    const kind = path.includes("/git/blobs/")
-      ? "blob"
-      : path.includes("/git/trees/")
-        ? "tree"
-        : path.includes("/commits/")
-          ? "head"
-          : path === "/user"
-            ? "user"
-            : "repository";
+    const kind =
+      path === "/graphql"
+        ? "history"
+        : path.includes("/git/blobs/")
+          ? "blob"
+          : path.includes("/git/trees/")
+            ? "tree"
+            : path.includes("/commits/")
+              ? "head"
+              : path === "/user"
+                ? "user"
+                : "repository";
     await env.DB.prepare(
       "INSERT INTO mock_requests (kind, count) VALUES (?, 1) ON CONFLICT(kind) DO UPDATE SET count = count + 1",
     )
@@ -50,6 +53,38 @@ export function mockGitHub(env: Bindings): Transport {
       ).toISOString(),
     });
     if (path === "/user") return Response.json({ login: "ocelot-demo" }, { headers });
+    if (path === "/graphql") {
+      const body = await readJson<{
+        query: string;
+        variables: { owner: string; name: string; commit: string };
+      }>(request);
+      const repository = data.repositories.find(
+        (repo) => repo.owner.login === body.variables.owner && repo.name === body.variables.name,
+      );
+      const revision = repository?.revisions.find((item) => item.commit === body.variables.commit);
+      const histories = [
+        ...body.query.matchAll(/p(\d+): history\(first: 1, path: ("(?:[^"\\]|\\.)*")\)/gu),
+      ].map((match) => {
+        const path: string = JSON.parse(match[2]);
+        const date = (revision?.history as Record<string, string> | undefined)?.[path];
+        return [`p${match[1]}`, { nodes: date ? [{ committedDate: date }] : [] }];
+      });
+      return Response.json(
+        {
+          data: {
+            repository: repository
+              ? {
+                  databaseId: repository.id,
+                  object: revision
+                    ? { oid: revision.commit, ...Object.fromEntries(histories) }
+                    : null,
+                }
+              : null,
+          },
+        },
+        { headers },
+      );
+    }
     const repository = data.repositories.find(
       (repo) =>
         path === `/repos/${repo.owner.login}/${repo.name}` ||

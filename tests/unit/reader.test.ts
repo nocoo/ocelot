@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { AuthorProfile, DocumentContent, Session, Snapshot } from "../../src/models/contracts";
+import type {
+  AuthorProfile,
+  DocumentContent,
+  RecentPage,
+  Session,
+  Snapshot,
+} from "../../src/models/contracts";
 import { ApiClient, ApiError } from "../../src/services/api";
 import type { BrowserServices } from "../../src/services/browser";
 import { ReaderViewModel } from "../../src/viewmodels/reader";
@@ -55,6 +61,11 @@ function setup(local = true) {
   };
   vi.spyOn(api, "session").mockImplementation(async () => structuredClone(session));
   vi.spyOn(api, "profile").mockResolvedValue({ name: null, avatar: null });
+  vi.spyOn(api, "recent").mockImplementation(async (_id, commit) => ({
+    commitSha: commit,
+    items: [],
+    next: null,
+  }));
   vi.spyOn(api, "repositories").mockResolvedValue([current.repository, snapshot(102).repository]);
   vi.spyOn(api, "sync").mockImplementation(async (id) => snapshot(id));
   vi.spyOn(api, "document").mockImplementation(async (_id, tree, path) => ({
@@ -86,6 +97,104 @@ function setup(local = true) {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
+});
+
+describe("recent updates state", () => {
+  const note = { path: "Second.md", updatedAt: "2026-09-12T00:00:00.000Z" };
+  it("loads the homepage list independently, hides incomplete ranking and shares it with the dialog", async () => {
+    const { api, model } = setup();
+    const lastPage = deferred<RecentPage>();
+    vi.mocked(api.recent)
+      .mockResolvedValueOnce({ commitSha: hash("c"), items: [note], next: 100 })
+      .mockReturnValueOnce(lastPage.promise);
+    expect(model.isHome()).toBe(false);
+    await model.loadRecent();
+    expect(api.recent).not.toHaveBeenCalled();
+    await model.start();
+    expect(model.isHome()).toBe(true);
+    expect(model.getSnapshot().reading?.path).toBe("README.md");
+    expect(model.getSnapshot().recent).toEqual({ items: [], loading: true, error: null });
+    model.openDialog("recent");
+    await model.loadRecent();
+    expect(api.recent).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(api.recent).mock.calls.map((call) => call.slice(0, 3))).toEqual([
+      [101, hash("c"), 0],
+      [101, hash("c"), 100],
+    ]);
+    await model.selectNote("Second.md");
+    expect(model.getSnapshot().dialog).toBeNull();
+    lastPage.resolve({ commitSha: hash("c"), items: [note], next: null });
+    await lastPage.promise;
+    expect(model.getSnapshot().recent).toEqual({ items: [note], loading: false, error: null });
+    await model.loadRecent();
+    expect(api.recent).toHaveBeenCalledTimes(2);
+    expect(model.isHome()).toBe(false);
+  });
+  it("rejects results from a previous repository and aborts unfinished requests on unmount", async () => {
+    const { api, model } = setup();
+    const stale = deferred<RecentPage>();
+    vi.mocked(api.recent).mockReturnValueOnce(stale.promise);
+    await model.start();
+    const signal = vi.mocked(api.recent).mock.calls[0][3];
+    await model.selectRepository(102);
+    expect(signal?.aborted).toBe(true);
+    stale.resolve({ commitSha: hash("c"), items: [note], next: null });
+    await stale.promise;
+    expect(model.getSnapshot().recent?.items).toEqual([]);
+    const next = setup();
+    const pending = deferred<RecentPage>();
+    vi.mocked(next.api.recent).mockReturnValueOnce(pending.promise);
+    const stop = next.model.mount();
+    await vi.waitFor(() => expect(next.api.recent).toHaveBeenCalledOnce());
+    stop();
+    expect(vi.mocked(next.api.recent).mock.calls[0][3]?.aborted).toBe(true);
+    pending.reject(new Error("Disconnected after unmount"));
+    await pending.promise.catch(() => {});
+    expect(next.model.getSnapshot().recent?.error).toBeNull();
+  });
+  it("retries list errors without replacing the article or reporting them as document failures", async () => {
+    const { api, model } = setup();
+    vi.mocked(api.recent)
+      .mockRejectedValueOnce(new Error("upstream internals"))
+      .mockRejectedValueOnce(new ApiError("github_offline", "请稍后重试"));
+    await model.start();
+    expect(model.getSnapshot().recent?.error).toBe("暂时无法载入最近更新，请重试。");
+    expect(model.getSnapshot().error).toBeNull();
+    await model.loadRecent();
+    expect(model.getSnapshot().recent?.error).toBe("请稍后重试");
+    await model.loadRecent();
+    expect(model.getSnapshot().recent).toEqual({ items: [], loading: false, error: null });
+    expect(model.getSnapshot().reading?.path).toBe("README.md");
+  });
+  it.each([
+    { commitSha: hash("d"), next: null },
+    { commitSha: hash("c"), next: 0 },
+    { commitSha: hash("c"), next: 1.5 },
+    { commitSha: hash("c"), next: 20_100 },
+  ])("rejects mismatched or nonadvancing list responses: %j", async (page) => {
+    const { api, model } = setup();
+    vi.mocked(api.recent).mockResolvedValueOnce({ ...page, items: [note] });
+    await model.start();
+    expect(model.getSnapshot().recent).toMatchObject({
+      items: [],
+      loading: false,
+      error: "最近更新列表暂时不可用，请重试。",
+    });
+  });
+  it("refreshes dates on a new commit with the same tree without reloading the article", async () => {
+    const { api, model } = setup();
+    await model.start();
+    const next = snapshot();
+    next.commitSha = hash("d");
+    next.repository.commitSha = next.commitSha;
+    vi.mocked(api.sync).mockResolvedValue(next);
+    await model.check(true);
+    expect(model.getSnapshot().snapshot?.commitSha).toBe(hash("d"));
+    expect(model.getSnapshot().pending).toBeNull();
+    expect(api.document).toHaveBeenCalledOnce();
+    expect(api.recent).toHaveBeenLastCalledWith(101, hash("d"), 0, expect.any(AbortSignal));
+    expect(api.sync).toHaveBeenLastCalledWith(101, true, hash("a"), hash("c"));
+  });
 });
 
 describe("reading state and navigation", () => {
@@ -380,7 +489,12 @@ describe("version handoff and connection recovery", () => {
     const repository = { ...snapshot().repository, checkedAt: 12345 };
     vi.mocked(api.sync).mockResolvedValueOnce({ unchanged: true, repository });
     await model.check(true);
-    expect(api.sync).toHaveBeenLastCalledWith(101, true, before.snapshot?.treeSha);
+    expect(api.sync).toHaveBeenLastCalledWith(
+      101,
+      true,
+      before.snapshot?.treeSha,
+      before.snapshot?.commitSha,
+    );
     expect(model.getSnapshot().snapshot?.files).toBe(before.snapshot?.files);
     expect(model.getSnapshot().reading).toBe(before.reading);
     expect(model.getSnapshot().snapshot?.repository.checkedAt).toBe(12345);

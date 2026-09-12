@@ -1,4 +1,4 @@
-import type { ConnectionStatus, VaultFile } from "../src/models/contracts";
+import type { ConnectionStatus, RecentNote, Repository, VaultFile } from "../src/models/contracts";
 import { canonicalPath } from "../src/models/vault";
 import { HttpError, readJson, readLimited } from "./http";
 
@@ -66,7 +66,7 @@ export class GitHub {
     }
   }
 
-  async request(path: string, headers: HeadersInit = {}): Promise<Response> {
+  async request(path: string, headers: HeadersInit = {}, body?: string): Promise<Response> {
     const started = Date.now();
     const connection = await this.env.DB.prepare(
       "SELECT retry_at FROM connection WHERE id = 1",
@@ -91,6 +91,8 @@ export class GitHub {
     try {
       response = await this.transport(
         new Request(`https://api.github.com${path}`, {
+          method: body === undefined ? "GET" : "POST",
+          body,
           headers: requestHeaders,
           redirect: "manual",
           signal: AbortSignal.timeout(12_000),
@@ -229,6 +231,80 @@ export class GitHub {
         "这个目录超出了当前阅读器的容量，请选择较小的知识库。",
       );
     return files.sort((a, b) => a.path.localeCompare(b.path, "en"));
+  }
+
+  async updatedNotes(
+    repository: Repository,
+    commit: string,
+    files: VaultFile[],
+  ): Promise<RecentNote[]> {
+    const fields = files.map(
+      (file, index) =>
+        `p${index}: history(first: 1, path: ${JSON.stringify(file.path)}) { nodes { committedDate } }`,
+    );
+    const response = await this.request(
+      "/graphql",
+      { "Content-Type": "application/json" },
+      JSON.stringify({
+        query: `query($owner: String!, $name: String!, $commit: GitObjectID!) {
+          repository(owner: $owner, name: $name) {
+            databaseId
+            object(oid: $commit) { ... on Commit { oid ${fields.join("\n")} } }
+          }
+        }`,
+        variables: { owner: repository.owner, name: repository.name, commit },
+      }),
+    );
+    const result = await readJson<{
+      data?: {
+        repository?: {
+          databaseId?: number;
+          object?: { oid?: string } & Record<string, { nodes?: { committedDate?: string }[] }>;
+        };
+      };
+      errors?: { type?: string }[];
+    }>(response);
+    if (result.errors?.some((error) => error.type === "RATE_LIMITED")) {
+      const retryAt = retryTime(response.headers, Date.now());
+      await this.record(
+        "limited",
+        Date.now(),
+        expiration(this.env.GITHUB_TOKEN_EXPIRES_AT),
+        retryAt,
+      );
+      throw new HttpError(
+        429,
+        "github_limited",
+        "GitHub 正在限流，我们会在稍后继续检查。",
+        retryAt,
+      );
+    }
+    if (
+      result.errors?.some((error) =>
+        ["FORBIDDEN", "NOT_FOUND", "UNAUTHORIZED"].includes(error.type ?? ""),
+      ) ||
+      (!result.errors?.length && !result.data?.repository)
+    )
+      throw new HttpError(
+        403,
+        "github_permission",
+        "无法读取这个仓库，请检查 PAT 的只读访问权限。",
+      );
+    const object = result.data?.repository?.object;
+    if (
+      result.errors?.length ||
+      result.data?.repository?.databaseId !== repository.id ||
+      object?.oid !== commit
+    )
+      throw new HttpError(502, "github_response", "暂时无法读取文章更新时间，请稍后重试。");
+    return files.map((file, index) => {
+      const nodes = object[`p${index}`]?.nodes;
+      const date = nodes?.[0]?.committedDate;
+      const updatedAt = typeof date === "string" ? expiration(date) : null;
+      if (nodes?.length !== 1 || !updatedAt)
+        throw new HttpError(502, "github_response", "文章更新时间不完整，请稍后重试。");
+      return { path: file.path, updatedAt };
+    });
   }
 
   async blob(id: number, sha: string, limit: number): Promise<Uint8Array<ArrayBuffer>> {

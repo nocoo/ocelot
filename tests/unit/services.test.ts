@@ -43,6 +43,8 @@ describe("HTTP client", () => {
     await api.local();
     await api.local("expiring");
     await api.profile();
+    await api.recent(3, "commit", 100);
+    await api.sync(3, false, "tree", "commit");
     expect(transport.mock.calls.map(([url]) => url)).toEqual([
       "/api/session",
       "/api/repositories",
@@ -55,6 +57,8 @@ describe("HTTP client", () => {
       "/api/local",
       "/api/local",
       "/api/profile",
+      "/api/repositories/3/recent?commit=commit&cursor=100",
+      "/api/repositories/3/sync?known=tree&knownCommit=commit",
     ]);
     expect(transport.mock.calls[9][1]?.body).toBe('{"scenario":"expiring"}');
   });

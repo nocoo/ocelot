@@ -1,10 +1,12 @@
 import type {
   Connection,
   ConnectionStatus,
+  RecentPage,
   Repository,
   Snapshot,
   VaultFile,
 } from "../src/models/contracts";
+import { latestNotes, recentCandidates } from "../src/models/recent";
 import { attachmentType, canonicalPath, isMarkdown, parseRepository } from "../src/models/vault";
 import { type Bindings, type GitHub, gitSha } from "./github";
 import { HttpError } from "./http";
@@ -167,7 +169,7 @@ export class VaultStore {
       return {
         repository: publicRepository(row),
         treeSha: tree,
-        commitSha: snapshot.commit_sha,
+        commitSha: tree === row.tree_sha && row.commit_sha ? row.commit_sha : snapshot.commit_sha,
         files,
       };
     } catch (error) {
@@ -200,10 +202,13 @@ export class VaultStore {
           "INSERT INTO snapshots (repository_id, tree_sha, commit_sha, created_at) SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM repositories WHERE id = ? AND lease = ?) ON CONFLICT(repository_id, tree_sha) DO UPDATE SET created_at = excluded.created_at",
         ).bind(id, tree, commit, now, id, lease),
         this.env.DB.prepare(
+          "INSERT INTO revisions (repository_id, commit_sha, tree_sha, created_at) SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM repositories WHERE id = ? AND lease = ?) ON CONFLICT(repository_id, commit_sha) DO UPDATE SET created_at = excluded.created_at",
+        ).bind(id, commit, tree, now, id, lease),
+        this.env.DB.prepare(
           "UPDATE repositories SET commit_sha = ?, tree_sha = ?, etag = ?, checked_at = ?, authorized_at = ?, authorization = 'allowed', retry_at = 0, lease = NULL, lease_until = 0 WHERE id = ? AND lease = ?",
         ).bind(commit, tree, head ? head.etag : row.etag, now, now, id, lease),
       ]);
-      if (!results[1].meta.changes)
+      if (!results[2].meta.changes)
         throw new HttpError(409, "sync_superseded", "另一项检查已经完成，请重新加载目录。");
       row = await this.repository(id);
       return { repository: publicRepository(row), treeSha: tree, commitSha: commit, files };
@@ -215,6 +220,59 @@ export class VaultStore {
       )
         .bind(id, lease)
         .run();
+    }
+  }
+
+  async recent(id: number, commit: string, cursor = 0): Promise<RecentPage> {
+    const batchSize = 100;
+    if (
+      !gitSha.test(commit) ||
+      !Number.isSafeInteger(cursor) ||
+      cursor < 0 ||
+      cursor > 20_000 ||
+      cursor % batchSize
+    )
+      throw new HttpError(400, "recent_invalid", "这个最近更新列表的版本无效。");
+    const row = await this.authorize(await this.repository(id));
+    const revision = await this.env.DB.prepare(
+      "SELECT tree_sha FROM revisions WHERE repository_id = ? AND commit_sha = ?",
+    )
+      .bind(id, commit)
+      .first<{ tree_sha: string }>();
+    if (!revision)
+      throw new HttpError(410, "snapshot_expired", "这个阅读版本已过期，请检查更新后重新打开。");
+    // Cache schema and source commit are independent of the application build/version.
+    const prefix = `repos/${id}/recent/v1/${commit}`;
+    try {
+      const complete = await this.env.CACHE.get(`${prefix}/complete.json`);
+      if (complete) return complete.json<RecentPage>();
+      const cached = await this.env.CACHE.get(`${prefix}/${cursor}.json`);
+      if (cached) return cached.json<RecentPage>();
+      const files = recentCandidates(await this.files(id, revision.tree_sha));
+      if (cursor > files.length)
+        throw new HttpError(400, "recent_invalid", "这个最近更新列表的位置无效。");
+      let previous: RecentPage | null = null;
+      if (cursor) {
+        const cachedPrevious = await this.env.CACHE.get(`${prefix}/${cursor - batchSize}.json`);
+        if (!cachedPrevious)
+          throw new HttpError(409, "recent_restart", "最近更新缓存已过期，请重试。");
+        previous = await cachedPrevious.json<RecentPage>();
+      }
+      const batch = files.slice(cursor, cursor + batchSize);
+      const notes = batch.length
+        ? await this.github.updatedNotes(publicRepository(row), commit, batch)
+        : [];
+      const result: RecentPage = {
+        commitSha: commit,
+        items: latestNotes([...(previous?.items ?? []), ...notes]),
+        next: cursor + batch.length < files.length ? cursor + batch.length : null,
+      };
+      await this.env.CACHE.put(`${prefix}/${cursor}.json`, JSON.stringify(result));
+      if (result.next === null)
+        await this.env.CACHE.put(`${prefix}/complete.json`, JSON.stringify(result));
+      return result;
+    } catch (error) {
+      return this.rejectAccess(id, error);
     }
   }
 
@@ -297,6 +355,11 @@ export async function cleanup(env: Bindings): Promise<void> {
   const cutoff = Date.now() - 30 * 86_400_000;
   await env.DB.prepare(
     "DELETE FROM snapshots WHERE created_at < ? AND NOT EXISTS (SELECT 1 FROM repositories WHERE repositories.id = snapshots.repository_id AND repositories.tree_sha = snapshots.tree_sha)",
+  )
+    .bind(cutoff)
+    .run();
+  await env.DB.prepare(
+    "DELETE FROM revisions WHERE created_at < ? AND NOT EXISTS (SELECT 1 FROM repositories WHERE repositories.id = revisions.repository_id AND repositories.commit_sha = revisions.commit_sha)",
   )
     .bind(cutoff)
     .run();

@@ -182,9 +182,21 @@ entries.push(file("附件/unsupported.svg", '<svg xmlns="http://www.w3.org/2000/
 
 function revision(files, name) {
   const tree = sha(JSON.stringify(files));
-  return { tree, commit: sha(`${name}:${tree}`), files };
+  const history = Object.fromEntries(
+    files.map((entry, index) => [
+      entry.path,
+      new Date(Date.UTC(2025, 0, 1) + Math.floor(index / 3) * 86_400_000).toISOString(),
+    ]),
+  );
+  return { tree, commit: sha(`${name}:${tree}`), files, history };
 }
-const updatedEntries = entries.filter((entry) => entry.path !== "02 观察与记录/书店的一角.md");
+const updatedEntries = entries
+  .filter((entry) => entry.path !== "02 观察与记录/书店的一角.md")
+  .map((entry) =>
+    entry.path === "02 观察与记录/雨后的街道.md"
+      ? { ...entry, path: "02 观察与记录/雨后散步.md" }
+      : entry,
+  );
 const welcomeIndex = updatedEntries.findIndex((entry) => entry.path === "README.md");
 updatedEntries[welcomeIndex] = file(
   "README.md",
@@ -262,6 +274,16 @@ const repositories = [
     ],
   },
 ];
+// The second commit only changes these paths; unchanged history must retain its date.
+const [first, second] = repositories[0].revisions;
+second.history = Object.fromEntries(
+  second.files.map((entry) => [
+    entry.path,
+    ["README.md", "02 观察与记录/今天的新发现.md", "02 观察与记录/雨后散步.md"].includes(entry.path)
+      ? "2026-09-12T09:00:00.000Z"
+      : first.history[entry.path],
+  ]),
+);
 await mkdir(new URL("fixtures/generated/", root), { recursive: true });
 await writeFile(
   new URL("fixtures/generated/github.json", root),

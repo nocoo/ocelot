@@ -71,6 +71,7 @@ import { NavigationTree } from "./NavigationTree";
 import { ReaderBreadcrumbs } from "./ReaderBreadcrumbs";
 import { ImageLightbox } from "./ReaderImage";
 import { ReaderOutline } from "./ReaderOutline";
+import { RecentNotes } from "./RecentNotes";
 import { useResolvedTheme } from "./useResolvedTheme";
 
 export function App({ model }: { model: ReaderViewModel }) {
@@ -478,6 +479,16 @@ function Reader({ model }: { model: ReaderViewModel }) {
                 <fieldset className="global-actions" aria-label="全局操作">
                   <Button
                     variant="ghost"
+                    size="sm"
+                    className="recent-button"
+                    onClick={() => model.openDialog("recent")}
+                    disabled={!snapshot}
+                  >
+                    <Clock3 size={15} aria-hidden="true" />
+                    最近更新
+                  </Button>
+                  <Button
+                    variant="ghost"
                     className={`sync-button ${state.pending ? "update-ready" : ""}`}
                     onClick={() => {
                       if (state.pending) void model.applyUpdate();
@@ -586,6 +597,9 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       aria-labelledby="document-title"
                       style={{ "--reading-scale": state.fontScale } as CSSProperties}
                     >
+                      {model.isHome() && !state.raw && (
+                        <RecentNotes state={state} model={model} preview />
+                      )}
                       <div className="article-eyebrow">
                         <span className="eyebrow-line" />
                         <span>{snapshot.repository.name.toUpperCase()}</span>

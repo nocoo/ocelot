@@ -29,6 +29,7 @@ import { connectionPresentation } from "../models/connection";
 import type { Scenario } from "../models/contracts";
 import { fileTitle } from "../models/vault";
 import type { ReaderState, ReaderViewModel } from "../viewmodels/reader";
+import { RecentNotes } from "./RecentNotes";
 
 const scenarioLabels: Record<Scenario, string> = {
   healthy: "正常阅读",
@@ -51,13 +52,15 @@ export function Dialogs({ state, model }: { state: ReaderState; model: ReaderVie
   const title =
     state.dialog === "search"
       ? "寻找一份笔记"
-      : state.dialog === "repositories"
-        ? "我的知识库"
-        : state.dialog === "connection"
-          ? "阅读连接"
-          : state.dialog === "preferences"
-            ? "让阅读更合心意"
-            : "本地体验场景";
+      : state.dialog === "recent"
+        ? "最近更新"
+        : state.dialog === "repositories"
+          ? "我的知识库"
+          : state.dialog === "connection"
+            ? "阅读连接"
+            : state.dialog === "preferences"
+              ? "让阅读更合心意"
+              : "本地体验场景";
   return (
     <Dialog
       open={state.dialog !== null}
@@ -93,15 +96,18 @@ export function Dialogs({ state, model }: { state: ReaderState; model: ReaderVie
           <DialogDescription>
             {state.dialog === "search"
               ? "按文件名与路径搜索当前知识库。"
-              : state.dialog === "repositories"
-                ? "在自己的知识之间，自由往来。"
-                : state.dialog === "connection"
-                  ? "只读访问 GitHub，安心留在文字里。"
-                  : state.dialog === "preferences"
-                    ? "一点调整，找到适合自己的节奏。"
-                    : "所有仓库与凭据均为合成数据，可放心切换。"}
+              : state.dialog === "recent"
+                ? "按最近更新时间排列，最多显示 50 篇文章。"
+                : state.dialog === "repositories"
+                  ? "在自己的知识之间，自由往来。"
+                  : state.dialog === "connection"
+                    ? "只读访问 GitHub，安心留在文字里。"
+                    : state.dialog === "preferences"
+                      ? "一点调整，找到适合自己的节奏。"
+                      : "所有仓库与凭据均为合成数据，可放心切换。"}
           </DialogDescription>
         </DialogHeader>
+        {state.dialog === "recent" && <RecentNotes state={state} model={model} />}
         {state.dialog === "search" && (
           <>
             <div className="dialog-search-field">

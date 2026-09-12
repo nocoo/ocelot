@@ -2,6 +2,7 @@ import type {
   AuthorProfile,
   Connection,
   DocumentContent,
+  RecentNote,
   Repository,
   Scenario,
   Session,
@@ -9,6 +10,7 @@ import type {
 } from "../models/contracts";
 import { embedExcerpt, type ParsedDocument, parseDocument } from "../models/document";
 import { resolveLink, routeUrl } from "../models/links";
+import { isHomeDocument } from "../models/recent";
 import {
   attachmentType,
   changedFiles,
@@ -34,7 +36,14 @@ export interface Reading extends DocumentContent {
   assetUrl: string | null;
   embeds: Record<string, EmbedPreview>;
 }
-export type DialogName = "search" | "repositories" | "connection" | "preferences" | "local" | null;
+export type DialogName =
+  | "search"
+  | "repositories"
+  | "connection"
+  | "preferences"
+  | "local"
+  | "recent"
+  | null;
 
 export interface LightboxImage {
   src: string;
@@ -50,6 +59,7 @@ export interface ReaderState {
   snapshot: Snapshot | null;
   reading: Reading | null;
   pending: Snapshot | null;
+  recent: { items: RecentNote[]; loading: boolean; error: string | null } | null;
   changes: Record<string, "added" | "modified" | "deleted">;
   booting: boolean;
   loading: boolean;
@@ -79,6 +89,7 @@ export class ReaderViewModel {
   private epoch = 0;
   private controller: AbortController | null = null;
   private profileController: AbortController | null = null;
+  private recentController: AbortController | null = null;
   private retryAt = 0;
   private checkSerial = 0;
 
@@ -93,6 +104,7 @@ export class ReaderViewModel {
       snapshot: null,
       reading: null,
       pending: null,
+      recent: null,
       changes: {},
       booting: true,
       loading: false,
@@ -123,6 +135,14 @@ export class ReaderViewModel {
     return () => this.listeners.delete(listener);
   };
   private set(patch: Partial<ReaderState>): void {
+    if (
+      patch.snapshot !== undefined &&
+      (patch.snapshot?.repository.id !== this.state.snapshot?.repository.id ||
+        patch.snapshot?.commitSha !== this.state.snapshot?.commitSha)
+    ) {
+      this.recentController?.abort();
+      patch.recent = null;
+    }
     this.state = { ...this.state, ...patch };
     for (const listener of this.listeners) listener();
   }
@@ -147,6 +167,7 @@ export class ReaderViewModel {
       this.epoch++;
       this.controller?.abort();
       this.profileController?.abort();
+      this.recentController?.abort();
     };
   }
 
@@ -328,6 +349,7 @@ export class ReaderViewModel {
         navigation: { version: this.state.navigation.version + 1, anchor, preserve },
       });
       this.browser.navigate(routeUrl(snapshot.repository.id, path, anchor), replace);
+      if (isHomeDocument(path)) void this.loadRecent();
       await this.loadEmbeds(reading, snapshot, ticket);
     } catch (error) {
       if (ticket === this.epoch) {
@@ -385,17 +407,29 @@ export class ReaderViewModel {
     const checkSerial = ++this.checkSerial;
     this.set({ checking: true });
     try {
-      const next = await this.api.sync(snapshot.repository.id, force, snapshot.treeSha);
+      const next = await this.api.sync(
+        snapshot.repository.id,
+        force,
+        snapshot.treeSha,
+        snapshot.commitSha,
+      );
       if (ticket !== this.epoch) return;
       if ("treeSha" in next && next.treeSha !== snapshot.treeSha)
         this.set({ pending: next, error: null });
-      else
+      else {
+        const reloadRecent = this.state.recent !== null;
         this.set({
-          snapshot: { ...snapshot, repository: next.repository },
+          snapshot: {
+            ...snapshot,
+            repository: next.repository,
+            commitSha: next.repository.commitSha ?? snapshot.commitSha,
+          },
           pending: null,
           notice: force ? "已经是最新版本" : this.state.notice,
           error: null,
         });
+        if (reloadRecent) void this.loadRecent();
+      }
     } catch (error) {
       if (ticket === this.epoch) this.report(error);
     } finally {
@@ -476,6 +510,51 @@ export class ReaderViewModel {
   openDialog(dialog: DialogName): void {
     this.set({ dialog, query: "", error: null, outlineOpen: false, lightbox: null });
     if (dialog === "local") void this.loadLocal();
+    if (dialog === "recent") void this.loadRecent();
+  }
+  isHome(): boolean {
+    return !!this.state.reading && isHomeDocument(this.state.reading.path);
+  }
+
+  async loadRecent(): Promise<void> {
+    const snapshot = this.state.snapshot;
+    if (!snapshot || (this.state.recent && !this.state.recent.error)) return;
+    this.recentController?.abort();
+    const controller = new AbortController();
+    this.recentController = controller;
+    this.set({ recent: { items: [], loading: true, error: null } });
+    try {
+      let cursor = 0;
+      while (true) {
+        const page = await this.api.recent(
+          snapshot.repository.id,
+          snapshot.commitSha,
+          cursor,
+          controller.signal,
+        );
+        if (controller.signal.aborted) return;
+        if (
+          page.commitSha !== snapshot.commitSha ||
+          (page.next !== null &&
+            (!Number.isSafeInteger(page.next) || page.next <= cursor || page.next > 20_000))
+        )
+          throw new ApiError("recent_invalid", "最近更新列表暂时不可用，请重试。");
+        if (page.next === null) {
+          this.set({ recent: { items: page.items, loading: false, error: null } });
+          return;
+        }
+        cursor = page.next;
+      }
+    } catch (error) {
+      if (!controller.signal.aborted)
+        this.set({
+          recent: {
+            items: [],
+            loading: false,
+            error: error instanceof ApiError ? error.message : "暂时无法载入最近更新，请重试。",
+          },
+        });
+    }
   }
   revealDirectory(path: string): void {
     const snapshot = this.state.snapshot;

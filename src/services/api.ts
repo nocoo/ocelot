@@ -3,6 +3,7 @@ import type {
   AuthorProfile,
   Connection,
   DocumentContent,
+  RecentPage,
   Repository,
   Scenario,
   Session,
@@ -70,12 +71,17 @@ export class ApiClient {
     return this.request(`/api/repositories/${id}`, "DELETE");
   }
   sync(id: number, force?: boolean): Promise<Snapshot>;
-  sync(id: number, force: boolean, known: string): Promise<SyncResult>;
-  sync(id: number, force = false, known?: string): Promise<SyncResult> {
+  sync(id: number, force: boolean, known: string, knownCommit?: string): Promise<SyncResult>;
+  sync(id: number, force = false, known?: string, knownCommit?: string): Promise<SyncResult> {
     const query = new URLSearchParams();
     if (force) query.set("force", "1");
     if (known) query.set("known", known);
+    if (knownCommit) query.set("knownCommit", knownCommit);
     return this.request(`/api/repositories/${id}/sync${query.size ? `?${query}` : ""}`, "POST");
+  }
+  recent(id: number, commit: string, cursor: number, signal?: AbortSignal): Promise<RecentPage> {
+    const query = new URLSearchParams({ commit, cursor: String(cursor) });
+    return this.request(`/api/repositories/${id}/recent?${query}`, "GET", undefined, signal);
   }
   document(id: number, tree: string, path: string, signal?: AbortSignal): Promise<DocumentContent> {
     return this.request(contentUrl(id, tree, path), "GET", undefined, signal);

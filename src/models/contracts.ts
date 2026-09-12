@@ -33,6 +33,17 @@ export interface Snapshot {
   files: VaultFile[];
 }
 
+export interface RecentNote {
+  path: string;
+  updatedAt: string;
+}
+
+export interface RecentPage {
+  commitSha: string;
+  items: RecentNote[];
+  next: number | null;
+}
+
 export type SyncResult = Snapshot | { unchanged: true; repository: Repository };
 
 export interface DocumentContent {
