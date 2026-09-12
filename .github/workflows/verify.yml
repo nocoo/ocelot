@@ -16,6 +16,7 @@ jobs:
       runtime-version: "1.4.0"
       node-version: "26.8.1"
       install-policy: "project"
+      gitleaks-config: ".gitleaks.toml"
       coverage-path: "coverage"
       prepare-command: |
         bun run types
@@ -27,11 +28,19 @@ jobs:
       build-command: |
         bun run build
         bun run worker:check
-      l3: true
-      l3-command: "bun run test:e2e"
-      l3-browser: "chromium"
-      artifact-name: verification
-      artifact-paths: |
-        coverage/
+
+  browser:
+    uses: nocoo/base-ci/.github/workflows/test-job.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
+    with:
+      runtime-version: "1.4.0"
+      node-version: "26.8.1"
+      install-policy: "project"
+      pre-command: |
+        bun run types
+        git diff --exit-code -- worker/worker-configuration.d.ts
+      browser: chromium
+      command: bun run test:e2e
+      artifact-name: browser-verification
+      artifact-path: |
         playwright-report/
         test-results/

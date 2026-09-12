@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public Cloudflare Access audience used for JWT verification"
+condition = "AND"
+paths = ['''^wrangler\.jsonc$''']
+regexTarget = "line"
+regexes = ['''^\s*"ACCESS_AUD"\s*:\s*"9ae6de1c823b3d81d5332533d40024ddee04eb692b9e33b068c4071c64154798"\s*,?\s*$''']

@@ -1,5 +1,23 @@
 # 09 · 身份展示、版本与持续交付
 
+## Shared delivery migration (2026-09-12)
+
+Status: Actionlint and current-tree/full-history Gitleaks passed; remote
+verification is pending this commit's CI and Release runs.
+
+CI and Release inherit the pinned `base-ci` v2026.7 workflows. Quality retains
+type generation checks, lint, type checking, coverage, build, Worker dry run,
+and required security scans. A separate shared test job runs Chromium and
+uploads its HTML report and failure diagnostics from the job that produces
+them; the coverage job retains its own report. The build job must not upload
+coverage or browser reports created on other runners.
+
+The public Cloudflare Access audience is verifier metadata. The Gitleaks
+configuration allows only its exact `ACCESS_AUD` assignment in `wrangler.jsonc`
+and preserves all default credential detectors. The historical fingerprint
+remains limited to its original commit. Release verifies the successful CI
+source and current main commit before using the production environment.
+
 状态：**生产 PAT 已恢复为 Secret；状态修复已通过本地回归** · 2026-09-11
 
 ## 用户要求
