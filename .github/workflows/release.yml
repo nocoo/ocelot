@@ -2,7 +2,7 @@ name: Release
 
 on:
   workflow_run:
-    workflows: ["Verify & Deploy"]
+    workflows: ["CI"]
     types: [completed]
     branches: [main]
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
     uses: nocoo/base-ci/.github/workflows/deploy-worker.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
     with:
       expected-workflow-path: ".github/workflows/verify.yml"
-      expected-workflow-name: "Verify & Deploy"
+      expected-workflow-name: "CI"
       source-run-id: ${{ github.event_name == 'workflow_run' && format('{0}', github.event.workflow_run.id) || inputs.source-run-id }}
       allowed-source-events: "push,workflow_dispatch"
       runtime-version: "1.4.0"
