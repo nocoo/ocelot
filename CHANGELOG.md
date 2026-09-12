@@ -2,6 +2,32 @@
 
 Release entries are generated from Git commits by `bun run release`.
 
+## [0.3.0] - 2026-09-12
+
+### Documentation
+
+- record verified v0.2.0 release ([3b82fbb](https://github.com/nocoo/ocelot/commit/3b82fbb32947fa6e4a0fab36fbbcda792b64c584))
+
+### Fixes
+
+- justify reader paragraphs on mobile and desktop ([dc82808](https://github.com/nocoo/ocelot/commit/dc82808f82f4a1fd650324c401f029dcc5613527))
+- map account id from secret or var ([a374609](https://github.com/nocoo/ocelot/commit/a3746097c2bff483c396d931de671bfb5b9305df))
+- name the shared quality workflow ci ([dd13a26](https://github.com/nocoo/ocelot/commit/dd13a267f14f864a2a8ef70c7643d78b44aa8deb))
+- retain shared browser job diagnostics ([3a0910b](https://github.com/nocoo/ocelot/commit/3a0910b788f48ec8e1a13cecd6f30609ac564092))
+- verify independent CI and production deployment before release ([c66d449](https://github.com/nocoo/ocelot/commit/c66d449d7a15eac8032a6683c5f7872763e8b794))
+- restore native mobile tree scrolling and close after article navigation ([3fbfb94](https://github.com/nocoo/ocelot/commit/3fbfb941b79bc5c9696da340eb1bee746e8a5f4c))
+
+### Maintenance
+
+- migrate workflows to base-ci ([e707370](https://github.com/nocoo/ocelot/commit/e7073707a0d68329b27d41494ca415fbfc71d70d))
+- pin base-ci to verified sha ([1ad7689](https://github.com/nocoo/ocelot/commit/1ad7689b56ab1aa9c109659e39f17ad67c9dbe9c))
+- drop unused ci secrets inherit ([b7df70e](https://github.com/nocoo/ocelot/commit/b7df70ea2dcaacc4f8dd4320dc6fd2207743c8d1))
+- pin base-ci to ad43150 ([ea048dc](https://github.com/nocoo/ocelot/commit/ea048dcb40d581dd431bde7c0d6fb98b8892b7e6))
+
+### Features
+
+- maintain the 50 latest articles from immutable GitHub history ([4e8ef42](https://github.com/nocoo/ocelot/commit/4e8ef424ebe0346a8fdcb21fd3600bc55daffec1))
+
 ## [0.2.0] - 2026-09-11
 
 ### Fixes
