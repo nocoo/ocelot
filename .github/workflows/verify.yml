@@ -11,119 +11,21 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    concurrency:
-      group: verify-${{ github.ref }}
-      cancel-in-progress: true
-    env:
-      HUSKY: "0"
-      WRANGLER_SEND_METRICS: "false"
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: 1.4.0
-      - run: bun install --frozen-lockfile
-      - name: Verify generated bindings
-        run: |
-          bun run types
-          git diff --exit-code -- worker/worker-configuration.d.ts
-      - name: Types, lint, coverage and production build
-        run: bun run check
-      - name: Package production Worker
-        run: bun run worker:check
-      - name: Install test browser
-        run: bun x playwright install --with-deps chromium
-      - name: Browser flows on local Wrangler
-        run: bun run test:e2e
-      - name: Verification reports
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: verification
-          path: |
-            coverage/
-            playwright-report/
-            test-results/
-          retention-days: 7
-  security:
-    name: Security
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    concurrency:
-      group: security-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: 1.4.0
-      - name: Install verified security scanners
-        run: |
-          mkdir -p "$RUNNER_TEMP/ocelot-security"
-          cd "$RUNNER_TEMP/ocelot-security"
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64 \
-            --output osv-scanner
-          curl --fail --silent --show-error --location --retry 3 \
-            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
-            --output gitleaks.tar.gz
-          sha256sum --check <<'CHECKSUMS'
-          f9f25499a2c8cc367b3af45df2ea7eeca7fbccceab9c35079968f4b3652194be  osv-scanner
-          551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz
-          CHECKSUMS
-          tar -xzf gitleaks.tar.gz gitleaks
-          chmod +x osv-scanner gitleaks
-          echo "$RUNNER_TEMP/ocelot-security" >> "$GITHUB_PATH"
-      - name: Scan locked dependencies and Git history
-        run: bun run check:security
-  deploy:
-    name: Deploy
-    needs: [verify, security]
-    if: github.repository == 'nocoo/ocelot' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    concurrency:
-      group: ocelot-production
-      cancel-in-progress: false
-    environment:
-      name: production
-      url: https://ocelot.hexly.ai
-    env:
-      HUSKY: "0"
-      WRANGLER_SEND_METRICS: "false"
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version-file: .node-version
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-        with:
-          bun-version: 1.4.0
-      - run: bun install --frozen-lockfile
-      - name: Build the verified revision
-        run: bun run build && bun run worker:check
-      - name: Reject a superseded revision
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          current_revision=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
-          test "$current_revision" = "$GITHUB_SHA"
-      - name: Migrate, deploy, and verify production
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          : "${CLOUDFLARE_API_TOKEN:?Set the CLOUDFLARE_API_TOKEN repository Actions secret}"
-          bun run deploy
+    uses: nocoo/base-ci/.github/workflows/quality.yml@3d2e9e55fdd60aa756df454ded53ef6d06d6653f
+    with:
+      runtime-version: "1.4.0"
+      node-version: "26.8.1"
+      install-policy: "project"
+      coverage-path: "coverage"
+      prepare-command: "bun run types && git diff --exit-code -- worker/worker-configuration.d.ts"
+      test-command: "bun run test:coverage"
+      lint-command: "bun run lint"
+      typecheck-command: "bun run typecheck"
+      build: true
+      build-command: "bun run build && bun run worker:check"
+      l3: true
+      l3-command: "bun run test:e2e"
+      l3-browser: "chromium"
+      artifact-name: verification
+      artifact-paths: "coverage/\nplaywright-report/\ntest-results/"
+    secrets: inherit

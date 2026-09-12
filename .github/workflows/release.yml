@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["Verify & Deploy"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      source-run-id:
+        description: "Successful CI run ID to deploy"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  deploy:
+    name: Deploy
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.event != 'pull_request' &&
+       github.repository == 'nocoo/ocelot')
+    uses: nocoo/base-ci/.github/workflows/deploy-worker.yml@3d2e9e55fdd60aa756df454ded53ef6d06d6653f
+    with:
+      expected-workflow-path: ".github/workflows/verify.yml"
+      expected-workflow-name: "Verify & Deploy"
+      source-run-id: ${{ github.event_name == 'workflow_run' && format('{0}', github.event.workflow_run.id) || inputs.source-run-id }}
+      allowed-source-events: "push,workflow_dispatch"
+      runtime-version: "1.4.0"
+      node-version: "26.8.1"
+      install-policy: "project"
+      build-command: bun run build && bun run worker:check
+      wrangler-version: "4.131.0"
+      deploy-script: bun run deploy
+      environment: production
+      concurrency-group: ocelot-production
+      timeout-minutes: 15
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
