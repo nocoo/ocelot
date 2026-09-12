@@ -20,7 +20,7 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 const hash = (char: string) => char.repeat(40);
-function snapshot(id = 101, tree = "a"): Snapshot {
+function snapshot(id = 101, tree = "a", commit = "c"): Snapshot {
   return {
     repository: {
       id,
@@ -29,13 +29,13 @@ function snapshot(id = 101, tree = "a"): Snapshot {
       branch: "main",
       private: true,
       description: "A garden",
-      commitSha: hash("c"),
+      commitSha: hash(commit),
       treeSha: hash(tree),
       checkedAt: 1,
       authorization: "allowed",
     },
     treeSha: hash(tree),
-    commitSha: hash("c"),
+    commitSha: hash(commit),
     files: ["README.md", "Second.md", "Third.md", "image.png", "unsafe.svg"].map((path) => ({
       path,
       sha: hash("b"),
@@ -124,23 +124,26 @@ describe("recent updates state", () => {
     await model.selectNote("Second.md");
     expect(model.getSnapshot().dialog).toBeNull();
     lastPage.resolve({ commitSha: hash("c"), items: [note], next: null });
-    await lastPage.promise;
+    await api.recentNotes(101, hash("c"));
     expect(model.getSnapshot().recent).toEqual({ items: [note], loading: false, error: null });
     await model.loadRecent();
     expect(api.recent).toHaveBeenCalledTimes(2);
     expect(model.isHome()).toBe(false);
   });
-  it("rejects results from a previous repository and aborts unfinished requests on unmount", async () => {
+  it("keeps a previous repository's preload isolated, reuses it on return and cancels on unmount", async () => {
     const { api, model } = setup();
     const stale = deferred<RecentPage>();
     vi.mocked(api.recent).mockReturnValueOnce(stale.promise);
     await model.start();
     const signal = vi.mocked(api.recent).mock.calls[0][3];
     await model.selectRepository(102);
-    expect(signal?.aborted).toBe(true);
+    expect(signal?.aborted).toBe(false);
     stale.resolve({ commitSha: hash("c"), items: [note], next: null });
-    await stale.promise;
+    await api.recentNotes(101, hash("c"));
     expect(model.getSnapshot().recent?.items).toEqual([]);
+    await model.selectRepository(101);
+    expect(model.getSnapshot().recent).toEqual({ items: [note], loading: false, error: null });
+    expect(api.recent).toHaveBeenCalledTimes(2);
     const next = setup();
     const pending = deferred<RecentPage>();
     vi.mocked(next.api.recent).mockReturnValueOnce(pending.promise);
@@ -150,7 +153,100 @@ describe("recent updates state", () => {
     expect(vi.mocked(next.api.recent).mock.calls[0][3]?.aborted).toBe(true);
     pending.reject(new Error("Disconnected after unmount"));
     await pending.promise.catch(() => {});
-    expect(next.model.getSnapshot().recent?.error).toBeNull();
+    expect(next.model.getSnapshot().recent).toBeNull();
+    await next.model.start();
+    await next.api.recentNotes(101, hash("c"));
+    expect(next.model.getSnapshot().recent).toEqual({ items: [], loading: false, error: null });
+    expect(next.api.recent).toHaveBeenCalledTimes(2);
+  });
+  it.each(["Second.md", "image.png", null])(
+    "preloads outside the homepage (%s) and reuses the list through unchanged checks and dialogs",
+    async (path) => {
+      const { api, model, browser, current } = setup();
+      vi.mocked(browser.route).mockReturnValue({ repository: 101, path, anchor: "" });
+      if (!path) vi.mocked(api.sync).mockResolvedValue({ ...current, files: [] });
+      await model.start();
+      expect(model.isHome()).toBe(false);
+      expect(model.getSnapshot().reading?.path ?? null).toBe(path);
+      expect(model.getSnapshot().recent).toEqual({ items: [], loading: false, error: null });
+      await model.check(true);
+      model.openDialog("recent");
+      model.openDialog(null);
+      model.openDialog("recent");
+      await model.loadRecent();
+      expect(api.recent).toHaveBeenCalledOnce();
+    },
+  );
+  it.each([true, false])(
+    "preloads a pending version without changing the current list and reuses it on apply (ready: %s)",
+    async (ready) => {
+      const { api, model } = setup();
+      vi.mocked(api.recent).mockResolvedValueOnce({
+        commitSha: hash("c"),
+        items: [note],
+        next: null,
+      });
+      await model.start();
+      const next = snapshot(101, "d", "e");
+      const updated = { ...note, path: "Third.md" };
+      const warming = deferred<RecentPage>();
+      vi.mocked(api.sync).mockResolvedValue(next);
+      vi.mocked(api.recent).mockReturnValueOnce(warming.promise);
+      await model.check(true);
+      expect(model.getSnapshot().pending).toEqual(next);
+      model.openDialog("recent");
+      expect(model.getSnapshot().recent?.items).toEqual([note]);
+      model.openDialog(null);
+      await model.check(true);
+      expect(api.recent).toHaveBeenCalledTimes(2);
+      if (ready) {
+        warming.resolve({ commitSha: next.commitSha, items: [updated], next: null });
+        await api.recentNotes(101, next.commitSha);
+      }
+      expect(model.getSnapshot().recent?.items).toEqual([note]);
+      const observed: boolean[] = [];
+      const unsubscribe = model.subscribe(() => {
+        if (model.getSnapshot().snapshot?.commitSha === next.commitSha)
+          observed.push(model.getSnapshot().recent?.loading ?? true);
+      });
+      await model.applyUpdate();
+      if (ready) expect(observed.every((loading) => !loading)).toBe(true);
+      else {
+        expect(model.getSnapshot().recent).toEqual({ items: [], loading: true, error: null });
+        warming.resolve({ commitSha: next.commitSha, items: [updated], next: null });
+        await api.recentNotes(101, next.commitSha);
+      }
+      unsubscribe();
+      expect(model.getSnapshot().recent).toEqual({ items: [updated], loading: false, error: null });
+      expect(api.recent).toHaveBeenCalledTimes(2);
+    },
+  );
+  it("keeps failed preparation out of the current article and retries when applying the new version", async () => {
+    const { api, model } = setup();
+    await model.start();
+    const next = snapshot(101, "d", "e");
+    vi.mocked(api.sync).mockResolvedValue(next);
+    vi.mocked(api.recent).mockRejectedValueOnce(new ApiError("github_offline", "合成预加载失败"));
+    await model.check(true);
+    expect(api.recent).toHaveBeenCalledTimes(2);
+    expect(model.getSnapshot().error).toBeNull();
+    expect(model.getSnapshot().recent).toEqual({ items: [], loading: false, error: null });
+    expect(api.cachedRecent(101, next.commitSha)).toBeUndefined();
+    await model.applyUpdate();
+    expect(api.recent).toHaveBeenCalledTimes(3);
+    expect(model.getSnapshot().recent).toEqual({ items: [], loading: false, error: null });
+  });
+  it("clears only the removed repository's prepared lists", async () => {
+    const { api, model } = setup();
+    await model.start();
+    await model.selectRepository(102);
+    expect(api.cachedRecent(101, hash("c"))).toEqual([]);
+    await model.removeRepository(101);
+    expect(api.cachedRecent(101, hash("c"))).toBeUndefined();
+    expect(api.cachedRecent(102, hash("c"))).toEqual([]);
+    model.openDialog("recent");
+    expect(model.getSnapshot().recent).toEqual({ items: [], loading: false, error: null });
+    expect(api.recent).toHaveBeenCalledTimes(2);
   });
   it("retries list errors without replacing the article or reporting them as document failures", async () => {
     const { api, model } = setup();

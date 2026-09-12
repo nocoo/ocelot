@@ -141,10 +141,14 @@ export class ReaderViewModel {
         patch.snapshot?.commitSha !== this.state.snapshot?.commitSha)
     ) {
       this.recentController?.abort();
-      patch.recent = null;
+      const cached =
+        patch.snapshot &&
+        this.api.cachedRecent(patch.snapshot.repository.id, patch.snapshot.commitSha);
+      patch.recent = cached ? { items: cached, loading: false, error: null } : null;
     }
     this.state = { ...this.state, ...patch };
     for (const listener of this.listeners) listener();
+    if (patch.snapshot) void this.loadRecent();
   }
 
   mount(): () => void {
@@ -168,6 +172,8 @@ export class ReaderViewModel {
       this.controller?.abort();
       this.profileController?.abort();
       this.recentController?.abort();
+      this.api.clearRecent();
+      this.set({ recent: null });
     };
   }
 
@@ -288,6 +294,7 @@ export class ReaderViewModel {
         raw: anchor ? false : this.state.raw,
         navigation: { version: this.state.navigation.version + 1, anchor, preserve: !anchor },
       });
+      void this.loadRecent();
       return;
     }
     this.controller?.abort();
@@ -349,7 +356,6 @@ export class ReaderViewModel {
         navigation: { version: this.state.navigation.version + 1, anchor, preserve },
       });
       this.browser.navigate(routeUrl(snapshot.repository.id, path, anchor), replace);
-      if (isHomeDocument(path)) void this.loadRecent();
       await this.loadEmbeds(reading, snapshot, ticket);
     } catch (error) {
       if (ticket === this.epoch) {
@@ -414,10 +420,12 @@ export class ReaderViewModel {
         snapshot.commitSha,
       );
       if (ticket !== this.epoch) return;
-      if ("treeSha" in next && next.treeSha !== snapshot.treeSha)
+      if ("treeSha" in next && next.treeSha !== snapshot.treeSha) {
         this.set({ pending: next, error: null });
-      else {
-        const reloadRecent = this.state.recent !== null;
+        void this.api.recentNotes(next.repository.id, next.commitSha).catch(() => {
+          // Applying this snapshot can retry; background preparation must not interrupt reading.
+        });
+      } else {
         this.set({
           snapshot: {
             ...snapshot,
@@ -428,7 +436,6 @@ export class ReaderViewModel {
           notice: force ? "已经是最新版本" : this.state.notice,
           error: null,
         });
-        if (reloadRecent) void this.loadRecent();
       }
     } catch (error) {
       if (ticket === this.epoch) this.report(error);
@@ -524,27 +531,8 @@ export class ReaderViewModel {
     this.recentController = controller;
     this.set({ recent: { items: [], loading: true, error: null } });
     try {
-      let cursor = 0;
-      while (true) {
-        const page = await this.api.recent(
-          snapshot.repository.id,
-          snapshot.commitSha,
-          cursor,
-          controller.signal,
-        );
-        if (controller.signal.aborted) return;
-        if (
-          page.commitSha !== snapshot.commitSha ||
-          (page.next !== null &&
-            (!Number.isSafeInteger(page.next) || page.next <= cursor || page.next > 20_000))
-        )
-          throw new ApiError("recent_invalid", "最近更新列表暂时不可用，请重试。");
-        if (page.next === null) {
-          this.set({ recent: { items: page.items, loading: false, error: null } });
-          return;
-        }
-        cursor = page.next;
-      }
+      const items = await this.api.recentNotes(snapshot.repository.id, snapshot.commitSha);
+      if (!controller.signal.aborted) this.set({ recent: { items, loading: false, error: null } });
     } catch (error) {
       if (!controller.signal.aborted)
         this.set({
@@ -617,6 +605,7 @@ export class ReaderViewModel {
     this.set({ removing: id, error: null });
     try {
       await this.api.remove(id);
+      this.api.clearRecent(id);
       const repositories = this.state.repositories.filter((repository) => repository.id !== id);
       this.set({ repositories });
       if (this.state.snapshot?.repository.id === id) {

@@ -1,9 +1,10 @@
 # 00 · 项目状态与文档索引
 
-更新：2026-09-12
+更新：2026-09-13
 
-当前阶段：**移动导航与最近更新已完成本地验收；v0.3.0 正式发行和生产证据以
-[Release](https://github.com/nocoo/ocelot/releases/tag/v0.3.0) 为准**。
+当前阶段：**最近更新预加载与会话缓存已完成本地验收，证据见 14；生产交付以
+对应 main 提交的 CI/CD 为准**。v0.3.0 正式发行记录见
+[Release](https://github.com/nocoo/ocelot/releases/tag/v0.3.0)。
 
 ## 文档
 
@@ -22,6 +23,7 @@
 | 11 | [本地 HTTPS 与端口登记](11-local-https.md) | 可信 HTTPS、HMR 与真实浏览器操作已验证 |
 | 12 | [线上作者身份资料恢复](12-author-profile-recovery.md) | 云端真实姓名/头像、177 UT、27 浏览器流程及完整 CI/CD 通过，已部署 |
 | 13 | [移动导航与最近更新](13-mobile-navigation-and-recent-notes.md) | 本地验收完成，213 UT / 集成、40 浏览器流程；生产记录见 v0.3.0 Release |
+| 14 | [最近更新预加载与会话缓存](14-recent-preloading-and-cache.md) | 本地验收完成，221 UT / 集成、41 浏览器流程；重复打开新增请求为 0 |
 
 ## 交付状态
 
@@ -36,9 +38,9 @@
 | 选择 GitHub 凭据方案 | 已完成 | 用户接受细粒度 PAT 与定期轮换 |
 | 确定存储、渲染与同步 | 已确定 | 02；D1 + 私有 R2、按需缓存和条件检查 |
 | Vite/Worker、MVVM 基础工程 | 已完成 | Wrangler 本地 Worker、SQLite D1、磁盘 R2 和 3 个合成仓库 |
-| Biome、Husky、CI 与 UT 门禁 | 本轮本地通过；远程见对应 main CI/CD | 213 UT / 集成，四项覆盖率 100 / 98.56 / 100 / 100%，见 13 |
-| 阅读界面与 Obsidian 兼容性 | 本地已验证 | 40 浏览器测试，明暗/移动端 axe 无违规；移动导航与最近更新见 13，边界见 05 |
-| 最近更新的至多 50 篇文章 | 已实现并本地验证 | 13；运行时 Git 提交历史、源 commit 缓存、首页摘要、右上角入口 |
+| Biome、Husky、CI 与 UT 门禁 | 本轮本地通过；远程见对应 main CI/CD | 221 UT / 集成，四项覆盖率 100 / 98.67 / 100 / 100%，见 14 |
+| 阅读界面与 Obsidian 兼容性 | 本地已验证 | 41 浏览器测试，明暗/移动端 axe 无违规；移动导航与最近更新见 13、14，边界见 05 |
+| 最近更新的至多 50 篇文章 | 已实现并本地验证 | 13、14；运行时 Git 历史、源 commit 缓存、首页摘要、右上角入口及更新后预加载 |
 | Access 身份与作者头像 | 云端实际请求已验证 | 12；修复 Workers 不支持的 redirect 模式；缓存异常不丢弃合法资料 |
 | 版本与 release | 已实现并本地验证 | 单一版本来源、只读 dry run、CI/CD 成功后不可变 tag |
 | Cloudflare 部署与 Access 策略 | 已交付并验证 | D1 迁移、私有 R2、完整 Git 标签和 Access 入口通过；远程证据见 09 |

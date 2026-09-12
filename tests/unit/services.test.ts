@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { RecentPage } from "../../src/models/contracts";
 import { ApiClient, ApiError } from "../../src/services/api";
 import { browserServices, readRoute } from "../../src/services/browser";
 
@@ -96,6 +97,33 @@ describe("HTTP client", () => {
       `/api/repositories/101/sync?force=1&known=${"a".repeat(40)}`,
       expect.objectContaining({ method: "POST" }),
     );
+  });
+  it("does not let a cancelled response overwrite or evict a replacement preload", async () => {
+    const api = new ApiClient();
+    let resolve!: (page: RecentPage) => void;
+    const recent = vi
+      .spyOn(api, "recent")
+      .mockReturnValueOnce(
+        new Promise<RecentPage>((done) => {
+          resolve = done;
+        }),
+      )
+      .mockResolvedValue({ commitSha: "commit", items: [], next: null });
+    const cancelled = api.recentNotes(1, "commit");
+    const rejected = expect(cancelled).rejects.toMatchObject({ name: "AbortError" });
+    expect(api.recentNotes(1, "commit")).toBe(cancelled);
+    api.clearRecent(1);
+    expect(recent.mock.calls[0][3]?.aborted).toBe(true);
+    await api.recentNotes(1, "commit");
+    resolve({
+      commitSha: "commit",
+      items: [{ path: "old.md", updatedAt: "2026-09-12T00:00:00.000Z" }],
+      next: null,
+    });
+    await rejected;
+    expect(api.cachedRecent(1, "commit")).toEqual([]);
+    expect(await api.recentNotes(1, "commit")).toEqual([]);
+    expect(recent).toHaveBeenCalledTimes(2);
   });
 });
 
