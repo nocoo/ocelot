@@ -160,7 +160,7 @@ test("sidebar loading ends after a failed sync and the registered vault can be r
 test("Chinese and English reading, wikilinks, deep links and browser history", async ({ page }) => {
   await open(page);
   await expect(page.locator("#document-title")).toHaveText(welcome);
-  await expect(page.getByText("1,177 篇", { exact: true })).toBeVisible();
+  await expect(page.getByText("1,178 篇", { exact: true })).toBeVisible();
   await search(page, "On paying attention");
   await expect(page.locator("#document-title")).toHaveText("On paying attention");
   await expect(page.locator(".prose")).toContainText(
@@ -364,6 +364,49 @@ test("long Unicode paths remain accessible in breadcrumbs and GitHub links at ev
   ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "浏览完整路径" })).toBeFocused();
+});
+
+test("toolbar uses consistent Lucide icons with pointer and keyboard descriptions", async ({
+  page,
+}, info) => {
+  await open(page);
+  const controls = page.locator(".reader-options, .global-actions").locator("button, a");
+  for (const control of await controls.all()) {
+    await expect(control).toHaveText("");
+    await expect(control).toHaveAttribute("aria-label", /\S/u);
+    await expect(control.locator("svg.lucide")).toHaveCount(1);
+    await expect(control.locator("svg")).toHaveAttribute("aria-hidden", "true");
+    await expect(control.locator("svg")).toHaveCSS("width", "18px");
+    await expect(control.locator("svg")).toHaveCSS("stroke-width", "1.75px");
+  }
+  const preferences = page.getByRole("button", { name: "阅读偏好", exact: true });
+  await preferences.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("阅读偏好");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  const external = page.getByRole("link", { name: "在 GitHub 打开 Markdown", exact: true });
+  await external.focus();
+  await expect(page.getByRole("tooltip")).toHaveText("在 GitHub 打开 Markdown");
+  await expect(external).toHaveAttribute(
+    "aria-describedby",
+    (await page.getByRole("tooltip").getAttribute("id")) ?? "",
+  );
+  await expect(external).toHaveCSS("outline-width", "2px");
+  // Portaled tooltips are transient descriptions, not document landmarks.
+  expect(
+    (
+      await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .analyze()
+    ).violations,
+  ).toEqual([]);
+  await page.screenshot({ path: info.outputPath("toolbar-light.png") });
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await preferences.click();
+  await expect(page.getByRole("dialog", { name: "让阅读更合心意", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
 });
 
 test("renders math, diagrams, pinned images, note embeds and safe semantic HTML", async ({
@@ -830,7 +873,7 @@ test("full width persists and Raw shows the exact Markdown without another conte
   const readerOptions = page.getByRole("group", { name: "阅读器选项", exact: true });
   const fullWidth = readerOptions.getByRole("button", { name: "全宽阅读", exact: true });
   await expect(fullWidth).toBeInViewport();
-  await expect(fullWidth).toHaveText("全宽");
+  await expect(fullWidth).toHaveText("");
   await expect(fullWidth).toHaveAttribute("aria-pressed", "false");
   await fullWidth.click();
   await expect(fullWidth).toHaveAttribute("aria-pressed", "true");

@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { renderDiagram } from "../services/diagram";
 import { ReaderImage } from "./ReaderImage";
 import { useResolvedTheme } from "./useResolvedTheme";
 
@@ -19,18 +20,8 @@ export default function Diagram({
     setImage(null);
     async function draw() {
       try {
-        const { default: mermaid } = await import("mermaid");
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: "strict",
-          suppressErrorRendering: true,
-          theme: resolvedTheme === "dark" ? "dark" : "neutral",
-          maxTextSize: 20_000,
-          fontFamily: "system-ui",
-          flowchart: { htmlLabels: false, useMaxWidth: true },
-        });
-        const { svg } = await mermaid.render(`diagram-${id}`, source);
-        if (active) setImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+        const image = await renderDiagram(`diagram-${id}`, source, resolvedTheme === "dark");
+        if (active) setImage(image);
       } catch {
         if (active) setFailed(true);
       }
@@ -49,7 +40,12 @@ export default function Diagram({
     );
   return image ? (
     <figure className="diagram">
-      <ReaderImage src={image} alt="笔记中的 Mermaid 图示" onOpen={onOpenImage} />
+      <ReaderImage
+        src={image}
+        alt="笔记中的 Mermaid 图示"
+        onOpen={onOpenImage}
+        onError={() => setFailed(true)}
+      />
     </figure>
   ) : (
     <div className="diagram-placeholder shimmer" role="status" aria-label="正在绘制图示" />

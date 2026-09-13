@@ -14,19 +14,24 @@ export function ReaderImage({
   src,
   alt,
   onOpen,
+  onError,
 }: {
   src: string;
   alt: string;
   onOpen: (src: string, alt: string) => void;
+  onError?: () => void;
 }) {
   return (
     <Button
       variant="ghost"
       className="reader-image"
       aria-label={`放大图片：${alt || "笔记图片"}`}
-      onClick={() => onOpen(src, alt)}
+      onClick={(event) => {
+        event.currentTarget.focus({ preventScroll: true });
+        onOpen(src, alt);
+      }}
     >
-      <img src={src} alt={alt} loading="lazy" decoding="async" />
+      <img src={src} alt={alt} loading="lazy" decoding="async" onError={onError} />
     </Button>
   );
 }

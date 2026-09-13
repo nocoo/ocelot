@@ -24,18 +24,28 @@ import {
   SidebarSearch,
   SidebarUser,
 } from "@nocoo/basalt/components/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@nocoo/basalt/components/tooltip";
 import { ThemeProvider } from "@nocoo/basalt/providers/theme";
 import {
   ArrowDownToLine,
   ArrowUp,
+  ArrowUpRight,
   BookOpen,
+  CaseSensitive,
   Check,
   ChevronRight,
   ChevronsUpDown,
   CircleHelp,
   Clock3,
-  ExternalLink,
+  CodeXml,
+  FileCodeCorner,
   FlaskConical,
+  FoldHorizontal,
   GitBranch,
   Link2,
   ListTree,
@@ -44,13 +54,15 @@ import {
   Moon,
   PanelLeft,
   Plus,
-  RotateCw,
+  RefreshCw,
   Search,
   ShieldCheck,
   Sun,
+  UnfoldHorizontal,
   X,
 } from "lucide-react";
 import {
+  type ComponentProps,
   type CSSProperties,
   useCallback,
   useEffect,
@@ -64,7 +76,6 @@ import { connectionPresentation } from "../models/connection";
 import { changedFiles, fileTitle, isMarkdown } from "../models/vault";
 import type { ReaderViewModel } from "../viewmodels/reader";
 import { Dialogs } from "./Dialogs";
-import { GitHubMark } from "./GitHubMark";
 import { Mark } from "./Mark";
 import { Markdown } from "./Markdown";
 import { NavigationTree } from "./NavigationTree";
@@ -78,24 +89,53 @@ export function App({ model }: { model: ReaderViewModel }) {
   useEffect(() => model.mount(), [model]);
   return (
     <ThemeProvider storageKey="ocelot-theme">
-      <Reader model={model} />
+      <TooltipProvider delayDuration={350}>
+        <Reader model={model} />
+      </TooltipProvider>
     </ThemeProvider>
+  );
+}
+
+function ToolbarButton({
+  title,
+  className = "",
+  children,
+  onClick,
+  ...props
+}: ComponentProps<typeof Button> & { "aria-label": string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`chrome-button ${className}`}
+          onClick={(event) => {
+            // Safari taps need an explicit focus target for dialog focus restoration.
+            event.currentTarget.focus({ preventScroll: true });
+            onClick?.(event);
+          }}
+          {...props}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={8} className="toolbar-tooltip">
+        {title ?? props["aria-label"]}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
 function ThemeButton() {
   const { resolvedTheme, setTheme } = useResolvedTheme();
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="chrome-button"
-      title={resolvedTheme === "dark" ? "切换到浅色" : "切换到深色"}
+    <ToolbarButton
       aria-label={resolvedTheme === "dark" ? "切换到浅色" : "切换到深色"}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
     >
-      {resolvedTheme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-    </Button>
+      {resolvedTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+    </ToolbarButton>
   );
 }
 
@@ -384,22 +424,14 @@ function Reader({ model }: { model: ReaderViewModel }) {
             className="reader-toolbar"
             leading={
               <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="chrome-button"
-                  title="切换知识库导航"
+                <ToolbarButton
                   aria-label="切换知识库导航"
                   aria-expanded={!collapsed}
                   aria-controls="vault-sidebar"
-                  onClick={(event) => {
-                    // Safari does not focus a button on tap; give the drawer a real return target.
-                    event.currentTarget.focus({ preventScroll: true });
-                    setCollapsed(!collapsed);
-                  }}
+                  onClick={() => setCollapsed(!collapsed)}
                 >
-                  <PanelLeft size={18} />
-                </Button>
+                  <PanelLeft aria-hidden="true" />
+                </ToolbarButton>
                 <ReaderBreadcrumbs
                   snapshot={snapshot}
                   path={reading?.path}
@@ -411,84 +443,72 @@ function Reader({ model }: { model: ReaderViewModel }) {
             actions={
               <>
                 <fieldset className="reader-options" aria-label="阅读器选项">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="chrome-button width-button"
+                  <ToolbarButton
                     aria-label="全宽阅读"
                     title={state.fullWidth ? "恢复舒适行宽" : "全宽阅读"}
                     aria-pressed={state.fullWidth}
                     disabled={!reading}
                     onClick={() => model.setFullWidth(!state.fullWidth)}
                   >
-                    全宽
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="chrome-button type-button"
+                    {state.fullWidth ? (
+                      <FoldHorizontal aria-hidden="true" />
+                    ) : (
+                      <UnfoldHorizontal aria-hidden="true" />
+                    )}
+                  </ToolbarButton>
+                  <ToolbarButton
                     aria-label="阅读偏好"
-                    title="阅读偏好"
+                    aria-haspopup="dialog"
                     onClick={() => model.openDialog("preferences")}
                   >
-                    Aa
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="chrome-button raw-button"
+                    <CaseSensitive aria-hidden="true" />
+                  </ToolbarButton>
+                  <ToolbarButton
                     aria-label={state.raw ? "返回文章阅读" : "查看 Markdown 原文"}
-                    title={state.raw ? "返回文章阅读" : "查看 Markdown 原文"}
                     aria-pressed={state.raw}
                     disabled={!reading || !!reading.assetType}
                     onClick={() => model.setRaw(!state.raw)}
                   >
-                    {state.raw ? <BookOpen size={17} /> : <span>Raw</span>}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="chrome-button"
+                    {state.raw ? (
+                      <BookOpen aria-hidden="true" />
+                    ) : (
+                      <FileCodeCorner aria-hidden="true" />
+                    )}
+                  </ToolbarButton>
+                  <ToolbarButton
                     aria-label="在 GitHub 打开 Markdown"
-                    title="在 GitHub 打开 Markdown"
                     asChild={!!githubDocumentUrl}
                     disabled={!githubDocumentUrl}
                   >
                     {githubDocumentUrl ? (
                       <a href={githubDocumentUrl} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink size={17} />
+                        <ArrowUpRight aria-hidden="true" />
                       </a>
                     ) : (
-                      <ExternalLink size={17} />
+                      <ArrowUpRight aria-hidden="true" />
                     )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="chrome-button mobile-outline-button"
+                  </ToolbarButton>
+                  <ToolbarButton
+                    className="mobile-outline-button"
                     ref={outlineButton}
                     aria-label="文章大纲"
-                    title="文章大纲"
                     aria-expanded={state.outlineOpen}
                     onClick={() => model.setOutlineOpen(!state.outlineOpen)}
                     disabled={state.raw || !reading?.parsed.headings.length}
                   >
-                    <ListTree size={17} />
-                  </Button>
+                    <ListTree aria-hidden="true" />
+                  </ToolbarButton>
                 </fieldset>
                 <fieldset className="global-actions" aria-label="全局操作">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="recent-button"
+                  <ToolbarButton
+                    aria-label="最近更新"
+                    aria-haspopup="dialog"
                     onClick={() => model.openDialog("recent")}
                     disabled={!snapshot}
                   >
-                    <Clock3 size={15} aria-hidden="true" />
-                    最近更新
-                  </Button>
-                  <Button
-                    variant="ghost"
+                    <Clock3 aria-hidden="true" />
+                  </ToolbarButton>
+                  <ToolbarButton
                     className={`sync-button ${state.pending ? "update-ready" : ""}`}
                     onClick={() => {
                       if (state.pending) void model.applyUpdate();
@@ -501,49 +521,42 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       (state.session?.connection.retryAt ?? 0) > Date.now()
                     }
                     aria-label={state.pending ? `应用更新，${updateCount} 份文件` : "检查更新"}
-                    title={state.pending ? `${updateCount} 份文件有新版本，点击应用` : "检查更新"}
-                  >
-                    <span className={state.checking ? "spin" : ""}>
-                      {state.checking ? (
-                        <LoaderCircle size={14} />
-                      ) : state.pending ? (
-                        <ArrowDownToLine size={14} />
-                      ) : (
-                        <RotateCw size={14} />
-                      )}
-                    </span>
-                    <span>
-                      {state.checking
-                        ? "正在检查"
+                    aria-busy={state.checking}
+                    title={
+                      state.checking
+                        ? "正在检查更新"
                         : state.pending
-                          ? `应用更新 · ${updateCount}`
-                          : "检查更新"}
-                    </span>
-                  </Button>
+                          ? `${updateCount} 份文件有新版本，点击应用`
+                          : "检查更新"
+                    }
+                  >
+                    {state.checking ? (
+                      <LoaderCircle className="spin" aria-hidden="true" />
+                    ) : state.pending ? (
+                      <ArrowDownToLine aria-hidden="true" />
+                    ) : (
+                      <RefreshCw aria-hidden="true" />
+                    )}
+                  </ToolbarButton>
                   <ThemeButton />
                   {state.session?.local && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="chrome-button"
+                    <ToolbarButton
                       aria-label="本地体验场景"
-                      title="本地体验场景"
+                      aria-haspopup="dialog"
                       onClick={() => model.openDialog("local")}
                     >
-                      <FlaskConical size={17} />
-                    </Button>
+                      <FlaskConical aria-hidden="true" />
+                    </ToolbarButton>
                   )}
-                  <Button variant="ghost" size="icon" className="chrome-button" asChild>
+                  <ToolbarButton aria-label="Ocelot GitHub 仓库" asChild>
                     <a
                       href="https://github.com/nocoo/ocelot"
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="Ocelot GitHub 仓库"
-                      title="Ocelot GitHub 仓库"
                     >
-                      <GitHubMark />
+                      <CodeXml aria-hidden="true" />
                     </a>
-                  </Button>
+                  </ToolbarButton>
                 </fieldset>
               </>
             }

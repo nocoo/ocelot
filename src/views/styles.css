@@ -318,12 +318,6 @@ a {
   padding: 28px 12px;
   line-height: 1.7;
 }
-.recent-button {
-  gap: 5px;
-  padding-inline: 8px;
-  font-size: 12px;
-  white-space: nowrap;
-}
 .recent-notes {
   min-width: 0;
   color: var(--ink);
@@ -513,20 +507,20 @@ a {
   gap: 13px;
 }
 .reader-toolbar > div:last-child {
-  gap: 16px;
+  gap: 12px;
 }
 .reader-options,
 .global-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
 .reader-options {
-  padding-right: 16px;
+  padding-right: 12px;
   border-right: 1px solid var(--hairline);
 }
 .reader-breadcrumbs {
@@ -605,42 +599,38 @@ a {
 }
 .chrome-button {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   color: var(--muted);
   border-radius: 8px;
 }
-.type-button {
-  font-family: var(--serif);
-  font-size: 16px;
+.reader-toolbar .chrome-button svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.75;
 }
-.raw-button {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-}
-.width-button {
-  font-size: 11px;
-}
-.raw-button[aria-pressed="true"],
-.width-button[aria-pressed="true"] {
-  color: var(--accent);
+.chrome-button:hover {
+  color: var(--ink);
   background: var(--accent-soft);
 }
-.sync-button {
-  gap: 6px;
-  font-size: 11px;
-  color: var(--muted);
-  height: 30px;
-  padding: 0 8px;
-  border-radius: 7px;
+.chrome-button:focus-visible {
+  box-shadow: none;
 }
-.sync-button > span:first-child {
-  display: flex;
+.chrome-button[aria-pressed="true"],
+.mobile-outline-button[aria-expanded="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 .sync-button.update-ready {
   color: var(--accent);
   background: var(--accent-soft);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.toolbar-tooltip {
+  font-family: var(--basalt-font-sans);
+  font-size: 12px;
+  line-height: 1.5;
 }
 .mobile-outline-button {
   display: none;
@@ -2069,16 +2059,9 @@ a {
   .breadcrumb-current {
     font-size: 11px;
   }
-  .reader-toolbar .sync-button {
-    padding: 0 8px;
-    width: 28px;
-  }
-  .reader-toolbar .sync-button > span:last-child {
-    display: none;
-  }
   .chrome-button {
-    width: 28px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
   .island-wrap {
     padding: 0 8px;

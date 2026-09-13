@@ -67,6 +67,7 @@ const curated = [
   ["03 The Reading Room/On paying attention.md", "attention.md"],
   ["04 工具与实践/Markdown 排版实验室.md", "laboratory.md"],
   ["06 阅读器体验/图文与版式图鉴.md", "illustrated.md"],
+  ["06 阅读器体验/阅读室图示.md", "diagrams.md"],
 ];
 const entries = [];
 for (const [path, source] of curated)

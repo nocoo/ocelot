@@ -21,7 +21,7 @@ export default defineConfig({
     },
     {
       name: "webkit-mobile",
-      testMatch: "**/mobile-navigation.spec.ts",
+      testMatch: ["**/mobile-navigation.spec.ts", "**/diagrams.spec.ts"],
       // Playwright exposes native swipe injection only in Chromium; WebKit covers taps and keyboard scroll.
       grepInvert: /native touch/u,
       use: { ...devices["iPhone 13"], viewport: { width: 390, height: 844 } },
