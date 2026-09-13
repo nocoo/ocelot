@@ -80,8 +80,8 @@ describe("authorization before cache access", () => {
     expect(snapshot.repository).toMatchObject({
       owner: "ocelot-demo",
       private: true,
-      authorization: "allowed",
     });
+    expect((await store.repository(101)).authorization).toBe("allowed");
   });
   it("does not allow arbitrary snapshots, blobs or hidden paths into the cache namespace", async () => {
     const store = makeStore();

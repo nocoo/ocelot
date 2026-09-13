@@ -13,11 +13,6 @@ export interface Repository {
   name: string;
   branch: string;
   private: boolean;
-  description: string;
-  commitSha: string | null;
-  treeSha: string | null;
-  checkedAt: number;
-  authorization: string;
 }
 
 export interface VaultFile {

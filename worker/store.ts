@@ -32,11 +32,6 @@ export function publicRepository(row: RepositoryRow): Repository {
     name: row.name,
     branch: row.branch,
     private: Boolean(row.private),
-    description: row.description,
-    commitSha: row.commit_sha,
-    treeSha: row.tree_sha,
-    checkedAt: row.checked_at,
-    authorization: row.authorization,
   };
 }
 

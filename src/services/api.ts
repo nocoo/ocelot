@@ -83,9 +83,7 @@ export class ApiClient {
   checkConnection(): Promise<Connection> {
     return this.request("/api/connection/check", "POST");
   }
-  local(
-    scenario?: Scenario,
-  ): Promise<{ scenario: Scenario; requests: Record<string, number>; repositories: string[] }> {
+  local(scenario?: Scenario): Promise<{ scenario: Scenario; requests: Record<string, number> }> {
     return this.request(
       "/api/local",
       scenario ? "POST" : "GET",

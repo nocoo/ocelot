@@ -59,7 +59,7 @@ export interface ReaderState {
   fontScale: number;
   directoryFocus: { path: string } | null;
   navigation: { version: number; anchor: string; preserve: boolean };
-  local: { scenario: Scenario; requests: Record<string, number>; repositories: string[] } | null;
+  local: { scenario: Scenario; requests: Record<string, number> } | null;
 }
 
 export class ReaderViewModel {

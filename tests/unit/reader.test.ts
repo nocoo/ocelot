@@ -22,11 +22,6 @@ function snapshot(id = 101, tree = "a"): Snapshot {
       name: `garden-${id}`,
       branch: "main",
       private: true,
-      description: "A garden",
-      commitSha: hash("c"),
-      treeSha: hash(tree),
-      checkedAt: 1,
-      authorization: "allowed",
     },
     treeSha: hash(tree),
     commitSha: hash("c"),
@@ -67,7 +62,6 @@ function setup(local = true) {
   vi.spyOn(api, "local").mockImplementation(async (scenario) => ({
     scenario: scenario ?? "healthy",
     requests: {},
-    repositories: ["demo/garden"],
   }));
   const browser: BrowserServices = {
     route: vi.fn(() => ({ repository: 101, path: "README.md", anchor: "" })),
@@ -375,13 +369,13 @@ describe("version handoff and connection recovery", () => {
     const { model, api } = setup();
     await model.start();
     const before = model.getSnapshot();
-    const repository = { ...snapshot().repository, checkedAt: 12345 };
+    const repository = { ...snapshot().repository, name: "garden-refreshed" };
     vi.mocked(api.sync).mockResolvedValueOnce({ unchanged: true, repository });
     await model.check(true);
     expect(api.sync).toHaveBeenLastCalledWith(101, true, before.snapshot?.treeSha);
     expect(model.getSnapshot().snapshot?.files).toBe(before.snapshot?.files);
     expect(model.getSnapshot().reading).toBe(before.reading);
-    expect(model.getSnapshot().snapshot?.repository.checkedAt).toBe(12345);
+    expect(model.getSnapshot().snapshot?.repository.name).toBe("garden-refreshed");
     expect(model.getSnapshot()).toMatchObject({
       pending: null,
       checking: false,

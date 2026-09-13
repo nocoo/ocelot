@@ -123,6 +123,5 @@ export async function localControls(request: Request, env: Bindings): Promise<Re
   return json({
     scenario: await scenario(env),
     requests: Object.fromEntries(requests.results.map((row) => [row.kind, row.count])),
-    repositories: data.repositories.map((repo) => `${repo.owner.login}/${repo.name}`),
   });
 }
