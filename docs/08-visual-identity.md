@@ -15,7 +15,6 @@ The generation archive is `nocoo/hexly.ai/artwork/logo-family/ocelot/2026-09-11-
 | Empty reader hero | Complete approved paper presentation, served at 256/512 px; 192 px on desktop and 144 px on mobile, with the original 23% corner radius |
 | Browser favicon | Transparent 16/32 px PNGs |
 | Apple touch icon | Square 180 px presentation; the platform supplies its own mask |
-| Social previews | The shared Hexly image at `https://hexly.ai/og/ocelot.jpg` |
 
 The paper background uses independent broken almond rosettes and turned-page curves. It is a presentation palette, not a website theme. Ocelot keeps its existing blue-gray controls, light/dark reading surfaces and text colors. Application marks use the same foreground in both themes.
 
@@ -60,3 +59,20 @@ errors, and axe reports zero violations after the theme transition settles.
 Visible interface text remains at least 11 px. TypeScript, Biome and the production
 build pass. Screenshots and measurements are in the ignored
 `output/testing/empty-reading-*` files. No View unit tests were added.
+
+## Social-card metadata
+
+Status: **Removed**, 2026-09-15. Open Graph and Twitter card tags in root
+`index.html` (`og:title`, `og:description`, `og:image`, `twitter:card`,
+`twitter:image`) were unreachable behind Cloudflare Access: crawlers never see
+the authenticated HTML shell, so the tags produced no social preview. The shared
+Hexly image at `https://hexly.ai/og/ocelot.jpg` remains the public brand asset
+outside this app; Ocelot no longer references it from the reader document head.
+
+`index.html` keeps charset, viewport, theme-color, `noindex, nofollow`, title,
+description, favicons and the Apple touch icon. No runtime, routing, branding
+asset, or Access behavior change.
+
+Verification: `index.html` contains none of the five removed meta tags and still
+serves the retained head entries above. Document 08 no longer lists social
+previews as an in-app consumer.
