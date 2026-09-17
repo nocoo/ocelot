@@ -745,10 +745,22 @@ for (const theme of ["light", "dark"] as const) {
     await expect(preferences).toBeFocused();
     await page.reload();
     await expect(page.locator(".article")).toHaveCSS("--reading-scale", "1.15");
-    await page.getByRole("button", { name: "切换主题", exact: true }).click();
+    const themeToggle = page.getByRole("button", { name: "切换主题", exact: true });
+    const stored = await page.evaluate(() => localStorage.getItem("ocelot-theme"));
+    const current =
+      stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
+    const next = current === "system" ? "light" : current === "light" ? "dark" : "system";
+    await themeToggle.click();
     await settleMotion(page);
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ocelot-theme"))).toBe(next);
     await page.reload();
-    await expect(page.getByRole("button", { name: "切换主题", exact: true })).toBeVisible();
+    await expect(themeToggle).toBeVisible();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ocelot-theme"))).toBe(next);
+    const resolvedDark = next === "dark" || (next === "system" && theme === "dark");
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-mode",
+      resolvedDark ? "dark" : "light",
+    );
     expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(
       expect.arrayContaining(["ocelot-font-scale", "ocelot-theme"]),
     );
