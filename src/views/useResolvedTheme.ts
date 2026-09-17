@@ -12,5 +12,9 @@ export function useResolvedTheme() {
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
-  return { resolvedTheme: theme === "system" ? (systemDark ? "dark" : "light") : theme, setTheme };
+  return {
+    theme,
+    resolvedTheme: theme === "system" ? (systemDark ? "dark" : "light") : theme,
+    setTheme,
+  };
 }

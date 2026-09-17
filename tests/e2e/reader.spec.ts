@@ -745,17 +745,10 @@ for (const theme of ["light", "dark"] as const) {
     await expect(preferences).toBeFocused();
     await page.reload();
     await expect(page.locator(".article")).toHaveCSS("--reading-scale", "1.15");
-    await page
-      .getByRole("button", { name: theme === "dark" ? "切换到浅色" : "切换到深色", exact: true })
-      .click();
+    await page.getByRole("button", { name: "切换主题", exact: true }).click();
     await settleMotion(page);
     await page.reload();
-    await expect(
-      page.getByRole("button", {
-        name: theme === "dark" ? "切换到深色" : "切换到浅色",
-        exact: true,
-      }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "切换主题", exact: true })).toBeVisible();
     expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(
       expect.arrayContaining(["ocelot-font-scale", "ocelot-theme"]),
     );

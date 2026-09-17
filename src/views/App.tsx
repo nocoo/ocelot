@@ -42,7 +42,6 @@ import {
   ChevronsUpDown,
   CircleHelp,
   Clock3,
-  CodeXml,
   FileCodeCorner,
   FlaskConical,
   FoldHorizontal,
@@ -51,6 +50,7 @@ import {
   ListTree,
   LoaderCircle,
   LockKeyhole,
+  Monitor,
   Moon,
   PanelLeft,
   Plus,
@@ -75,6 +75,7 @@ import { version } from "../../package.json";
 import { connectionPresentation } from "../models/connection";
 import { changedFiles, fileTitle, isMarkdown } from "../models/vault";
 import type { ReaderViewModel } from "../viewmodels/reader";
+import { Github, Hexly } from "./chrome-icons";
 import { Dialogs } from "./Dialogs";
 import { Mark } from "./Mark";
 import { Markdown } from "./Markdown";
@@ -128,13 +129,14 @@ function ToolbarButton({
 }
 
 function ThemeButton() {
-  const { resolvedTheme, setTheme } = useResolvedTheme();
+  const { theme, setTheme } = useResolvedTheme();
+  const nextTheme = theme === "system" ? "light" : theme === "light" ? "dark" : "system";
+  const label =
+    nextTheme === "system" ? "使用系统主题" : nextTheme === "light" ? "切换到浅色" : "切换到深色";
+  const Icon = theme === "system" ? Monitor : theme === "dark" ? Moon : Sun;
   return (
-    <ToolbarButton
-      aria-label={resolvedTheme === "dark" ? "切换到浅色" : "切换到深色"}
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-    >
-      {resolvedTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+    <ToolbarButton aria-label="切换主题" title={label} onClick={() => setTheme(nextTheme)}>
+      <Icon aria-hidden="true" />
     </ToolbarButton>
   );
 }
@@ -538,7 +540,6 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       <RefreshCw aria-hidden="true" />
                     )}
                   </ToolbarButton>
-                  <ThemeButton />
                   {state.session?.local && (
                     <ToolbarButton
                       aria-label="本地体验场景"
@@ -554,9 +555,19 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <CodeXml aria-hidden="true" />
+                      <Github aria-hidden="true" />
                     </a>
                   </ToolbarButton>
+                  <ToolbarButton aria-label="Ocelot on hexly.ai" asChild>
+                    <a
+                      href="https://hexly.ai/projects/ocelot"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Hexly aria-hidden="true" />
+                    </a>
+                  </ToolbarButton>
+                  <ThemeButton />
                 </fieldset>
               </>
             }
