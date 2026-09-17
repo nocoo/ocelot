@@ -1,95 +1,96 @@
 # Ocelot
 
-@AGENTS.md
+Single-user, read-only GitHub Obsidian reader behind Cloudflare Access.
+Profile: ts-worker-web.
+Direction: [project status](docs/00-project-status.md), [product contract](docs/01-product-contract.md).
 
-Single-user, read-only GitHub Obsidian reader on Cloudflare Workers. `AGENTS.md`
-is the engineering contract; this file is the operational entry point. Keep both
-aligned with actual scripts and numbered documents. Read
-[the status index](docs/00-project-status.md) before changing behavior.
+## Sources of Truth
 
-## Sources of truth
+This handbook and [AGENTS.md](AGENTS.md) are the contract; hooks, CI and config are enforcement. Raise weaker enforcement to match. Frameworks must not rewrite the handbook.
 
-| Topic | Source |
+| Fact | Where |
 | --- | --- |
-| Requirements, MVVM, coverage | `AGENTS.md`, `docs/01-product-contract.md` |
-| PAT, immutable cache, authorization freshness | `docs/02-github-auth-cache-and-sync.md` |
-| Running locally and rotating PATs | `docs/06-running-and-deployment.md` |
-| Caddy HTTPS and registered local ports | `docs/11-local-https.md` |
-| Basalt/Pierre navigation and typography | `docs/07-basalt-navigation.md` |
-| Identity, versioning and CI/CD | `docs/09-identity-and-delivery.md` |
-| Version | Root `package.json` only; store `X.Y.Z`, display `vX.Y.Z` |
-| Production bindings | `wrangler.jsonc`; regenerate `worker/worker-configuration.d.ts` |
-| Local simulation | `wrangler.local.jsonc`, `mock/`, synthetic `fixtures/` |
-| Verification and delivery | `.github/workflows/verify.yml`, `.husky/`, `scripts/` |
+| Human docs | [README.md](README.md), numbered docs |
+| Version | Root `package.json`; sidebar `vX.Y.Z` and authenticated `/api/live` |
+| Runtime | `wrangler.jsonc`; generated `worker/worker-configuration.d.ts` |
+| Test/dev | `wrangler.local.jsonc`, `mock/`, synthetic `fixtures/` |
+| Enforcement | `.husky/`, `.github/workflows/verify.yml`, Vitest/Playwright |
+| Accidents | [Retrospective.md](Retrospective.md) |
+
+## Project Invariants
+
+- Source vaults remain read-only; preference/registration/cache writes never authorize modifying a GitHub repository. Keep private note content/paths, PATs and real fixture inventories out of Git.
+- Verify Access JWT and configured owner before every asset/API/avatar/private-cache response, including `/api/live`. Keep workers.dev/preview disabled; production never imports synthetic transports/test controls.
+- GitHub PATs live only in Worker Secrets (`GITHUB_TOKEN`, optional `GITHUB_TOKEN_EXPIRES_AT`), never ordinary Wrangler text vars, build variables, browser storage or logs. Missing current PAT rejects GitHub operations even if old health data is cached.
+- Author profile lookup receives the verified normalized email's SHA-256. Profile loading is separate from reading; proxy only the allowed raster avatar origin with bounded content and preserve CSP.
+- Pin Basalt 2.1.8/TypeScript 7.0.2; use Pierre Trees and Kami-inspired typography without treating Kami as a parser. Respect upstream notices and the [navigation](docs/07-basalt-navigation.md) contract.
+- MVVM: Views render/dispatch, ViewModels own interaction state, models/services parse and access/cache GitHub. Authorize before cache reads; validate untrusted Markdown/HTML/SVG/URLs/paths/diagrams.
+- Preserve cool blue-gray surfaces, text ≥11px, reduced motion, sidebar/header Basalt L0 and fixed logo x-offset 24px through animation. Keep virtual-tree geometry stable.
+
+## Stack / Layout
+
+| Component | Choice |
+| --- | --- |
+| Runtime | Vite/React SPA + Cloudflare Worker; D1 metadata/private R2 cache |
+| Tooling | Bun 1.4.0, Node 26.8.1, TypeScript 7, Biome |
+| Source | `src/` Views/ViewModels/models; `worker/`; `mock/`/`fixtures/` local simulation |
+| Tests | `tests/unit/`, `tests/worker/`, `tests/e2e/` and release-model tests |
 
 ## Commands
+
+Run from root. Local dev uses only synthetic repositories and needs no PAT/Cloudflare account.
 
 ```sh
 bun install --frozen-lockfile
 bun run dev
-bun run check
+bun run types
+bun run typecheck
+bun run lint
+bun run test:coverage
+bun run build
 bun run worker:check
+bun x playwright install chromium
+bun x playwright install webkit
 bun run test:e2e
 bun run check:security
-bun run types
-bun run release -- --dry-run
-bun run release -- patch
 ```
 
-Use Node 26.8.1 and Bun 1.4.0. Basalt 2.1.8 and TypeScript 7.0.2 stay pinned.
-Security checks require OSV Scanner 2.5.1 and Gitleaks 8.30.1; CI verifies their
-binary checksums. Do not bypass hooks, coverage thresholds or security scans.
+G2 uses OSV 2.5.1 and gitleaks 8.30.1; CI verifies binaries. `types` uses the tracked empty `.dev.vars.example` only for deterministic generation, never deployment. `worker:check` packages production config as a dry run. Avoid overwriting generated bindings by hand.
 
-## Runtime boundaries
+## Verification
 
-- Production is `https://ocelot.hexly.ai`, Access team `nocoo`. The exact AUD is
-  in Wrangler config. Verify the JWT and configured owner before assets, APIs,
-  avatars and cached vault content. `/api/live` is authenticated too.
-- `workers.dev` and preview URLs stay disabled. Production never imports the
-  local Worker entry, synthetic transport, or test controls.
-- The author service receives SHA-256 of the verified normalized email. Load
-  profile details separately from reading. Proxy only the configured public
-  avatar origin, with bounded raster content; preserve the restrictive CSP.
-- Local entry is `https://ocelot.dev.hexly.ai/`, Caddy → Vite 7049 → Worker 37049.
-  Browser tests use UI/API ports 27049/17049; inspectors use 38049/18049.
-  Ports are registered in nmem. Tests have independent SQLite D1 and R2 state.
-  Never reuse the developer or production resources for
-  tests. Preserve other worktrees and their running servers.
-- Tests include all unexecuted non-View runtime source and release policy.
-  Minimum statements/branches/functions/lines: 95%. Views use Playwright and axe.
-  CLI publication is checked through an isolated temporary Git repository and
-  the actual CI/CD result; a dry run cannot publish.
+6DQ = L1/L2/L3 + G1/G2 + D1. Status: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests; all four L1 metrics ≥95% across first-party non-View runtime code, including unexecuted files.
 
-## Delivery
+| Piece | Requirement and current reality | Status | Evidence |
+| --- | --- | --- | --- |
+| L1 | Statements/branches/functions/lines ≥95%; Worker/mock/release policy included | enforced | Vitest config, pre-push and CI |
+| L2 | Real HTTP/SQLite across every API endpoint/method | planned | Worker tests/browser HTTP exist; no separate exhaustive API inventory gate |
+| L3 | Reading/navigation/auth/cache behavior, accessibility | enforced | CI Playwright Chromium/WebKit with axe |
+| G1 | Strict types and zero-error/warning lint | enforced | Pre-commit types/staged Biome, CI whole-tree checks |
+| G2 | Required OSV + gitleaks | enforced | `check:security` and shared quality CI |
+| D1 | Per-run local state and guards/marker before reset/seed | planned | `dev.mjs --test` uses local fake bindings but resets fixed `.wrangler/e2e` without marker checks |
+| Build | Vite and Worker packaging | enforced | Verify CI builds and `worker:check` |
+| Release | Matching CI/CD before immutable tag/release | enforced | Release policy/script and workflows |
+| Docs | Status and behavior evidence updated before implementation | manual | Numbered document review |
 
-- Write numbered docs before implementation and record honest verification
-  status. Make atomic commits to `main` and push; authorization is already given.
-- `CLOUDFLARE_API_TOKEN` is the repository Actions secret for CD. The account ID
-  is public configuration. Test jobs never receive deployment credentials.
-- GitHub vault credentials are separate: Worker Secret `GITHUB_TOKEN`, with
-  optional `GITHUB_TOKEN_EXPIRES_AT`. Never put a PAT in Actions build variables,
-  `VITE_*`, source, browser storage, logs, screenshots, or test fixtures.
-  In the Dashboard select Secret, not Text: Wrangler replaces ordinary variables
-  from config. Session status must reject a missing current PAT even if D1 still
-  holds an earlier healthy result.
-  Initial deployment can serve an authenticated empty reader without a PAT;
-  GitHub operations still reject missing credentials. The empty declaration in
-  `.dev.vars.example` is used only for deterministic type generation, never deploy.
-- CI verifies types, Biome, ≥95% coverage, Worker packaging, browser behavior,
-  OSV and Gitleaks. Trusted `main` deploys only after all checks pass. Production
-  deployments are serialized and reject superseded revisions.
-- The deploy script inspects/creates only the named Ocelot D1 database, applies
-  migrations before code deployment, and lets Wrangler provision the named
-  private R2 bucket. It verifies the active Worker version/Git tag and the Access
-  redirect. Do not confuse these checks with authenticated private-vault UAT.
-- Release policy follows nmem `f1ee6f38-dc59-4f41-83c8-2a2663f32c31` and the
-  current `../hexly.ai` release flow: clean main, version/changelog commit,
-  successful matching CI/CD, then immutable annotated tag and GitHub Release.
-  Default patch; more than 3 days or 500 changed lines selects minor. Explicit
-  patch/minor/major/X.Y.Z overrides selection. An untagged version can be retried.
-- After a credential-only fix, rerun the failed GitHub workflow for the same
-  commit before retrying the explicit release version. Never move a published
-  tag. If only GitHub Release creation failed, recover from the existing tag.
+Current pre-commit checks staged Biome plus working-tree types; pre-push runs working-tree coverage only. Target: check-only index L1/G1 <30s and stdin pushed-ref L2/G2 <3min. Never bypass hooks, suppress security checks or weaken coverage.
 
-Production readiness and remaining user-supplied configuration are recorded in
-document 09. Report actual remote outcomes, including any missing configuration.
+## Resources / Isolation
+
+| Purpose | Port / resource | Isolation |
+| --- | --- | --- |
+| Dev | Caddy `https://ocelot.dev.hexly.ai/`, UI 7049 / Worker 37049 | `.wrangler/state`; inspector 38049 |
+| Browser | UI 27049 / Worker 17049 | Fixed `.wrangler/e2e`; inspector 18049 |
+| Production | `https://ocelot.hexly.ai`, Access team `nocoo` | Exact audience/bindings in Wrangler |
+
+Keep registered ports and Caddy aligned and preserve existing servers. Required tests use new per-run SQLite/R2, reject remote bindings/credentials and verify local context plus `_test_marker` before fixtures/cleanup. Do not create remote `-test` resources or use developer/private vault data.
+
+## Operations / Release
+
+Authorized releases use `bun run release -- --dry-run` then the selected version (`patch` default; policy in [delivery](docs/16-release-policy.md)). Trusted main deploys after checks, migrations precede Worker code, and releases require matching successful CI/CD. Never rotate a PAT into ordinary vars or move published tags. Verify active version/tag and Access redirect; these checks do not replace authenticated private-vault UAT. Full runbook: [running/deployment](docs/06-running-and-deployment.md).
+
+## Retrospective
+
+Use [Retrospective.md](Retrospective.md) for narratives. Keep recurring project rules short; cross-project lessons belong in nmem/global rules, deterministic checks in hooks/tests.
+
+- After credential-only recovery rerun the same failed workflow/explicit version; recover an existing published tag rather than moving it.
