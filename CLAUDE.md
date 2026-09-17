@@ -36,7 +36,7 @@ bun run release -- --dry-run
 bun run release -- patch
 ```
 
-Use Node 26.8.1 and Bun 1.4.0. Basalt 2.1.7 and TypeScript 7.0.2 stay pinned.
+Use Node 26.8.1 and Bun 1.4.0. Basalt 2.1.8 and TypeScript 7.0.2 stay pinned.
 Security checks require OSV Scanner 2.5.1 and Gitleaks 8.30.1; CI verifies their
 binary checksums. Do not bypass hooks, coverage thresholds or security scans.
 

@@ -19,7 +19,7 @@ The application runs on Cloudflare Workers behind Cloudflare Access.
 ## Implementation constraints
 
 - Vite, React, TypeScript **7.0.2**, Biome, and Husky.
-- Use the published **@nocoo/basalt 2.1.7** for controls and application layout;
+- Use the published **@nocoo/basalt 2.1.8** for controls and application layout;
   consult `../basalt/INTEGRATION.md` and its package integration recipes.
 - Adapt Kami's Chinese/English document typography to Ocelot's visual identity.
   Kami is a design/template system, not a Markdown parser or React UI package.

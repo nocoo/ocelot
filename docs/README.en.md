@@ -9,7 +9,7 @@
 A quiet, private reading room. Connect public or private Obsidian vaults on GitHub and read through folders,
 wiki links and article outlines. Ocelot is a single-user reader; source repositories remain read-only.
 
-Basalt **2.1.7** supplies controls and layout, Pierre Trees supplies virtualized navigation, and Chinese/English
+Basalt **2.1.8** supplies controls and layout, Pierre Trees supplies virtualized navigation, and Chinese/English
 document typography takes cues from [Kami](https://github.com/tw93/Kami). The cool blue-gray interface supports
 light/dark themes, mobile layouts, keyboard navigation and reduced motion.
 

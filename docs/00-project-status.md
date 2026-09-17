@@ -1,6 +1,6 @@
 # 00 · 项目状态与文档索引
 
-更新：2026-09-13
+更新：2026-09-17
 
 当前阶段：**图标工具栏与 Mermaid 兼容性已完成本地验收，证据见 15；生产交付以
 对应 main 提交的 CI/CD 为准**。v0.3.0 正式发行记录见
@@ -33,6 +33,7 @@
 | 创建公开仓库并关联本地项目 | 已完成 | [nocoo/ocelot](https://github.com/nocoo/ocelot)，`origin` 指向该仓库 |
 | 建立 `main` 原子提交约定 | 已完成 | `AGENTS.md`，提交记录见 `git log` |
 | 核验 Basalt 2.1.7、TS 7.0.2 | 已完成 | 本地 Basalt 包信息与 npm 版本查询 |
+| 升级 Basalt 2.1.8 | 已部署 | 固定依赖与锁文件已同步；[CI](https://github.com/nocoo/ocelot/actions/runs/35190236604) 与 [部署](https://github.com/nocoo/ocelot/actions/runs/35190546238) 均通过；应用版本仍为 v0.3.0 |
 | 了解本地 Obsidian 约定 | 已完成 | 只读检查规则与文件特征；公开文档仅记录通用需求 |
 | 核验 Kami 与 Pierre 集成方式 | 已完成 | 已集成，保留字体与组件许可证 |
 | GitHub 类似项目研究 | 已完成 | 03；README、元数据与相关源码，未运行参考应用 |

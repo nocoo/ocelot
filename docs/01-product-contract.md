@@ -27,7 +27,7 @@ Obsidian 阅读应用。用户可以添加 GitHub 上的公开或私有仓库，
 | 访问控制 | Cloudflare Access，单用户 | JWT 校验已测试，team/AUD/owner 已配置；匿名入口已核验 |
 | 前端 | Vite + React，MVVM | 已实现 |
 | 类型系统 | TypeScript `7.0.2`，固定版本 | 已安装并通过类型检查 |
-| 控件与布局 | `@nocoo/basalt` `2.1.7`，固定版本 | 已集成并验证 |
+| 控件与布局 | `@nocoo/basalt` `2.1.8`，固定版本 | 已集成并验证 |
 | 工程工具 | Biome、Husky | 已配置，CI 使用同一检查命令 |
 | 单元测试 | 非 View 的业务与 Worker 代码，四项覆盖率均 ≥95% | 163 项通过，最低一项 98.62% |
 | View 验证 | 浏览器交互、可访问性、视觉检查；不要求 View UT | 17 项浏览器测试及明暗/移动端扫描通过 |

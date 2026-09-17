@@ -5,7 +5,7 @@ Their upstream licenses continue to apply. In particular:
 
 | Project | Use | License / notice |
 | --- | --- | --- |
-| [Basalt](https://github.com/nocoo/basalt) 2.1.7 | Controls and application layout | [MIT](public/licenses/basalt.txt) |
+| [Basalt](https://github.com/nocoo/basalt) 2.1.8 | Controls and application layout | [MIT](public/licenses/basalt.txt) |
 | [Pierre Trees](https://github.com/pierrecomputer/pierre) 1.0.0-beta.6 | Read-only file navigation | [Apache-2.0](public/licenses/pierre.txt), [upstream notice including headless-tree](public/licenses/pierre-notice.txt) |
 | [Source Serif 4](https://github.com/adobe-fonts/source-serif) via Fontsource 5.3.0 | Unmodified self-hosted Latin font files | [OFL-1.1](public/licenses/source-serif-4.txt) |
 | [Kami](https://github.com/tw93/Kami) | Chinese/English typography reference | [MIT upstream](https://github.com/tw93/Kami/blob/main/LICENSE) |

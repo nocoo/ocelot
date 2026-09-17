@@ -9,7 +9,7 @@
 一处安静的私人阅读室。连接 GitHub 上的公开或私有 Obsidian 知识库，沿着目录、
 双链和文章大纲阅读。源仓库始终只读。
 
-Basalt **2.1.7** 提供控件与布局，Pierre Trees 提供虚拟化目录，排版借鉴
+Basalt **2.1.8** 提供控件与布局，Pierre Trees 提供虚拟化目录，排版借鉴
 [Kami](https://github.com/tw93/Kami) 的中英文阅读节奏。冷蓝灰界面支持明暗主题、
 移动端、键盘导航与减少动效。
 
