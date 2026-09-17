@@ -1,5 +1,18 @@
 # 09 · 身份展示、版本与持续交付
 
+## 右上角入口交付恢复（2026-09-17）
+
+状态：**图示用例已修正；发布结果以修复提交的 CI / Release 为准**。
+右上角 GitHub → Hexly → 主题的改动已推送，但
+[CI 35210109821](https://github.com/nocoo/ocelot/actions/runs/35210109821)
+中两项 Mermaid 用例在 Chromium / WebKit 下仍按旧主题按钮名称定位，4 项超时、
+42 项通过；对应 [Release](https://github.com/nocoo/ocelot/actions/runs/35210277459)
+因 CI 失败被跳过，部署尚未执行。
+
+修复约定：图示用例从显式浅色偏好开始，使用稳定的“切换主题”无障碍名称，
+并断言实际明暗模式；保留 SVG 内容、尺寸、主题重绘与解码失败恢复检查。
+沿用当前三态主题控件、版本和发布门禁，通过 main 推送触发完整 CI / Release。
+
 ## Shared delivery migration (2026-09-12)
 
 Status: Actionlint and current-tree/full-history Gitleaks passed; remote

@@ -4,7 +4,8 @@ import { expect, type Locator, test } from "@playwright/test";
 const note = "06 阅读器体验/阅读室图示.md";
 const headers = { Origin: "http://127.0.0.1:27049", "X-Ocelot-Request": "1" };
 
-test.beforeEach(async ({ request }) => {
+test.beforeEach(async ({ page, request }) => {
+  await page.addInitScript(() => localStorage.setItem("ocelot-theme", "light"));
   expect((await request.post("/api/local", { headers, data: { scenario: "healthy" } })).ok()).toBe(
     true,
   );
@@ -48,6 +49,7 @@ test("Mermaid keeps labels, line breaks and intrinsic size across diagrams and t
   await expect(page.locator("#document-title")).toHaveText("阅读室图示");
   const images = page.locator(".diagram img");
   for (const theme of ["light", "dark"] as const) {
+    await expect(page.locator("html")).toHaveAttribute("data-mode", theme);
     await expect(images).toHaveCount(5);
     for (const image of await images.all()) {
       const data = await diagram(image);
@@ -82,7 +84,7 @@ test("Mermaid keeps labels, line breaks and intrinsic size across diagrams and t
     await page.screenshot({ path: info.outputPath(`diagrams-${theme}.png`) });
     if (theme === "light") {
       const before = await images.first().getAttribute("src");
-      await page.getByRole("button", { name: "切换到深色", exact: true }).click();
+      await page.getByRole("button", { name: "切换主题", exact: true }).click();
       await expect(images.first()).not.toHaveAttribute("src", before ?? "");
     }
   }
@@ -127,7 +129,8 @@ test("invalid syntax and image decode failures show source and recover on rerend
   });
   await expect(page.locator(".diagram-error")).toHaveCount(2);
   await expect(page.locator(".diagram-error").last()).toContainText("flowchart LR");
-  await page.getByRole("button", { name: /切换到[深浅]色/u }).click();
+  await page.getByRole("button", { name: "切换主题", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
   await expect(page.locator(".diagram-error")).toHaveCount(1);
   expect((await diagram(image)).errors).toBe(0);
   await expect(page.locator(".diagram-placeholder")).toHaveCount(0);
