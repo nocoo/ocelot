@@ -2,6 +2,36 @@
 
 Release entries are generated from Git commits by `bun run release`.
 
+## [0.3.1] - 2026-09-19
+
+### Maintenance
+
+- preload recent notes and reuse snapshot session caches ([c22f65a](https://github.com/nocoo/ocelot/commit/c22f65a96913c42e81242222d3b8a9408c215865))
+- Refine reader toolbar icons and fix Mermaid image rendering ([501bb79](https://github.com/nocoo/ocelot/commit/501bb79ffeababedc3dce3a6e49b529846d5407c))
+- pin @nocoo/basalt 2.1.8 ([dca0ae8](https://github.com/nocoo/ocelot/commit/dca0ae878b1eb771b814a0e5a7d2d3feb5c21d7f))
+- Stale Primer Octicons notice and license; the UI uses Lucide ([46cd5da](https://github.com/nocoo/ocelot/commit/46cd5da4001fab5dd8faa211862a56b3bb5b90f1))
+- Merge pull request #3 from nocoo/co/20260918-ocelot-cleanup ([081717a](https://github.com/nocoo/ocelot/commit/081717a14675d3527553e750dbb2450d3a1be183))
+
+### Documentation
+
+- record social-card metadata removal behind Access ([c6185db](https://github.com/nocoo/ocelot/commit/c6185db29178e1af56a93a4066d6a6b3d4980a06))
+- align current basalt contract with 2.1.8 ([eec8eac](https://github.com/nocoo/ocelot/commit/eec8eac7ac55c90ee6edd58074e2b024bd0f8de4))
+- standardize agent handbook and retrospective ([4e5796e](https://github.com/nocoo/ocelot/commit/4e5796e13504167d783fd5ee3fd2586d1b22ceea))
+- allow public GET /api/live ([f8d9e46](https://github.com/nocoo/ocelot/commit/f8d9e46959dff3e3aaf88fa4d1b32225ed426100))
+
+### Fixes
+
+- align header github hexly theme chrome ([18670d5](https://github.com/nocoo/ocelot/commit/18670d55ebff6d74ed1ddcad0584a5308e9a3f7d))
+- align diagram checks with three-state theme ([33db8d7](https://github.com/nocoo/ocelot/commit/33db8d7c6b6c9ae1e2a2c83ef139c857a36aa247))
+
+### Tests
+
+- restore theme persistence after reload ([33cd7b9](https://github.com/nocoo/ocelot/commit/33cd7b9af3138609a1a6514bdffc1e4a369fbed4))
+
+### Features
+
+- serve public GET /api/live ([6cc057d](https://github.com/nocoo/ocelot/commit/6cc057d2756e2aebb1e06c5d81880dfd1ee288f3))
+
 ## [0.3.0] - 2026-09-12
 
 ### Documentation
