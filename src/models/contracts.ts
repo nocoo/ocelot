@@ -3,7 +3,6 @@ export type ConnectionStatus = "unknown" | "healthy" | "invalid" | "limited" | "
 export interface Connection {
   status: ConnectionStatus;
   expiresAt: string | null;
-  checkedAt: number;
   retryAt: number;
 }
 
@@ -13,11 +12,6 @@ export interface Repository {
   name: string;
   branch: string;
   private: boolean;
-  description: string;
-  commitSha: string | null;
-  treeSha: string | null;
-  checkedAt: number;
-  authorization: string;
 }
 
 export interface VaultFile {
@@ -48,7 +42,6 @@ export type SyncResult = Snapshot | { unchanged: true; repository: Repository };
 
 export interface DocumentContent {
   path: string;
-  sha: string;
   treeSha: string;
   content: string;
 }

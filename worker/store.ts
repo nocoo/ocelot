@@ -34,11 +34,6 @@ export function publicRepository(row: RepositoryRow): Repository {
     name: row.name,
     branch: row.branch,
     private: Boolean(row.private),
-    description: row.description,
-    commitSha: row.commit_sha,
-    treeSha: row.tree_sha,
-    checkedAt: row.checked_at,
-    authorization: row.authorization,
   };
 }
 
@@ -53,7 +48,6 @@ export async function connection(env: Bindings): Promise<Connection> {
   return {
     status: env.GITHUB_TOKEN ? row.status : "invalid",
     expiresAt: row.expires_at,
-    checkedAt: row.checked_at,
     retryAt: row.retry_at,
   };
 }
@@ -311,7 +305,7 @@ export class VaultStore {
     if (!object) throw new HttpError(503, "cache_unavailable", "文件正在准备中，请再试一次。");
     if (!asset)
       return Response.json(
-        { path, sha: file.sha, treeSha: tree, content: await object.text() },
+        { path, treeSha: tree, content: await object.text() },
         { headers: { "Cache-Control": "private, no-store" } },
       );
     const headers = new Headers({

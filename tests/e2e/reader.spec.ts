@@ -306,7 +306,6 @@ test("long Unicode paths remain accessible in breadcrumbs and GitHub links at ev
     await route.fulfill({
       json: {
         path,
-        sha: "a".repeat(40),
         treeSha: url.searchParams.get("tree"),
         content: "# 一份很长的中英文笔记 Reading with attention\n\n一份合成的路径布局样例。",
       },

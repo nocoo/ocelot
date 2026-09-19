@@ -49,11 +49,6 @@ const snapshot: Snapshot = {
     name: "garden",
     branch: "main",
     private: true,
-    description: "",
-    commitSha: "b".repeat(40),
-    treeSha: "c".repeat(40),
-    checkedAt: 0,
-    authorization: "allowed",
   },
   files,
   treeSha: "c".repeat(40),
@@ -315,7 +310,7 @@ describe("document models and safe Markdown", () => {
 
 describe("calm credential reminders", () => {
   const now = Date.parse("2026-09-11T00:00:00Z");
-  const connection: Connection = { status: "healthy", expiresAt: null, checkedAt: now, retryAt: 0 };
+  const connection: Connection = { status: "healthy", expiresAt: null, retryAt: 0 };
   it("distinguishes failure, backoff, unavailable expiry and an upcoming rotation", () => {
     expect(connectionPresentation(null, now).tone).toBe("quiet");
     expect(connectionPresentation({ ...connection, status: "unknown" }, now).label).toBe(

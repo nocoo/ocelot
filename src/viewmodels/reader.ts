@@ -328,7 +328,7 @@ export class ReaderViewModel {
             path,
             this.controller.signal,
           )
-        : { path, sha: file.sha, treeSha: snapshot.treeSha, content: "" };
+        : { path, treeSha: snapshot.treeSha, content: "" };
       if (ticket !== this.epoch) return;
       const reading: Reading = {
         ...raw,
@@ -430,7 +430,7 @@ export class ReaderViewModel {
           snapshot: {
             ...snapshot,
             repository: next.repository,
-            commitSha: next.repository.commitSha ?? snapshot.commitSha,
+            commitSha: "commitSha" in next ? next.commitSha : snapshot.commitSha,
           },
           pending: null,
           notice: force ? "已经是最新版本" : this.state.notice,

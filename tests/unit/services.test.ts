@@ -89,7 +89,10 @@ describe("HTTP client", () => {
     await expect(api.session()).rejects.toMatchObject({ code: "request" });
   });
   it("sends the known tree so unchanged checks do not download the directory again", async () => {
-    const unchanged = { unchanged: true, repository: { id: 101, checkedAt: 123 } };
+    const unchanged = {
+      unchanged: true,
+      repository: { id: 101, owner: "demo", name: "garden", branch: "main", private: true },
+    };
     const transport = vi.fn<typeof fetch>().mockResolvedValue(Response.json(unchanged));
     const api = new ApiClient(transport);
     expect(await api.sync(101, true, "a".repeat(40))).toEqual(unchanged);

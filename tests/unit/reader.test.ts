@@ -28,11 +28,6 @@ function snapshot(id = 101, tree = "a", commit = "c"): Snapshot {
       name: `garden-${id}`,
       branch: "main",
       private: true,
-      description: "A garden",
-      commitSha: hash(commit),
-      treeSha: hash(tree),
-      checkedAt: 1,
-      authorization: "allowed",
     },
     treeSha: hash(tree),
     commitSha: hash(commit),
@@ -48,7 +43,7 @@ function document(
   tree = "a",
   content = `# ${path}\n\nA paragraph.`,
 ): DocumentContent {
-  return { path, treeSha: hash(tree), sha: hash("b"), content };
+  return { path, treeSha: hash(tree), content };
 }
 
 function setup(local = true) {
@@ -57,7 +52,7 @@ function setup(local = true) {
   const session: Session = {
     email: "reader@example.test",
     local,
-    connection: { status: "healthy", checkedAt: 1, expiresAt: null, retryAt: 0 },
+    connection: { status: "healthy", expiresAt: null, retryAt: 0 },
   };
   vi.spyOn(api, "session").mockImplementation(async () => structuredClone(session));
   vi.spyOn(api, "profile").mockResolvedValue({ name: null, avatar: null });
@@ -282,7 +277,6 @@ describe("recent updates state", () => {
     await model.start();
     const next = snapshot();
     next.commitSha = hash("d");
-    next.repository.commitSha = next.commitSha;
     vi.mocked(api.sync).mockResolvedValue(next);
     await model.check(true);
     expect(model.getSnapshot().snapshot?.commitSha).toBe(hash("d"));
@@ -436,7 +430,7 @@ describe("reading state and navigation", () => {
     delayed.resolve({
       email: "old",
       local: false,
-      connection: { status: "invalid", checkedAt: 0, expiresAt: null, retryAt: 0 },
+      connection: { status: "invalid", expiresAt: null, retryAt: 0 },
     });
     await older;
     expect(model.getSnapshot().session?.email).toBe("reader@example.test");
@@ -582,7 +576,7 @@ describe("version handoff and connection recovery", () => {
     const { model, api } = setup();
     await model.start();
     const before = model.getSnapshot();
-    const repository = { ...snapshot().repository, checkedAt: 12345 };
+    const repository = { ...snapshot().repository, name: "garden-refreshed" };
     vi.mocked(api.sync).mockResolvedValueOnce({ unchanged: true, repository });
     await model.check(true);
     expect(api.sync).toHaveBeenLastCalledWith(
@@ -593,7 +587,7 @@ describe("version handoff and connection recovery", () => {
     );
     expect(model.getSnapshot().snapshot?.files).toBe(before.snapshot?.files);
     expect(model.getSnapshot().reading).toBe(before.reading);
-    expect(model.getSnapshot().snapshot?.repository.checkedAt).toBe(12345);
+    expect(model.getSnapshot().snapshot?.repository.name).toBe("garden-refreshed");
     expect(model.getSnapshot()).toMatchObject({
       pending: null,
       checking: false,
