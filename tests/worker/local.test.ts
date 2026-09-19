@@ -23,8 +23,12 @@ describe("local API boundaries and scenarios", () => {
   it("handles registration, metadata, short sync responses, assets and removal through the HTTP router", async () => {
     expect((await api("/api/session")).status).toBe(200);
     const live = await api("/api/live");
-    expect(await live.json()).toEqual({ version, deployment: env.VERSION_METADATA });
-    expect(live.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(live.status).toBe(200);
+    expect(await live.json()).toEqual({ status: "ok", version });
+    expect(live.headers.get("Cache-Control")).toBe("no-store");
+    const anonymousLive = await local.fetch(new Request("http://127.0.0.1/api/live"), env);
+    expect(anonymousLive.status).toBe(200);
+    expect(await anonymousLive.json()).toEqual({ status: "ok", version });
     expect(await (await api("/api/profile")).json()).toEqual({ name: null, avatar: null });
     expect((await api("/api/avatar")).status).toBe(404);
     expect(await (await api("/api/repositories")).json()).toEqual([]);

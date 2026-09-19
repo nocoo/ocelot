@@ -1,4 +1,4 @@
-import { handleApi } from "./app";
+import { handleApi, isPublicLive, publicLive } from "./app";
 import { verifyAccess } from "./auth";
 import { failure, securityHeaders } from "./http";
 import { cleanup } from "./store";
@@ -6,6 +6,7 @@ import { cleanup } from "./store";
 export default {
   async fetch(request: Request, env: WorkerBindings) {
     try {
+      if (isPublicLive(request)) return publicLive();
       const email = await verifyAccess(request, env);
       const response = new URL(request.url).pathname.startsWith("/api/")
         ? await handleApi(request, env, email)

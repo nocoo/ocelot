@@ -1,5 +1,5 @@
 import { localControls, mockGitHub } from "../mock/github";
-import { handleApi } from "./app";
+import { handleApi, isPublicLive, publicLive } from "./app";
 import type { Bindings } from "./github";
 import { failure, HttpError, securityHeaders } from "./http";
 import { cleanup } from "./store";
@@ -10,6 +10,7 @@ export default {
       const url = new URL(request.url);
       if (!["127.0.0.1", "localhost", "[::1]"].includes(url.hostname))
         throw new HttpError(403, "local_only", "本地阅读器仅接受本机连接。");
+      if (isPublicLive(request)) return publicLive();
       // The proxies change Host/port. Restore only the registered local origins
       // before the shared CSRF check; production never imports this entry.
       const origin = request.headers.get("Origin");

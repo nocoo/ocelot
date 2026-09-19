@@ -1,8 +1,18 @@
 import { version } from "../package.json";
 import { type Bindings, GitHub, type Transport } from "./github";
-import { HttpError, json, readJson, requireSameOrigin } from "./http";
+import { HttpError, json, readJson, requireSameOrigin, securityHeaders } from "./http";
 import { authorAvatar, authorProfile } from "./profile";
 import { connection, VaultStore } from "./store";
+
+export function isPublicLive(request: Request): boolean {
+  return request.method === "GET" && new URL(request.url).pathname === "/api/live";
+}
+
+export function publicLive(): Response {
+  const response = securityHeaders(json({ status: "ok", version }));
+  response.headers.set("Cache-Control", "no-store");
+  return response;
+}
 
 export async function handleApi(
   request: Request,
@@ -15,8 +25,6 @@ export async function handleApi(
   const url = new URL(request.url);
   const github = new GitHub(env, transport);
   const store = new VaultStore(env, github);
-  if (url.pathname === "/api/live" && request.method === "GET")
-    return json({ version, deployment: env.VERSION_METADATA });
   if (url.pathname === "/api/session" && request.method === "GET")
     return json({ email, local, connection: await connection(env) });
   if (url.pathname === "/api/profile" && request.method === "GET") {

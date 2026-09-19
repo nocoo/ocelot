@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { version } from "../../package.json";
 import { handleApi } from "../../worker/app";
 import production from "../../worker/index";
 import { authorAvatar, authorProfile } from "../../worker/profile";
@@ -213,7 +214,7 @@ describe("optional author profiles behind Access", () => {
       ACCESS_AUD: "test-audience",
       OWNER_EMAIL: email,
     };
-    for (const path of ["/api/profile", "/api/avatar", "/api/live"]) {
+    for (const path of ["/api/profile", "/api/avatar", "/api/session"]) {
       const denied = await production.fetch(
         new Request(`https://reader.test${path}`, {
           headers: { "Cf-Access-Authenticated-User-Email": email },
@@ -224,6 +225,23 @@ describe("optional author profiles behind Access", () => {
       expect(denied.headers.get("Cache-Control")).toBe("private, no-store");
       expect(denied.headers.get("Content-Security-Policy")).toContain("img-src 'self' data:");
     }
+    const live = await production.fetch(
+      new Request("https://reader.test/api/live", {
+        headers: {
+          Origin: "https://status.hexly.ai",
+          "Sec-Fetch-Site": "cross-site",
+        },
+      }),
+      bindings,
+    );
+    expect(live.status).toBe(200);
+    expect(await live.json()).toEqual({ status: "ok", version });
+    expect(live.headers.get("Cache-Control")).toBe("no-store");
+    const mutatingLive = await production.fetch(
+      new Request("https://reader.test/api/live", { method: "POST" }),
+      bindings,
+    );
+    expect(mutatingLive.status).toBe(401);
     expect(outgoing).not.toHaveBeenCalled();
   });
 });
