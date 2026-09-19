@@ -24,7 +24,7 @@ Obsidian 阅读应用。用户可以添加 GitHub 上的公开或私有仓库，
 | 源码仓库 | `nocoo/ocelot`，公开仓库 | 已创建并关联本地目录 |
 | Git 工作流 | 在 `main` 上做原子化提交并推送 | 已确定 |
 | 部署 | Cloudflare Workers | `ocelot.hexly.ai` 已部署，远程 CI/CD 通过 |
-| 访问控制 | Cloudflare Access，单用户 | JWT 校验已测试，team/AUD/owner 已配置；匿名入口已核验 |
+| 访问控制 | Cloudflare Access，单用户；仅 `GET /api/live` 可匿名 | JWT 校验已测试，team/AUD/owner 已配置；匿名入口已核验 |
 | 前端 | Vite + React，MVVM | 已实现 |
 | 类型系统 | TypeScript `7.0.2`，固定版本 | 已安装并通过类型检查 |
 | 控件与布局 | `@nocoo/basalt` `2.1.8`，固定版本 | 已集成并验证 |

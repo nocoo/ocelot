@@ -86,7 +86,10 @@ source and current main commit before using the production environment.
 ### 版本与发布
 
 - 根 `package.json` 提供前后端版本；侧栏 Pill 至少 11px，支持折叠状态。
-  `/api/live` 返回版本及部署信息，同样受 Access 保护，不建立公开认证旁路。
+  公开 `GET /api/live` 返回 `{ status: "ok", version }` 与
+  `Cache-Control: no-store`，不含机密或部署内部字段。其余 API、静态资源、
+  头像、vault 与 cache 路径继续校验 Access JWT 与 owner。边缘若拦截该健康
+  路径，只为 `ocelot.hexly.ai/api/live` 增加 Bypass，不放行整个应用。
 - release 从干净的 `main` 执行，检查 origin、版本合法性、远程同步与已存在
   的 tag；生成 CHANGELOG，保留 hooks，推送后等待对应提交的全部 CI/CD。
 - CI 部署验证控制面中的版本与 Git SHA，并验证公开域名进入 Access 登录。
@@ -248,3 +251,12 @@ Biome、OSV Scanner 2.5.1 与 Gitleaks 8.30.1 通过。完整功能验收见 [13
 正式发行状态、远端 SHA 和生产验收以
 [v0.3.0 Release](https://github.com/nocoo/ocelot/releases/tag/v0.3.0) 中的实际记录为准；
 脚本只在匹配的独立 CI/CD 成功后发布该 Release。
+
+## 公开 GET /api/live（2026-09-19）
+
+状态：**契约已接受；Worker 实现与正式 patch 以本轮提交 / Release 为准**。
+用户授权将旧的“所有 API 包括 live 必须登录”收窄为仅 `GET /api/live`
+可匿名。响应至少 `{ status: "ok", version }`，`Cache-Control: no-store`，
+不含机密。业务、vault、source、avatar、cache 路由继续校验 Access。
+边缘若拦截，只为该路径配置 Bypass，不放行整个应用。不改 Hexly Index /
+Status 接入。

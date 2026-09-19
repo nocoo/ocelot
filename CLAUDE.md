@@ -11,7 +11,7 @@ This handbook and [AGENTS.md](AGENTS.md) are the contract; hooks, CI and config 
 | Fact | Where |
 | --- | --- |
 | Human docs | [README.md](README.md), numbered docs |
-| Version | Root `package.json`; sidebar `vX.Y.Z` and authenticated `/api/live` |
+| Version | Root `package.json`; sidebar `vX.Y.Z` and public `GET /api/live` |
 | Runtime | `wrangler.jsonc`; generated `worker/worker-configuration.d.ts` |
 | Test/dev | `wrangler.local.jsonc`, `mock/`, synthetic `fixtures/` |
 | Enforcement | `.husky/`, `.github/workflows/verify.yml`, Vitest/Playwright |
@@ -20,7 +20,7 @@ This handbook and [AGENTS.md](AGENTS.md) are the contract; hooks, CI and config 
 ## Project Invariants
 
 - Source vaults remain read-only; preference/registration/cache writes never authorize modifying a GitHub repository. Keep private note content/paths, PATs and real fixture inventories out of Git.
-- Verify Access JWT and configured owner before every asset/API/avatar/private-cache response, including `/api/live`. Keep workers.dev/preview disabled; production never imports synthetic transports/test controls.
+- Verify Access JWT and configured owner before every asset/API/avatar/private-cache response except public `GET /api/live`. Keep workers.dev/preview disabled; production never imports synthetic transports/test controls.
 - GitHub PATs live only in Worker Secrets (`GITHUB_TOKEN`, optional `GITHUB_TOKEN_EXPIRES_AT`), never ordinary Wrangler text vars, build variables, browser storage or logs. Missing current PAT rejects GitHub operations even if old health data is cached.
 - Author profile lookup receives the verified normalized email's SHA-256. Profile loading is separate from reading; proxy only the allowed raster avatar origin with bounded content and preserve CSP.
 - Pin Basalt 2.1.8/TypeScript 7.0.2; use Pierre Trees and Kami-inspired typography without treating Kami as a parser. Respect upstream notices and the [navigation](docs/07-basalt-navigation.md) contract.

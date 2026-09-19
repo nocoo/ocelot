@@ -4,8 +4,9 @@
 
 ## 已实现的边界
 
-- PAT 仅进入服务端 GitHub 请求；所有源仓库操作都是 GET。API 使用 Access
-  JWT 的签名、issuer、audience、有效期和 owner email 验证单用户身份。
+- PAT 仅进入服务端 GitHub 请求；所有源仓库操作都是 GET。除公开
+  `GET /api/live` 外，API 使用 Access JWT 的签名、issuer、audience、有效期
+  和 owner email 验证单用户身份。
 - 仓库以 GitHub 数字 ID 登记。快照登记在 D1，目录和按需读取的 blob 存入私有
   R2。正文、图片与笔记嵌入均固定到当前阅读版本。
 - GitHub 权限复核窗口为 60 秒。获知凭据失效后立即停止新的缓存响应；超出窗口

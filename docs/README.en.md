@@ -69,6 +69,7 @@ coverage of **100% / 98.62% / 100% / 100%** and light, dark and mobile axe check
 The [runtime and verification record](05-runtime-contract-and-verification.md) documents the evidence and support boundaries.
 
 Production is live at **<https://ocelot.hexly.ai>**, protected by nocoo Cloudflare Access.
+`GET /api/live` is the only unauthenticated health endpoint.
 After verification and security checks, trusted `main` reuses D1/private R2, migrates, deploys and verifies the running revision.
 Releases require successful CI/CD for the matching commit; see the [production acceptance record](09-identity-and-delivery.md).
 Real vault access still requires a separate GitHub PAT in the `GITHUB_TOKEN` Worker Secret; follow [Running and deployment](06-running-and-deployment.md).

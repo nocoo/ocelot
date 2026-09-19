@@ -110,14 +110,19 @@ R2 不启用 `r2.dev` 或公开域名。生产只运行 migrations，不导入 `
 这不代替真实 Access 会话与私有知识库的端到端验收。
 
 保留 `assets.run_worker_first: true`、`workers_dev: false`、`preview_urls: false`。
-认证覆盖 HTML、静态资源、API 与附件，不为这些路径添加 Access Bypass。
-Worker 同时验证 JWT 签名、issuer、audience、有效期、应用类型和 owner email。
-Access Self-hosted application 应覆盖整个域名，Allow policy 限定本人邮箱。
+认证覆盖 HTML、静态资源、业务 API 与附件，不为这些路径添加 Access Bypass。
+唯一例外是 `GET /api/live`：Worker 不校验 Access JWT，返回
+`{ status: "ok", version }` 与 `Cache-Control: no-store`，不含机密。
+若边缘 Access 仍拦截该路径，只为 `ocelot.hexly.ai/api/live` 配置路径级
+Bypass（Everyone），不得放行整个应用。
+Worker 对其余请求同时验证 JWT 签名、issuer、audience、有效期、应用类型和
+owner email。Access Self-hosted application 应覆盖整个域名，Allow policy
+限定本人邮箱。
 
 ## 版本与 release
 
-根 `package.json` 是版本唯一来源：侧栏显示 `vX.Y.Z`，受保护的 `/api/live`
-返回 `X.Y.Z` 和 Cloudflare 版本信息。按以下流程从干净的 main 发布：
+根 `package.json` 是版本唯一来源：侧栏显示 `vX.Y.Z`，公开 `GET /api/live`
+返回 `{ status: "ok", version: "X.Y.Z" }`。按以下流程从干净的 main 发布：
 
 ```sh
 bun run release -- --dry-run
@@ -163,7 +168,8 @@ Secrets 添加名为 `GITHUB_TOKEN` 的 **Secret**，不要选择普通 Text 变
 登记不会扩大 PAT 权限；新增未授权仓库时，先在 GitHub 更新其授权范围。
 
 默认本地 demo 无需 `.dev.vars`，不要为它放入真实 PAT。该文件仅供独立配置真实生产入口的本地调试，
-需要同时提供实际 Access 配置和有效 JWT；不在生产入口增加认证旁路。
+需要同时提供实际 Access 配置和有效 JWT；除公开 `GET /api/live` 外，
+不在生产入口增加认证旁路。
 
 ## 日常轮换
 

@@ -44,7 +44,7 @@ The application runs on Cloudflare Workers behind Cloudflare Access.
 - Keep the sidebar logo at the same 24px left offset when expanded, collapsed,
   and throughout the transition, following Surety. Do not center it dynamically.
 - Keep root `package.json` as the sole version source. Show its `vX.Y.Z` beside
-  the sidebar name and return `X.Y.Z` from the authenticated `/api/live`.
+  the sidebar name and return `X.Y.Z` from public `GET /api/live`.
   Use `scripts/release.ts`; publishing requires the matching successful CI/CD.
   Operational commands and release recovery are in `CLAUDE.md` and document 09.
 
