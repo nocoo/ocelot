@@ -3,8 +3,15 @@
 </p>
 
 <h1 align="center">Ocelot</h1>
+<p align="center">只读浏览 GitHub 上的公开和私有 Obsidian 知识库。</p>
+<p align="center"><a href="https://ocelot.hexly.ai">站点</a> · <a href="docs/README.en.md">English</a></p>
 
-<p align="center">简体中文 · <a href="docs/README.en.md">English</a></p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/reader-dark.png">
+  <img src="docs/assets/reader-light.png" alt="Ocelot 的目录、中文正文与文章大纲，使用合成示例知识库">
+</picture>
+
+## 这是什么
 
 一处安静的私人阅读室。连接 GitHub 上的公开或私有 Obsidian 知识库，沿着目录、
 双链和文章大纲阅读。源仓库始终只读。
@@ -13,12 +20,21 @@ Basalt **2.1.8** 提供控件与布局，Pierre Trees 提供虚拟化目录，�
 [Kami](https://github.com/tw93/Kami) 的中英文阅读节奏。冷蓝灰界面支持明暗主题、
 移动端、键盘导航与减少动效。
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/reader-dark.png">
-  <img src="docs/assets/reader-light.png" alt="Ocelot 的目录、中文正文与文章大纲，使用合成示例知识库">
-</picture>
+## 功能
 
-## 本地体验
+- GFM、frontmatter、Obsidian 双链/别名、标题和块锚点、callout、表格、代码、公式、Mermaid。
+- 笔记嵌入与附件固定到同一 Git 版本；外部追踪图片与可执行内容被阻止。
+- 阅读器控件单独分组，直接切换全宽、字号与 Raw；长目录独立滚动，支持回顶与图片放大。
+- 文件名与路径搜索：⌘K / Ctrl+K。目录支持键盘选择、展开与变化标记。
+- 按需缓存正文；可见时每 60 秒条件检查，隐藏时暂停。未更新时不重新传输目录。
+- 更新由读者显式应用，保留当前位置与展开目录；慢加载期间保留原文。
+- PAT 到期前 7 天轻量提醒；服务端轮换后重新检查即可继续阅读。
+
+## 使用
+
+打开 [Ocelot](https://ocelot.hexly.ai)，通过 Cloudflare Access 登录，选择知识库并沿目录、双链与文章大纲阅读。实际知识库需要管理员将 GitHub PAT 配置为 Worker Secret `GITHUB_TOKEN`；本地演示使用合成数据，不连接真实 GitHub。详见[运行与部署](docs/06-running-and-deployment.md)。
+
+## 开发
 
 需要 Node.js 26.8.1、Bun 1.4.0：
 
@@ -36,43 +52,35 @@ bun run dev
 右上角的烧瓶按钮可以体验慢加载、到期提醒、凭据失效、限流、离线及新提交。
 “我的知识库”支持添加第三个示例 `ocelot-demo/reading-room`。
 
-## 阅读与同步
-
-- GFM、frontmatter、Obsidian 双链/别名、标题和块锚点、callout、表格、代码、公式、Mermaid。
-- 笔记嵌入与附件固定到同一 Git 版本；外部追踪图片与可执行内容被阻止。
-- 阅读器控件单独分组，直接切换全宽、字号与 Raw；长目录独立滚动，支持回顶与图片放大。
-- 文件名与路径搜索：⌘K / Ctrl+K。目录支持键盘选择、展开与变化标记。
-- 按需缓存正文；可见时每 60 秒条件检查，隐藏时暂停。未更新时不重新传输目录。
-- 更新由读者显式应用，保留当前位置与展开目录；慢加载期间保留原文。
-- PAT 到期前 7 天轻量提醒；服务端轮换后重新检查即可继续阅读。
-
-## 工程与验证
-
-Vite + React + **TypeScript 7.0.2**，MVVM，Biome，Husky。Worker 使用
-Cloudflare Access 验证身份，PAT 存放于 Worker Secrets；D1 保存元数据，
-私有 R2 保存可重建缓存。
-线上左下角显示 Access 用户姓名和头像，资料服务暂不可用时仍能正常阅读。
-侧栏与顶部共用 Basalt 背景，站名旁显示版本，右上角可打开源码仓库。
-
 ```sh
-bun run check              # 类型、Biome、完整非 View 覆盖率、前端构建
-bun run worker:check       # 生产 Worker dry run
-bun x playwright install chromium
-bun run test:e2e           # 独立 Wrangler + 生产前端的浏览器验收
-bun run check:security     # OSV 依赖检查与 Gitleaks 历史扫描
-bun run release -- --dry-run
+bun run typecheck
+bun run lint
+bun run build
+bun run worker:check
 ```
 
-本地验收：**163 项 UT、17 项浏览器测试通过**。非 View 代码包含 Worker 与未执行
-源码，语句/分支/函数/行覆盖率分别为 **100% / 98.62% / 100% / 100%**。
-浅色、深色和移动端 axe 扫描通过。详细证据与支持边界见 [05](docs/05-runtime-contract-and-verification.md)。
+发布、PAT 轮换及真实环境验收见[运行与部署](docs/06-running-and-deployment.md)。
 
-已部署至 **<https://ocelot.hexly.ai>**，受 nocoo Cloudflare Access 保护；
-`GET /api/live` 是唯一公开健康检查。可信 `main`
-通过验证和安全扫描后，CD 复用 D1、私有 R2，先迁移再发布，并核对运行版本。
-Release 只在对应提交的 CI/CD 成功后创建；远程验收证据见 [09](docs/09-identity-and-delivery.md)。
-实际知识库还需将 GitHub PAT 配置为 Worker Secret `GITHUB_TOKEN`，配置方式见
-[06 · 运行与部署](docs/06-running-and-deployment.md)。默认本地 mock 不连接真实 GitHub。
+## 测试
+
+```sh
+bun run test:coverage
+bun x playwright install chromium
+bun x playwright install webkit
+bun run test:e2e
+```
+
+Vitest 检查非 View 逻辑与 Worker；Playwright 使用独立 Wrangler 和生产前端验证阅读、导航、鉴权、缓存与无障碍。历史结果和支持边界见[运行契约与验收记录](docs/05-runtime-contract-and-verification.md)。
+
+## 技术栈
+
+| 技术 | 用途 |
+| --- | --- |
+| React、Vite、TypeScript | MVVM 阅读器与前端构建 |
+| Basalt、Pierre Trees | 控件、布局和虚拟化目录 |
+| Cloudflare Workers、Access | API 与查看者身份校验 |
+| D1、私有 R2 | 元数据与可重建缓存 |
+| Biome、Vitest、Playwright | 静态检查、逻辑与浏览器验证 |
 
 ## 文档
 
@@ -89,5 +97,6 @@ Release 只在对应提交的 CI/CD 成功后创建；远程验收证据见 [09]
 - [操作入口](CLAUDE.md) · [版本变更](CHANGELOG.md)
 - [开发协作约定](AGENTS.md) · [第三方说明](THIRD_PARTY_NOTICES.md)
 
-在 `main` 上按可验证的结果做原子提交。公开仓库只保存应用与合成示例，
-不保存私人笔记、真实仓库清单或运行凭据。
+## 许可证
+
+仓库未提供项目级 LICENSE。第三方组件的许可见[第三方说明](THIRD_PARTY_NOTICES.md)。

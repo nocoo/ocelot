@@ -3,8 +3,15 @@
 </p>
 
 <h1 align="center">Ocelot</h1>
+<p align="center">Read public and private GitHub Obsidian vaults without changing their source.</p>
+<p align="center"><a href="https://ocelot.hexly.ai">Website</a> · <a href="../README.md">简体中文</a></p>
 
-<p align="center"><a href="../README.md">简体中文</a> · English</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/reader-dark.png">
+  <img src="assets/reader-light.png" alt="Ocelot's vault tree, article and outline, using synthetic example notes">
+</picture>
+
+## What it does
 
 A quiet, private reading room. Connect public or private Obsidian vaults on GitHub and read through folders,
 wiki links and article outlines. Ocelot is a single-user reader; source repositories remain read-only.
@@ -13,12 +20,21 @@ Basalt **2.1.8** supplies controls and layout, Pierre Trees supplies virtualized
 document typography takes cues from [Kami](https://github.com/tw93/Kami). The cool blue-gray interface supports
 light/dark themes, mobile layouts, keyboard navigation and reduced motion.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/reader-dark.png">
-  <img src="assets/reader-light.png" alt="Ocelot's vault tree, article and outline, using synthetic example notes">
-</picture>
+## Features
 
-## Try it locally
+- Render GFM, frontmatter, Obsidian wiki links and aliases, heading/block anchors, callouts, tables, code, math and Mermaid diagrams.
+- Keep embedded notes and attachments on the same Git revision. External tracking images and executable content are blocked.
+- Use a separate reader control group for full width, typography and Raw Markdown; scroll long outlines independently, return to the top and enlarge images in a lightbox.
+- Search filenames and paths with `⌘K` / `Ctrl+K`. The tree supports keyboard selection, expansion and change indicators.
+- Cache note content on demand. Conditional checks run every 60 seconds while the page is visible and pause when hidden. Unchanged trees are not transferred again.
+- Apply updates explicitly while preserving the reading position and expanded folders. Slow requests keep the current article visible.
+- Receive a reminder seven days before a PAT expires. After rotating it on the server, check again to resume reading.
+
+## Usage
+
+Open [Ocelot](https://ocelot.hexly.ai), sign in through Cloudflare Access, select a vault and follow its tree, wiki links and outline. Real vaults require an administrator to set the `GITHUB_TOKEN` Worker Secret. The local demo uses synthetic data without connecting to real GitHub. See [running and deployment](06-running-and-deployment.md).
+
+## Development
 
 Use Node.js 26.8.1 and Bun 1.4.0:
 
@@ -36,44 +52,35 @@ The welcome note links to a 48-chapter article with 144 outline entries and illu
 The top-right flask button demonstrates slow loading, expiry reminders, invalid credentials, rate limits, offline behavior and new commits.
 Add the third example, `ocelot-demo/reading-room`, through the repository dialog.
 
-## Reading and updates
-
-- Render GFM, frontmatter, Obsidian wiki links and aliases, heading/block anchors, callouts, tables, code, math and Mermaid diagrams.
-- Keep embedded notes and attachments on the same Git revision. External tracking images and executable content are blocked.
-- Use a separate reader control group for full width, typography and Raw Markdown; scroll long outlines independently, return to the top and enlarge images in a lightbox.
-- Search filenames and paths with `⌘K` / `Ctrl+K`. The tree supports keyboard selection, expansion and change indicators.
-- Cache note content on demand. Conditional checks run every 60 seconds while the page is visible and pause when hidden. Unchanged trees are not transferred again.
-- Apply updates explicitly while preserving the reading position and expanded folders. Slow requests keep the current article visible.
-- Receive a reminder seven days before a PAT expires. After rotating it on the server, check again to resume reading.
-
-## Engineering and verification
-
-Vite, React and **TypeScript 7.0.2** form an MVVM application, with Biome and Husky.
-The Worker validates Cloudflare Access identity; GitHub PATs stay in Worker Secrets.
-D1 stores metadata and private R2 stores a rebuildable cache.
-The sidebar shows the verified Access user's name and avatar without delaying reading.
-The header and sidebar share a Basalt surface; the app version and GitHub link stay visible.
-
 ```sh
-bun run check
+bun run typecheck
+bun run lint
+bun run build
 bun run worker:check
-bun x playwright install chromium
-bun run test:e2e
-bun run check:security
-bun run release -- --dry-run
 ```
 
-These commands cover static checks, non-View code coverage, the frontend build, a Worker dry run and browser acceptance.
-Local verification records **163 unit tests and 17 browser tests passed**, with non-View statement/branch/function/line
-coverage of **100% / 98.62% / 100% / 100%** and light, dark and mobile axe checks.
-The [runtime and verification record](05-runtime-contract-and-verification.md) documents the evidence and support boundaries.
+See [running and deployment](06-running-and-deployment.md) for releases, PAT rotation and live-environment acceptance.
 
-Production is live at **<https://ocelot.hexly.ai>**, protected by nocoo Cloudflare Access.
-`GET /api/live` is the only unauthenticated health endpoint.
-After verification and security checks, trusted `main` reuses D1/private R2, migrates, deploys and verifies the running revision.
-Releases require successful CI/CD for the matching commit; see the [production acceptance record](09-identity-and-delivery.md).
-Real vault access still requires a separate GitHub PAT in the `GITHUB_TOKEN` Worker Secret; follow [Running and deployment](06-running-and-deployment.md).
-The default local demo does not connect to real GitHub repositories.
+## Tests
+
+```sh
+bun run test:coverage
+bun x playwright install chromium
+bun x playwright install webkit
+bun run test:e2e
+```
+
+Vitest checks non-View logic and the Worker. Playwright uses an independent Wrangler instance and production frontend to verify reading, navigation, authentication, caching and accessibility. Historical results and support boundaries are in the [runtime and verification record](05-runtime-contract-and-verification.md).
+
+## Stack
+
+| Technology | Role |
+| --- | --- |
+| React, Vite, TypeScript | MVVM reader and frontend builds |
+| Basalt, Pierre Trees | Controls, layouts and virtualized navigation |
+| Cloudflare Workers, Access | APIs and viewer identity verification |
+| D1, private R2 | Metadata and rebuildable caches |
+| Biome, Vitest, Playwright | Static, logic and browser checks |
 
 ## Documentation
 
@@ -92,3 +99,7 @@ The default local demo does not connect to real GitHub repositories.
 
 Make coherent atomic commits on `main`. This public repository contains the application and synthetic fixtures,
 not private notes, real vault inventories or runtime credentials.
+
+## License
+
+The repository has no project-level LICENSE. See [third-party notices](../THIRD_PARTY_NOTICES.md) for dependency terms.
