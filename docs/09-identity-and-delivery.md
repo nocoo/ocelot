@@ -254,9 +254,18 @@ Biome、OSV Scanner 2.5.1 与 Gitleaks 8.30.1 通过。完整功能验收见 [13
 
 ## 公开 GET /api/live（2026-09-19）
 
-状态：**契约已接受；Worker 实现与正式 patch 以本轮提交 / Release 为准**。
+状态：**Worker 已随 v0.3.1 发布；边缘 Access 仍拦截匿名 `/api/live`**。
 用户授权将旧的“所有 API 包括 live 必须登录”收窄为仅 `GET /api/live`
 可匿名。响应至少 `{ status: "ok", version }`，`Cache-Control: no-store`，
 不含机密。业务、vault、source、avatar、cache 路由继续校验 Access。
-边缘若拦截，只为该路径配置 Bypass，不放行整个应用。不改 Hexly Index /
-Status 接入。
+边缘若拦截，只为 `ocelot.hexly.ai/api/live` 配置 Bypass，不放行整个应用。
+不改 Hexly Index / Status 接入。
+
+发行结果：annotated tag `v0.3.1` 指向
+`5f612c6fdcfd03f4432efa44f316614ca2864c4d`。
+[CI](https://github.com/nocoo/ocelot/actions/runs/35410529031) 与
+[Release 部署](https://github.com/nocoo/ocelot/actions/runs/35410755855)
+成功；控制面核验 Worker `d009bac5-ce2a-408b-a82f-9127fc8133e9`、
+`v0.3.1` 与 `/` 的 nocoo Access 登录。匿名 `GET /api/live` 仍被边缘
+302 到 Access；Wrangler OAuth 创建路径级 Bypass 返回 403（code 1010）。
+`/`、`/api/session`、`/api/profile` 仍进入 Access。

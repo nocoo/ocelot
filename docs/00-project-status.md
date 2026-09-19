@@ -2,9 +2,8 @@
 
 更新：2026-09-19
 
-当前阶段：**公开 `GET /api/live` 健康接口已写入契约**；Worker 实现与 patch
-发布见本轮提交。v0.3.0 正式发行记录见
-[Release](https://github.com/nocoo/ocelot/releases/tag/v0.3.0)。图标工具栏与
+当前阶段：**公开 `GET /api/live` 已随 [v0.3.1](https://github.com/nocoo/ocelot/releases/tag/v0.3.1)
+发布 Worker**；边缘 Access 仍 302，缺 Zero Trust 路径级 Bypass。图标工具栏与
 Mermaid 本地验收仍见 15。
 
 ## 文档
@@ -48,7 +47,7 @@ Mermaid 本地验收仍见 15。
 | Access 身份与作者头像 | 云端实际请求已验证 | 12；修复 Workers 不支持的 redirect 模式；缓存异常不丢弃合法资料 |
 | 版本与 release | 已实现并本地验证 | 单一版本来源、只读 dry run、CI/CD 成功后不可变 tag |
 | Cloudflare 部署与 Access 策略 | 已交付并验证 | D1 迁移、私有 R2、完整 Git 标签和 Access 入口通过；远程证据见 09 |
-| 公开 `GET /api/live` | 契约已接受；实现见本轮 | 仅该路径可匿名；业务/vault/avatar/cache 仍校验 Access。边缘 Bypass 需 Zero Trust 权限 |
+| 公开 `GET /api/live` | Worker 已发布 v0.3.1；边缘仍拦截 | [CI](https://github.com/nocoo/ocelot/actions/runs/35410529031) / [部署](https://github.com/nocoo/ocelot/actions/runs/35410755855) 成功。匿名 live 仍 302；Bypass 需 Zero Trust 权限 |
 
 ## 已确认的实施范围
 
