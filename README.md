@@ -94,7 +94,7 @@ Vitest 检查非 View 逻辑与 Worker；Playwright 使用独立 Wrangler 和生
 - [07 · Basalt 导航与阅读界面](docs/07-basalt-navigation.md)
 - [08 · 视觉规范](docs/08-visual-identity.md) · [品牌资产](assets/brand/README.md)
 - [09 · 身份、版本与持续交付](docs/09-identity-and-delivery.md)
-- [操作入口](CLAUDE.md) · [版本变更](CHANGELOG.md)
+- [操作入口](AGENTS.md) · [版本变更](CHANGELOG.md)
 - [开发协作约定](AGENTS.md) · [第三方说明](THIRD_PARTY_NOTICES.md)
 
 ## 许可证

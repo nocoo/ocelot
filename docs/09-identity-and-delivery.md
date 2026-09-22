@@ -122,7 +122,7 @@ source and current main commit before using the production environment.
   的提交。测试 job 不获得 Cloudflare Token 或 GitHub PAT。
 - 保留 `workers_dev: false`、`preview_urls: false`、`run_worker_first: true`；
   自定义域名进入同一个 Access 校验，前端及 Worker 原子上传。
-- `CLAUDE.md` 记录工程约定与命令，并引用 `AGENTS.md`、编号文档、配置和
+- `AGENTS.md` 记录工程约定与命令，并引用编号文档、配置和
   实际门禁，避免重复维护互相冲突的规则。
 
 ## 验收记录

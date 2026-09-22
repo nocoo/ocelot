@@ -94,7 +94,7 @@ Vitest checks non-View logic and the Worker. Playwright uses an independent Wran
 - [07 · Basalt navigation and reading chrome](07-basalt-navigation.md)
 - [08 · Visual identity](08-visual-identity.md) · [Brand assets](../assets/brand/README.md)
 - [09 · Identity, versioning and delivery](09-identity-and-delivery.md)
-- [Operations](../CLAUDE.md) · [Changelog](../CHANGELOG.md)
+- [Operations](../AGENTS.md) · [Changelog](../CHANGELOG.md)
 - [Contributor agreement](../AGENTS.md) · [Third-party notices](../THIRD_PARTY_NOTICES.md)
 
 Make coherent atomic commits on `main`. This public repository contains the application and synthetic fixtures,
