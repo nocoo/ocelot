@@ -8,7 +8,6 @@
   "workers_dev": false,
   "preview_urls": false,
   "routes": [{ "pattern": "ocelot.hexly.ai", "custom_domain": true }],
-  "version_metadata": { "binding": "VERSION_METADATA" },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
