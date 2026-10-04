@@ -1,6 +1,7 @@
 # 17 · Dependency maintenance — 2026-10-05
 
-Status: planned implementation; validation remains required.
+Status: nine requested non-major targets implemented; final-head local checks,
+independent reviews and current-head CI remain required before merge.
 
 ## Scope
 
@@ -58,3 +59,18 @@ the declared Bun runtime took about 2.8 seconds. Pin the real Bun executable
 before adding mocked commands to PATH, and use it for the release CLI and mock
 executables. Preserve all assertions, real temporary Git history and the limit.
 The failed/interrupted runs remain recorded; complete final coverage must pass.
+
+## Implemented compatibility details
+
+KaTeX 0.18.10 is pinned for all KaTeX consumers through an exact override: the
+root CSS import and rehype/remark/Mermaid math renderers must use the same release.
+Its declared Commander 15 dependency requires Node >=22.12, matching this
+project's supported floor. No unrelated direct dependency or numeric-major
+migration is introduced. Existing model and Worker tests and browser CI provide
+behavioral acceptance; no React View tests were added.
+
+The Cloudflare group regenerated the Worker bindings with the normal generator;
+the resulting interface was byte-identical. The release-fixture repair passed
+all 18 existing release tests and the complete 147-test models project without
+raising timeouts or removing assertions. These focused results are not a
+substitute for the final candidate checks and remote browser jobs.
