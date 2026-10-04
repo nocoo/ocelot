@@ -17,6 +17,9 @@ import {
   type WorkflowEvidence,
 } from "../../scripts/release-model";
 
+// Fixture PATH contains a fake bun; pin the real runtime before creating it.
+const fixtureRuntime = execFileSync("which", ["bun"], { encoding: "utf8" }).trim();
+
 vi.mock("node:timers/promises", () => ({ setTimeout: vi.fn().mockResolvedValue(undefined) }));
 afterEach(() => {
   vi.restoreAllMocks();
@@ -269,7 +272,7 @@ describe("release CLI preflight and read-only preview", () => {
     );
     writeFileSync(join(bin, "gh"), "#!/bin/sh\nexit 99\n", { mode: 0o755 });
     const cli = (...args: string[]) =>
-      spawnSync(process.execPath, [join(cwd, "scripts/release.ts"), ...args], {
+      spawnSync(fixtureRuntime, [join(cwd, "scripts/release.ts"), ...args], {
         cwd,
         encoding: "utf8",
         env: { ...cleanEnv, PATH: `${bin}:${process.env.PATH}` },
@@ -288,7 +291,7 @@ describe("release CLI preflight and read-only preview", () => {
     cleanEnv.OCELOT_RELEASE_TEST_MODE = mode;
     writeFileSync(
       join(bin, "git"),
-      `#!/usr/bin/env node
+      `#!${fixtureRuntime}
 const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const args = process.argv.slice(2);
@@ -302,7 +305,7 @@ process.exit(result.status ?? 1);
     writeFileSync(join(bin, "bun"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
     writeFileSync(
       join(bin, "gh"),
-      `#!/usr/bin/env node
+      `#!${fixtureRuntime}
 const fs = require("node:fs");
 const { execFileSync } = require("node:child_process");
 const args = process.argv.slice(2);
@@ -429,7 +432,7 @@ if (args[0] === "run" && args[1] === "list") {
     writeFileSync(join(cwd, "resources.json"), "[]");
     writeFileSync(
       join(bin, "bun"),
-      `#!/usr/bin/env node
+      `#!${fixtureRuntime}
 const fs = require("node:fs");
 const args = process.argv.slice(2);
 fs.appendFileSync("commands.log", JSON.stringify(args) + "\\n");

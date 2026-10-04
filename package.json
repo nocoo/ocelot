@@ -10,7 +10,8 @@
   "overrides": {
     "dompurify": "3.4.16",
     "lodash-es": "4.18.1",
-    "undici": "7.29.1"
+    "undici": "7.29.1",
+    "katex": "0.18.10"
   },
   "scripts": {
     "dev": "node scripts/dev.mjs",
@@ -40,8 +41,8 @@
     "@nocoo/basalt": "2.2.0",
     "@pierre/trees": "1.0.0-beta.6",
     "jose": "6.2.12",
-    "katex": "0.16.47",
-    "lucide-react": "1.44.0",
+    "katex": "0.18.10",
+    "lucide-react": "1.49.0",
     "mdast-util-to-string": "4.0.0",
     "mermaid": "12.0.0",
     "react": "19.3.0",
@@ -55,15 +56,15 @@
     "remark-parse": "11.0.0",
     "unified": "11.0.5",
     "unist-util-visit": "5.1.0",
-    "yaml": "2.9.0"
+    "yaml": "2.9.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
-    "@biomejs/biome": "2.5.13",
-    "@cloudflare/vitest-plugin": "1.1.7",
-    "@cloudflare/workers-types": "5.20260911.1",
+    "@biomejs/biome": "2.5.15",
+    "@cloudflare/vitest-plugin": "1.3.4",
+    "@cloudflare/workers-types": "5.20260930.2",
     "@playwright/test": "1.63.0",
-    "@types/hast": "3.0.4",
+    "@types/hast": "3.0.5",
     "@types/mdast": "4.0.4",
     "@types/node": "22.20.2",
     "@types/react": "19.3.0",
@@ -72,8 +73,8 @@
     "@vitest/coverage-istanbul": "4.1.11",
     "husky": "9.1.7",
     "typescript": "7.0.2",
-    "vite": "8.3.0",
+    "vite": "8.3.1",
     "vitest": "4.1.11",
-    "wrangler": "4.131.0"
+    "wrangler": "4.145.0"
   }
 }
