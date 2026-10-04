@@ -48,3 +48,13 @@ protections must pass before a commit-preserving PR merge.
 Detailed command outputs, review records and issue-closure evidence are retained
 in the dependency duty run `20261004T213347Z-72294a366d21` in the workflow task
 receipt and its linked local evidence. An unexecuted check remains N/A.
+
+## Validation fixture repair
+
+The release-recovery fixture exceeded its unchanged five-second limit because
+it launched the Bun release script with Vitest's Node process.execPath. Two
+full isolated attempts took about 6.7 seconds. Running that same scenario with
+the declared Bun runtime took about 2.8 seconds. Pin the real Bun executable
+before adding mocked commands to PATH, and use it for the release CLI and mock
+executables. Preserve all assertions, real temporary Git history and the limit.
+The failed/interrupted runs remain recorded; complete final coverage must pass.
