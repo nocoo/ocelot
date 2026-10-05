@@ -74,3 +74,16 @@ the resulting interface was byte-identical. The release-fixture repair passed
 all 18 existing release tests and the complete 147-test models project without
 raising timeouts or removing assertions. These focused results are not a
 substitute for the final candidate checks and remote browser jobs.
+
+## Automatic delivery repair
+
+PR #18 merged after all local and current-head CI checks passed, and its nine
+issues closed automatically. The trusted-main CI passed too. Automatic delivery
+then failed before migrations or upload: the shared workflow correctly rejected
+Wrangler 4.145.0 because release.yml still requested 4.131.0.
+
+Synchronize that existing deployment version constraint with the exact direct
+dependency. Add a repository contract test to the existing release suite so PR
+CI rejects drift before merge. Preserve the shared deploy workflow, source-run
+proof, environment, migrations-first script and all checks. No manual deployment
+or tag is part of this repair; verify the normal trusted-main delivery after merge.
