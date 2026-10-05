@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { setTimeout as pause } from "node:timers/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { parse as parseYaml } from "yaml";
 import {
   assertDeploymentTag,
   assertWorkflowSuccess,
@@ -27,6 +28,11 @@ afterEach(() => {
 });
 
 describe("nmem release policy", () => {
+  it("matches the declared Wrangler in the automatic deployment gate", () => {
+    const manifest = JSON.parse(readFileSync("package.json", "utf8"));
+    const workflow = parseYaml(readFileSync(".github/workflows/release.yml", "utf8"));
+    expect(workflow.jobs.deploy.with["wrangler-version"]).toBe(manifest.devDependencies.wrangler);
+  });
   const now = Date.parse("2026-09-11T12:00:00Z");
   const baseline = {
     current: "1.2.3",

@@ -23,3 +23,18 @@ stalled; only this run's descendant test processes were stopped. Pinning Bun onl
 for the mock executables was insufficient. Measure the complete subprocess path
 and match the application's declared runtime before treating an optimization as
 a fix. This test change never disables the repository's normal hooks.
+
+## 2026-10-05 — Synchronize the deployment toolchain constraint
+
+The dependency PR upgraded the direct Wrangler dependency and lock to 4.145.0
+but missed the separate 4.131.0 expectation in release.yml. Local checks, PR CI
+and trusted-main CI passed; the deployment workflow then correctly rejected the
+mismatch before migration or upload. The nine dependency issues had already
+closed, so their source completion and failed delivery must be reported separately.
+
+Synchronize the release constraint, and add an existing-suite contract assertion
+that parses the actual workflow and compares its Wrangler version with the
+authoritative manifest. The assertion failed on the stale pin before the fix.
+Future dependency reviews must trace version pins into publication consumers,
+not stop at manifests, lockfiles and build commands. Preserve the failed delivery
+run and validate the normal automatic pipeline after the follow-up merge.
