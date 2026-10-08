@@ -90,7 +90,7 @@ or tag is part of this repair; verify the normal trusted-main delivery after mer
 
 ## 2026-10-08 — Compatible security patches
 
-Status: scope recorded before implementation; current-revision acceptance is required.
+Status: both compatible fixes are implemented; current-revision acceptance is required before merge.
 
 Fresh default-branch scanning found Sharp 0.35.4 (GHSA-wq5f-xc86-pv6w, #20) and source-map-js 1.2.1 (GHSA-68fv-2mgg-jv7q, #21). Apply the compatible fixes 0.35.5 and 1.2.2 as separate atomic commits. Preserve all existing direct dependency pins and the four open major requests. Do not alter historical benchmark inputs, View tests, hooks, coverage floors or scanner policy.
 
