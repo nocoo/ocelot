@@ -87,3 +87,11 @@ dependency. Add a repository contract test to the existing release suite so PR
 CI rejects drift before merge. Preserve the shared deploy workflow, source-run
 proof, environment, migrations-first script and all checks. No manual deployment
 or tag is part of this repair; verify the normal trusted-main delivery after merge.
+
+## 2026-10-08 — Compatible security patches
+
+Status: both compatible fixes are implemented; current-revision acceptance is required before merge.
+
+Fresh default-branch scanning found Sharp 0.35.4 (GHSA-wq5f-xc86-pv6w, #20) and source-map-js 1.2.1 (GHSA-68fv-2mgg-jv7q, #21). Apply the compatible fixes 0.35.5 and 1.2.2 as separate atomic commits. Preserve all existing direct dependency pins and the four open major requests. Do not alter historical benchmark inputs, View tests, hooks, coverage floors or scanner policy.
+
+Verify a frozen install, generated bindings, strict types/lint, complete models/Worker coverage, Vite build, Worker packaging dry-run and both security scanners. Existing normal hooks and exact-head CI, including both configured browser engines, remain mandatory. No local browser, private vault, real credential, production operation or release tag is authorized by this batch. The dependency-duty receipt for run `20261007T213513Z-9ceaa0c6054b` retains actual commands, reviews, PR and closure outcomes; previous duty results are not current evidence.
