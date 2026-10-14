@@ -26,7 +26,7 @@ jobs:
        github.event.workflow_run.head_branch == 'main' &&
        github.event.workflow_run.event != 'pull_request' &&
        github.repository == 'nocoo/ocelot')
-    uses: nocoo/base-ci/.github/workflows/deploy-worker.yml@ad43150de3a2be2fa464b5cd2f921dc4fa9f8f0f
+    uses: nocoo/base-ci/.github/workflows/deploy-worker.yml@0394178ebcff0418c442d84a84119220f31f8987 # v2026.9
     with:
       expected-workflow-path: ".github/workflows/verify.yml"
       expected-workflow-name: "CI"
@@ -38,7 +38,6 @@ jobs:
       build-command: |
         bun run build
         bun run worker:check
-      wrangler-version: "4.150.0"
       deploy-script: bun run deploy
       environment: production
       concurrency-group: ocelot-production
