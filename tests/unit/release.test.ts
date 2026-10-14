@@ -34,7 +34,8 @@ describe("nmem release policy", () => {
     expect(manifest.devDependencies.wrangler).toMatch(/^\d+\.\d+\.\d+$/u);
     // base-ci v2026.9 reads the exact version from the lockfile; a pin is optional but must match.
     const pin = workflow.jobs.deploy.with["wrangler-version"];
-    if (pin !== undefined && pin !== "lockfile") expect(pin).toBe(manifest.devDependencies.wrangler);
+    if (pin !== undefined && pin !== "lockfile")
+      expect(pin).toBe(manifest.devDependencies.wrangler);
   });
   const now = Date.parse("2026-09-11T12:00:00Z");
   const baseline = {
