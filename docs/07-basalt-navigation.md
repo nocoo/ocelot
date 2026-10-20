@@ -130,6 +130,28 @@ Pierre 仅负责 `SidebarNav` 中的虚拟文件树，与 Basalt 容器没有冲
   已更新 README 截图；原始帧记录位于忽略的 `output/testing/sidebar-motion.json`。
 - 用户确认“完美，可以继续上线”。本项完成，后续交付状态见 09。
 
+## In-app home navigation
+
+Status: implemented and locally verified (2026-10-21); delivery evidence belongs
+to the exact main commit's CI/CD.
+
+The brand's ordinary same-tab click should use the existing browser History
+service and ReaderViewModel location flow rather than reload the document.
+Returning home selects the first registered repository and its default document,
+matching a fresh visit to `/`. Preserve the shell and collapsed sidebar, and keep
+Back/Forward usable without adding a second home history entry. Modified clicks,
+external links and the explicit re-login link retain native browser behavior.
+Regression tests use synthetic repositories in an isolated local harness; no
+production or private vault data is used.
+
+The old brand link reproduced a Document request on an ordinary click. The final
+regressions pass for retained shell/header/sidebar nodes, collapsed state,
+Back/Forward and native foreground tabs opened by modified or middle clicks.
+The isolated browser suite passes 48/48 tests across Chromium and WebKit. Unit
+tests pass 236/236 with statements/branches/functions/lines coverage of
+100/98.77/100/100 percent. Generated types are unchanged; typecheck, check-only
+lint, production build, Worker dry-run and dependency/secret scans pass.
+
 ## 上线后目录状态修正
 
 状态：**已实现并通过本地验证；交付结果见对应 main CI/CD** · 2026-09-11。用户已在生产配置 GitHub PAT，并确认连接检测成功，

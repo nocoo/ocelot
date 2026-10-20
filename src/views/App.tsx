@@ -259,7 +259,24 @@ function Reader({ model }: { model: ReaderViewModel }) {
             </>
           )}
           <SidebarHeader className="brand-header">
-            <a className="brand" href="/" aria-label="Ocelot 首页" title={`Ocelot v${version}`}>
+            <a
+              className="brand"
+              href="/"
+              aria-label="Ocelot 首页"
+              title={`Ocelot v${version}`}
+              onClick={(event) => {
+                if (
+                  event.button !== 0 ||
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey
+                )
+                  return;
+                event.preventDefault();
+                void model.goHome();
+              }}
+            >
               <Mark />
               {!railCollapsed && (
                 <>

@@ -38,3 +38,16 @@ authoritative manifest. The assertion failed on the stale pin before the fix.
 Future dependency reviews must trace version pins into publication consumers,
 not stop at manifests, lockfiles and build commands. Preserve the failed delivery
 run and validate the normal automatic pipeline after the follow-up merge.
+
+## 2026-10-21 — Separate native click handling from headless popup behavior
+
+The homepage regression correctly reproduced a Document request from the brand
+link. A companion test initially assumed that a modified click would always emit
+a popup event in headless Chromium; that expectation timed out even with the
+unchanged native anchor. A temporary check verified that React did not cancel the
+modified events. The final regression reuses the working foreground-tab pattern
+from Hexly: Shift with Control/Meta or a middle click, a context page event, and
+explicit foreground focus. It tests native tab behavior without changing product
+code to accommodate the harness. Ordinary click and Back/Forward
+journeys still use real navigation and assert document requests, shell identity
+and collapsed state. All stores belong to the temporary synthetic harness.

@@ -95,6 +95,29 @@ afterEach(() => {
 });
 
 describe("recent updates state", () => {
+  it("returns home through History without duplicating the canonical entry", async () => {
+    const { model, browser } = setup();
+    await model.start();
+    await model.selectRepository(102, "Second.md");
+    vi.mocked(browser.navigate).mockClear();
+    vi.mocked(browser.route).mockReturnValue({ repository: null, path: null, anchor: "" });
+    await model.goHome();
+    expect(browser.navigate).toHaveBeenNthCalledWith(1, "/", false);
+    expect(browser.navigate).toHaveBeenLastCalledWith("/?repo=101&note=README.md", true);
+    expect(browser.navigate).toHaveBeenCalledTimes(2);
+    expect(model.getSnapshot().snapshot?.repository.id).toBe(101);
+    expect(model.getSnapshot().reading?.path).toBe("README.md");
+  });
+
+  it("keeps the empty homepage reachable without a registered repository", async () => {
+    const { api, model, browser } = setup();
+    vi.mocked(api.repositories).mockResolvedValue([]);
+    await model.start();
+    await model.goHome();
+    expect(browser.navigate).toHaveBeenCalledExactlyOnceWith("/", false);
+    expect(api.sync).not.toHaveBeenCalled();
+  });
+
   const note = { path: "Second.md", updatedAt: "2026-09-12T00:00:00.000Z" };
   it("loads the homepage list independently, hides incomplete ranking and shares it with the dialog", async () => {
     const { api, model } = setup();

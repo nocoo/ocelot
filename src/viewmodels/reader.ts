@@ -222,6 +222,11 @@ export class ReaderViewModel {
     };
   }
 
+  async goHome(): Promise<void> {
+    this.browser.navigate("/", false);
+    await this.followLocation(true);
+  }
+
   async followLocation(replace = false): Promise<void> {
     const route = this.browser.route();
     const id =

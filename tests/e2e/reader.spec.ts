@@ -110,6 +110,65 @@ test.beforeEach(async ({ request }) => {
   expect(response.ok()).toBe(true);
 });
 
+test("home navigation preserves shell nodes, collapsed state and browser history", async ({
+  page,
+}) => {
+  await open(page, longRead);
+  const noteUrl = page.url();
+  const noteTitle = await page.locator("#document-title").innerText();
+  await page.getByRole("button", { name: "切换知识库导航", exact: true }).click();
+  const toggle = page.getByRole("button", { name: "切换知识库导航", exact: true });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  const shellNode = await page.locator(".ocelot-shell").elementHandle();
+  const headerNode = await page.locator(".reader-toolbar").elementHandle();
+  const sidebarNode = await page.locator(".ocelot-sidebar").elementHandle();
+  const documents: string[] = [];
+  page.on("request", (request) => {
+    if (request.resourceType() === "document") documents.push(request.url());
+  });
+  await page.getByRole("link", { name: "Ocelot 首页", exact: true }).click();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  expect(new URL(page.url()).searchParams.get("note")).toBe("README.md");
+  expect(documents).toEqual([]);
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  expect(
+    await shellNode?.evaluate((node) => node === document.querySelector(".ocelot-shell")),
+  ).toBe(true);
+  expect(
+    await headerNode?.evaluate((node) => node === document.querySelector(".reader-toolbar")),
+  ).toBe(true);
+  expect(
+    await sidebarNode?.evaluate((node) => node === document.querySelector(".ocelot-sidebar")),
+  ).toBe(true);
+  await page.goBack();
+  await expect(page).toHaveURL(noteUrl);
+  await expect(page.locator("#document-title")).toHaveText(noteTitle);
+  await page.goForward();
+  await expect(page.locator("#document-title")).toHaveText(welcome);
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  expect(documents).toEqual([]);
+});
+
+test("modified home clicks retain native browser handling", async ({ page, context }) => {
+  await open(page, longRead);
+  const noteUrl = page.url();
+  const link = page.getByRole("link", { name: "Ocelot 首页", exact: true });
+  for (const action of ["modified", "middle"] as const) {
+    const opened = context.waitForEvent("page");
+    await link.click(
+      action === "modified"
+        ? { modifiers: ["ControlOrMeta", "Shift"], noWaitAfter: true }
+        : { button: "middle", modifiers: ["Shift"], noWaitAfter: true },
+    );
+    const popup = await opened;
+    await popup.bringToFront();
+    await expect(popup.locator("#document-title")).toHaveText(welcome);
+    await expect(page).toHaveURL(noteUrl);
+    await popup.close();
+    await page.bringToFront();
+  }
+});
+
 test("an empty sidebar offers a repository action instead of an idle loading animation", async ({
   page,
 }) => {
