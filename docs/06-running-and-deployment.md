@@ -4,7 +4,7 @@
 
 ## 本地启动
 
-使用 Node.js 26.8.1 与 Bun 1.4.0：
+使用 Node.js 26.12.1 与 Bun 1.4.0：
 
 ```sh
 bun install --frozen-lockfile

@@ -32,7 +32,7 @@ describe("nmem release policy", () => {
     const manifest = JSON.parse(readFileSync("package.json", "utf8"));
     const workflow = parseYaml(readFileSync(".github/workflows/release.yml", "utf8"));
     expect(manifest.devDependencies.wrangler).toMatch(/^\d+\.\d+\.\d+$/u);
-    // base-ci v2026.9 reads the exact version from the lockfile; a pin is optional but must match.
+    // base-ci main 2026-10-22 reads the exact version from the lockfile; a pin is optional but must match.
     const pin = workflow.jobs.deploy.with["wrangler-version"];
     if (pin !== undefined && pin !== "lockfile")
       expect(pin).toBe(manifest.devDependencies.wrangler);

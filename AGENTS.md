@@ -13,7 +13,7 @@ Direction: [project status](docs/00-project-status.md), [product contract](docs/
 
 ## Setup and commands
 
-Run from the repository root. Bun 1.4.0 (`packageManager`; CI pins Node 26.8.1), TypeScript 7.0.2 strict, Biome, Husky. Local development uses only synthetic repositories and needs no PAT or Cloudflare account.
+Run from the repository root. Bun 1.4.0 (`packageManager`; CI pins Node 26.12.1), TypeScript 7.0.2 strict, Biome, Husky. Local development uses only synthetic repositories and needs no PAT or Cloudflare account.
 
 ```sh
 bun install --frozen-lockfile

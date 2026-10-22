@@ -36,7 +36,7 @@ Open [Ocelot](https://ocelot.hexly.ai), sign in through Cloudflare Access, selec
 
 ## Development
 
-Use Node.js 26.8.1 and Bun 1.4.0:
+Use Node.js 26.12.1 and Bun 1.4.0:
 
 ```sh
 bun install --frozen-lockfile
