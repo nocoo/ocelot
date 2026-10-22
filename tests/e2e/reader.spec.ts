@@ -126,7 +126,7 @@ test("home navigation preserves shell nodes, collapsed state and browser history
   page.on("request", (request) => {
     if (request.resourceType() === "document") documents.push(request.url());
   });
-  await page.getByRole("link", { name: "Ocelot 首页", exact: true }).click();
+  await page.getByRole("link", { name: /Ocelot 首页/u }).click();
   await expect(page.locator("#document-title")).toHaveText(welcome);
   expect(new URL(page.url()).searchParams.get("note")).toBe("README.md");
   expect(documents).toEqual([]);
@@ -152,7 +152,7 @@ test("home navigation preserves shell nodes, collapsed state and browser history
 test("modified home clicks retain native browser handling", async ({ page, context }) => {
   await open(page, longRead);
   const noteUrl = page.url();
-  const link = page.getByRole("link", { name: "Ocelot 首页", exact: true });
+  const link = page.getByRole("link", { name: /Ocelot 首页/u });
   for (const action of ["modified", "middle"] as const) {
     const opened = context.waitForEvent("page");
     await link.click(
