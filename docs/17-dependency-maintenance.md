@@ -9,17 +9,17 @@ Apply the current non-major dependency issue targets in an isolated branch. Keep
 each independent upgrade in its own commit. Do not use historical test results as
 acceptance of this batch.
 
-| Issue | Dependency | Requested version |
-| --- | --- | --- |
-| #4 | @biomejs/biome | 2.5.15 |
-| #5 | @cloudflare/vitest-plugin | 1.3.4 |
-| #6 | @cloudflare/workers-types | 5.20260930.2 |
-| #7 | @types/hast | 3.0.5 |
-| #10 | katex | 0.18.10 |
-| #11 | lucide-react | 1.49.0 |
-| #13 | vite | 8.3.1 |
-| #15 | wrangler | 4.145.0 |
-| #16 | yaml | 2.9.1 |
+| Issue | Dependency                | Requested version |
+| ----- | ------------------------- | ----------------- |
+| #4    | @biomejs/biome            | 2.5.15            |
+| #5    | @cloudflare/vitest-plugin | 1.3.4             |
+| #6    | @cloudflare/workers-types | 5.20260930.2      |
+| #7    | @types/hast               | 3.0.5             |
+| #10   | katex                     | 0.18.10           |
+| #11   | lucide-react              | 1.49.0            |
+| #13   | vite                      | 8.3.1             |
+| #15   | wrangler                  | 4.145.0           |
+| #16   | yaml                      | 2.9.1             |
 
 The Cloudflare plugin, Wrangler and Worker types form one compatibility group.
 Published plugin 1.3.4 depends on Wrangler 4.145.0 and supports Vitest 4.1.x;

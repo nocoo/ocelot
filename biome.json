@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "includes": ["**", "!!worker/worker-configuration.d.ts", "!!fixtures/generated"]
@@ -18,7 +18,8 @@
       "linter": {
         "rules": {
           "style": { "noDescendingSpecificity": "off" },
-          "complexity": { "noImportantStyles": "off" }
+          "complexity": { "noImportantStyles": "off" },
+          "correctness": { "noInvalidGridAreas": "off" }
         }
       }
     }

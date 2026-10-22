@@ -8,14 +8,14 @@
 查询基础设施总表及最近的 hexly.ai、Giraffe、Poké Pocket 登记后，最近分配到
 7048；没有查到 7049 的登记，实际监听列表也没有以下端口。
 
-| 用途 | 端口 | 状态目录 |
-| --- | --- | --- |
-| 日常 Vite，Caddy 的上游 | 7049 | — |
-| 日常 Worker | 37049 | `.wrangler/state` |
-| 日常 Worker inspector | 38049 | — |
-| 浏览器验收 Vite preview | 27049 | — |
-| 验收 Worker / HTTP API | 17049 | `.wrangler/e2e` |
-| 验收 Worker inspector | 18049 | — |
+| 用途                    | 端口  | 状态目录          |
+| ----------------------- | ----- | ----------------- |
+| 日常 Vite，Caddy 的上游 | 7049  | —                 |
+| 日常 Worker             | 37049 | `.wrangler/state` |
+| 日常 Worker inspector   | 38049 | —                 |
+| 浏览器验收 Vite preview | 27049 | —                 |
+| 验收 Worker / HTTP API  | 17049 | `.wrangler/e2e`   |
+| 验收 Worker inspector   | 18049 | —                 |
 
 沿用主端口、API 测试 +10000、浏览器测试 +20000、开发辅助 +30000 的分配规则；
 inspector 在对应 Worker 端口上加 1000。同步登记 nmem，避免后续项目占用。

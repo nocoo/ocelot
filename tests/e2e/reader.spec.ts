@@ -115,7 +115,7 @@ test("home navigation preserves shell nodes, collapsed state and browser history
 }) => {
   await open(page, longRead);
   const noteUrl = page.url();
-  const noteTitle = await page.locator("#document-title").innerText();
+  const noteTitle = (await page.locator("#document-title").textContent()) ?? "";
   await page.getByRole("button", { name: "切换知识库导航", exact: true }).click();
   const toggle = page.getByRole("button", { name: "切换知识库导航", exact: true });
   await expect(toggle).toHaveAttribute("aria-expanded", "false");

@@ -74,13 +74,13 @@ Vitest 检查非 View 逻辑与 Worker；Playwright 使用独立 Wrangler 和生
 
 ## 技术栈
 
-| 技术 | 用途 |
-| --- | --- |
-| React、Vite、TypeScript | MVVM 阅读器与前端构建 |
-| Basalt、Pierre Trees | 控件、布局和虚拟化目录 |
-| Cloudflare Workers、Access | API 与查看者身份校验 |
-| D1、私有 R2 | 元数据与可重建缓存 |
-| Biome、Vitest、Playwright | 静态检查、逻辑与浏览器验证 |
+| 技术                       | 用途                       |
+| -------------------------- | -------------------------- |
+| React、Vite、TypeScript    | MVVM 阅读器与前端构建      |
+| Basalt、Pierre Trees       | 控件、布局和虚拟化目录     |
+| Cloudflare Workers、Access | API 与查看者身份校验       |
+| D1、私有 R2                | 元数据与可重建缓存         |
+| Biome、Vitest、Playwright  | 静态检查、逻辑与浏览器验证 |
 
 ## 文档
 

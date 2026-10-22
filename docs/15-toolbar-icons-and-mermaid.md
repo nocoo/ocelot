@@ -25,7 +25,6 @@ Safari 点击按钮时不自动建立焦点；图标按钮和图片入口显式�
 无法解码，1 张思维导图包含解析器不接受的语法。用户提供的状态图语法有效；
 其 SVG 的固有尺寸约为 `136 × 150`，明显小于实际布局，放大预览会受此影响。
 排除语法错误后，根因与决定如下：
-
 - Mermaid 12.0.0 已弃用图类型内的 `htmlLabels`；全局默认值覆盖现有的
   `flowchart.htmlLabels: false`。HTML 标签中的换行被序列化成未闭合的
   `<br>`，造成 SVG XML 解码失败。改用全局 `htmlLabels: false`，并保护
@@ -53,18 +52,18 @@ Safari 点击按钮时不自动建立焦点；图标按钮和图片入口显式�
 
 ## 完成与验证证据
 
-| 范围 | 当前结果 |
-| --- | --- |
-| 类型与风格 | TypeScript 7.0.2、Biome 通过；依赖版本未改变 |
-| 非 View runtime | 233 UT / Worker 集成通过；statements `1238/1238`、branches `1049/1063`、functions `232/232`、lines `1100/1100`，覆盖率 `100 / 98.68 / 100 / 100%` |
-| 渲染服务 | 新增 12 项测试，覆盖安全设置、主题、URL 编码、根元素尺寸、无效 viewBox 与渲染失败；该服务四项覆盖率均为 100% |
-| 打包与绑定 | Vite 生产构建通过；Worker dry run `72.38 KiB / gzip 19.63 KiB`；重新生成绑定声明无差异 |
-| 安全扫描 | OSV Scanner 与 Gitleaks 通过 |
-| 浏览器 | 完整 `46/46` 通过，约 1.2 分钟：Chromium 41 项、WebKit 手机 5 项；包含工具栏提示、明暗主题、320–1800px 布局、更新与最近列表、五类图示、错误回退、原图放大及 Safari 焦点恢复 |
-| 原始样例复核 | 只读提取本机同篇图示，在隔离浏览器内验证；Chromium / WebKit 的明暗主题下，6 张有效图示全部正常显示，0 个页面异常。用户状态图的固有尺寸分别为 `953 × 1016` / `953 × 1024`，原文未改写 |
-| 支持边界 | 同篇另一张思维导图有 Mermaid 解析器不接受的节点语法，继续回退到原文；不修改来源知识库 |
-| 本机合成样例 | 新增独立图示页与首页入口；主库 1,186 文件、1,178 篇 Markdown、1,194 个不可变 blob，3 个合成仓库 |
-| 生产交付 | 随当前 main 提交自动交付；匹配提交的 [CI](https://github.com/nocoo/ocelot/actions/workflows/verify.yml) 与 [部署](https://github.com/nocoo/ocelot/actions/workflows/release.yml) 是远程结果依据 |
+| 范围            | 当前结果                                                                                                                                                                                        |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 类型与风格      | TypeScript 7.0.2、Biome 通过；依赖版本未改变                                                                                                                                                    |
+| 非 View runtime | 233 UT / Worker 集成通过；statements `1238/1238`、branches `1049/1063`、functions `232/232`、lines `1100/1100`，覆盖率 `100 / 98.68 / 100 / 100%`                                               |
+| 渲染服务        | 新增 12 项测试，覆盖安全设置、主题、URL 编码、根元素尺寸、无效 viewBox 与渲染失败；该服务四项覆盖率均为 100%                                                                                    |
+| 打包与绑定      | Vite 生产构建通过；Worker dry run `72.38 KiB / gzip 19.63 KiB`；重新生成绑定声明无差异                                                                                                          |
+| 安全扫描        | OSV Scanner 与 Gitleaks 通过                                                                                                                                                                    |
+| 浏览器          | 完整 `46/46` 通过，约 1.2 分钟：Chromium 41 项、WebKit 手机 5 项；包含工具栏提示、明暗主题、320–1800px 布局、更新与最近列表、五类图示、错误回退、原图放大及 Safari 焦点恢复                     |
+| 原始样例复核    | 只读提取本机同篇图示，在隔离浏览器内验证；Chromium / WebKit 的明暗主题下，6 张有效图示全部正常显示，0 个页面异常。用户状态图的固有尺寸分别为 `953 × 1016` / `953 × 1024`，原文未改写            |
+| 支持边界        | 同篇另一张思维导图有 Mermaid 解析器不接受的节点语法，继续回退到原文；不修改来源知识库                                                                                                           |
+| 本机合成样例    | 新增独立图示页与首页入口；主库 1,186 文件、1,178 篇 Markdown、1,194 个不可变 blob，3 个合成仓库                                                                                                 |
+| 生产交付        | 随当前 main 提交自动交付；匹配提交的 [CI](https://github.com/nocoo/ocelot/actions/workflows/verify.yml) 与 [部署](https://github.com/nocoo/ocelot/actions/workflows/release.yml) 是远程结果依据 |
 
 已检查并保存公开合成样例的截图：[图标与键盘提示](assets/toolbar-icons-light.png)、
 [深色图示](assets/mermaid-dark.png)、[手机工具栏](assets/toolbar-icons-mobile.png)、

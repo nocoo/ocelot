@@ -74,13 +74,13 @@ Vitest checks non-View logic and the Worker. Playwright uses an independent Wran
 
 ## Stack
 
-| Technology | Role |
-| --- | --- |
-| React, Vite, TypeScript | MVVM reader and frontend builds |
-| Basalt, Pierre Trees | Controls, layouts and virtualized navigation |
-| Cloudflare Workers, Access | APIs and viewer identity verification |
-| D1, private R2 | Metadata and rebuildable caches |
-| Biome, Vitest, Playwright | Static, logic and browser checks |
+| Technology                 | Role                                         |
+| -------------------------- | -------------------------------------------- |
+| React, Vite, TypeScript    | MVVM reader and frontend builds              |
+| Basalt, Pierre Trees       | Controls, layouts and virtualized navigation |
+| Cloudflare Workers, Access | APIs and viewer identity verification        |
+| D1, private R2             | Metadata and rebuildable caches              |
+| Biome, Vitest, Playwright  | Static, logic and browser checks             |
 
 ## Documentation
 

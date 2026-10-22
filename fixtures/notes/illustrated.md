@@ -1,9 +1,11 @@
 ---
+
 title: 图文与版式图鉴
 description: 横图、竖图、长图、代码和表格，放在同一篇笔记里慢慢看。
 tags: [图文, Markdown, 体验]
 updated: 2026-09-12
 ---
+
 # 图文与版式图鉴
 
 这篇笔记把常见的文章版式放在一起。图片均为本机生成的原创山峦插图，可以点击放大；从工具栏的 Raw 入口可以看到完整 Markdown。
@@ -61,14 +63,24 @@ The mountains keep their distance. A small moon, a quiet ridge, and a line of bl
 
 ## 宽表格与长代码行
 
-| 观察编号 | 一月 | 二月 | 三月 | 四月 | 五月 | 六月 | 七月 | 八月 | 九月 | 十月 | 十一月 | 十二月 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 晨间光线 | 灰蓝 | 淡蓝 | 暖白 | 浅金 | 明亮 | 透白 | 炽白 | 浅金 | 暖白 | 淡蓝 | 灰蓝 | 银白 |
-| 步行距离 | 3.2 km | 4.1 km | 5.4 km | 4.8 km | 6.0 km | 5.5 km | 3.8 km | 4.7 km | 6.2 km | 5.1 km | 4.0 km | 3.6 km |
+| 观察编号   | 一月     | 二月     | 三月     | 四月     | 五月     | 六月     | 七月     | 八月     | 九月     | 十月     | 十一月   | 十二月   |
+| ---------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- | -------- |
+| 晨间光线   | 灰蓝     | 淡蓝     | 暖白     | 浅金     | 明亮     | 透白     | 炽白     | 浅金     | 暖白     | 淡蓝     | 灰蓝     | 银白     |
+| 步行距离   | 3.2 km   | 4.1 km   | 5.4 km   | 4.8 km   | 6.0 km   | 5.5 km   | 3.8 km   | 4.7 km   | 6.2 km   | 5.1 km   | 4.0 km   | 3.6 km   |
 | 留下的问题 | 留心树影 | 看见水面 | 听见鸟鸣 | 观察花期 | 记录夜风 | 寻找阴凉 | 等待降雨 | 留意云层 | 重访旧街 | 收集落叶 | 感受温差 | 回看笔记 |
 
 ```typescript
-const observations = ["清晨的街道", "旧书店的窗", "河边的长椅", "山路上的云", "夜色里的灯", "回程的风", "Morning light through the window", "A line that stays with the reader", "Leave room for the next thought"];
+const observations = [
+  "清晨的街道",
+  "旧书店的窗",
+  "河边的长椅",
+  "山路上的云",
+  "夜色里的灯",
+  "回程的风",
+  "Morning light through the window",
+  "A line that stays with the reader",
+  "Leave room for the next thought",
+];
 
 function revisit(index: number) {
   return { index, observation: observations[index % observations.length], completed: false };
