@@ -1,9 +1,6 @@
 # 16 · 交付、凭据与发布恢复
 
 详细交付约定。日常命令、6DQ 与测试隔离差距见根 AGENTS.md；本页不构成新的部署授权。
-
-
-
 - Write numbered docs before implementation and record honest verification status.
 - `CLOUDFLARE_API_TOKEN` is the repository Actions secret for CD. The account ID
   is public configuration. Test jobs never receive deployment credentials.

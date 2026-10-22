@@ -39,17 +39,17 @@
 
 ## 验证
 
-| 范围 | 结果与证据 |
-| --- | --- |
-| 云端修复前 | 实际 helper 返回 `{name: null, avatar: null}`，头像不可用；直接请求复现不支持 `redirect: "error"` 的运行时异常 |
-| 云端修复后 | 同一临时远程预览导入修改后的 helper，公开查询 `200 application/json`；实际 `authorProfile` 返回 `Zheng Li` 与有效头像，`authorAvatar` 返回 `200 image/jpeg`、2641 字节 |
-| 缓存故障复现 | 修复前新增 open / match / put 三项回归均失败；有效的网络资料被错误回退为空 |
-| Worker 资料回归 | 修复后 13 项通过；包含三种缓存故障、429 且缓存不可用后的恢复、资料/头像 3xx 拒绝、Access 先于缓存、哈希、响应类型和大小限制 |
-| 全部非 View runtime | 177 UT 通过；statements `1082/1082`、branches `888/900`、functions `201/201`、lines `958/958`；覆盖率 `100 / 98.66 / 100 / 100%`；`worker/profile.ts` 四项均为 `100%` |
-| 工程 | TypeScript 7.0.2、Biome、Vite 构建、Worker dry run 均通过；Worker `66.00 KiB / gzip 18.19 KiB`；无依赖变更 |
-| 安全扫描 | OSV 与 Gitleaks 通过 |
-| 浏览器 | 完整 Chromium 回归 `27/27`，42.0 秒；覆盖身份延迟加载、头像失效、Basalt 姓名/头像尺寸与对齐、折叠身份、明暗/移动端 axe |
-| 视觉 | 已检查[合成公开身份截图](assets/sidebar-public-identity.png)：头像 36px、姓名 14px、副标题 12px、垂直居中，底部布局稳定 |
+| 范围                | 结果与证据                                                                                                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 云端修复前          | 实际 helper 返回 `{name: null, avatar: null}`，头像不可用；直接请求复现不支持 `redirect: "error"` 的运行时异常                                                         |
+| 云端修复后          | 同一临时远程预览导入修改后的 helper，公开查询 `200 application/json`；实际 `authorProfile` 返回 `Zheng Li` 与有效头像，`authorAvatar` 返回 `200 image/jpeg`、2641 字节 |
+| 缓存故障复现        | 修复前新增 open / match / put 三项回归均失败；有效的网络资料被错误回退为空                                                                                             |
+| Worker 资料回归     | 修复后 13 项通过；包含三种缓存故障、429 且缓存不可用后的恢复、资料/头像 3xx 拒绝、Access 先于缓存、哈希、响应类型和大小限制                                            |
+| 全部非 View runtime | 177 UT 通过；statements `1082/1082`、branches `888/900`、functions `201/201`、lines `958/958`；覆盖率 `100 / 98.66 / 100 / 100%`；`worker/profile.ts` 四项均为 `100%`  |
+| 工程                | TypeScript 7.0.2、Biome、Vite 构建、Worker dry run 均通过；Worker `66.00 KiB / gzip 18.19 KiB`；无依赖变更                                                             |
+| 安全扫描            | OSV 与 Gitleaks 通过                                                                                                                                                   |
+| 浏览器              | 完整 Chromium 回归 `27/27`，42.0 秒；覆盖身份延迟加载、头像失效、Basalt 姓名/头像尺寸与对齐、折叠身份、明暗/移动端 axe                                                 |
+| 视觉                | 已检查[合成公开身份截图](assets/sidebar-public-identity.png)：头像 36px、姓名 14px、副标题 12px、垂直居中，底部布局稳定                                                |
 
 临时远程预览已关闭；诊断没有挂载应用资源或读取私有内容。
 浏览器使用合成身份和知识库；真实公开资料通过上面的 Cloudflare 远程运行验证，

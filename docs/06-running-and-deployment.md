@@ -26,15 +26,15 @@ bun run dev
 右上角的烧瓶按钮打开“本地体验场景”，旁边的 GitHub 图标打开源码仓库。
 左下角本地保留合成阅读室身份；线上改为经过 Access 验证的用户姓名与头像。
 
-| 场景 | 体验方式 |
-| --- | --- |
-| 正常阅读 | 浏览目录、双链，或按 ⌘K / Ctrl+K 搜索文件名与路径 |
-| 慢速加载 | 打开未读过的笔记；旧文章保留，顶部细线显示下一篇的准备过程 |
-| 3 天后到期 | 侧栏出现轻量提醒，连接面板展示日期与轮换说明 |
-| 凭据失效 | 当前文章保留，新的私有缓存读取被拒绝 |
-| GitHub 限流 | 检查按钮等待 `Retry-After`，避免重复请求 |
-| 上游离线 | 显示连接状态；权限复核过期后暂停新的内容读取 |
-| 收到新提交 | 工具栏提示 3 份文件变化；应用后新增、修改、删除分别反映到目录 |
+| 场景        | 体验方式                                                      |
+| ----------- | ------------------------------------------------------------- |
+| 正常阅读    | 浏览目录、双链，或按 ⌘K / Ctrl+K 搜索文件名与路径             |
+| 慢速加载    | 打开未读过的笔记；旧文章保留，顶部细线显示下一篇的准备过程    |
+| 3 天后到期  | 侧栏出现轻量提醒，连接面板展示日期与轮换说明                  |
+| 凭据失效    | 当前文章保留，新的私有缓存读取被拒绝                          |
+| GitHub 限流 | 检查按钮等待 `Retry-After`，避免重复请求                      |
+| 上游离线    | 显示连接状态；权限复核过期后暂停新的内容读取                  |
+| 收到新提交  | 工具栏提示 3 份文件变化；应用后新增、修改、删除分别反映到目录 |
 
 从失效或离线场景切回“正常阅读”会重新检查连接。面板中的请求计数可用于观察
 `head`、`not-modified`、`tree`、`blob`：反复读同一内容不会重复下载 blob。
@@ -79,16 +79,16 @@ CI 下载固定版本并核对 SHA-256。扫描不忽略已知漏洞或真实秘
 使用 `wrangler.jsonc` 部署；不要将 `wrangler.local.jsonc` 用于生产。
 以下值已写入 `wrangler.jsonc`：
 
-| 配置 | 值 |
-| --- | --- |
-| `account_id` | `d51a8fde361e4be31db17d8c56737c1f` |
-| 自定义域名 | `ocelot.hexly.ai` |
-| `vars.ACCESS_TEAM_DOMAIN` | `https://nocoo.cloudflareaccess.com` |
-| `vars.ACCESS_AUD` | `9ae6de1c823b3d81d5332533d40024ddee04eb692b9e33b068c4071c64154798` |
-| `vars.OWNER_EMAIL` | `architie@gmail.com`，沿用同一用户其他项目的邮箱 |
-| D1 | binding `DB`，数据库名 `ocelot` |
-| R2 | binding `CACHE`，私有桶 `ocelot-private-cache` |
-| `vars.GITHUB_TOKEN_EXPIRES_AT` | 可选 ISO 8601 到期时间；GitHub 返回日期优先 |
+| 配置                           | 值                                                                 |
+| ------------------------------ | ------------------------------------------------------------------ |
+| `account_id`                   | `d51a8fde361e4be31db17d8c56737c1f`                                 |
+| 自定义域名                     | `ocelot.hexly.ai`                                                  |
+| `vars.ACCESS_TEAM_DOMAIN`      | `https://nocoo.cloudflareaccess.com`                               |
+| `vars.ACCESS_AUD`              | `9ae6de1c823b3d81d5332533d40024ddee04eb692b9e33b068c4071c64154798` |
+| `vars.OWNER_EMAIL`             | `architie@gmail.com`，沿用同一用户其他项目的邮箱                   |
+| D1                             | binding `DB`，数据库名 `ocelot`                                    |
+| R2                             | binding `CACHE`，私有桶 `ocelot-private-cache`                     |
+| `vars.GITHUB_TOKEN_EXPIRES_AT` | 可选 ISO 8601 到期时间；GitHub 返回日期优先                        |
 
 GitHub Actions 的仓库 Secret **`CLOUDFLARE_API_TOKEN`** 已由用户保存。
 它仅用于 Ocelot 的 Cloudflare 部署，不是访问知识库的 GitHub PAT。
@@ -143,7 +143,6 @@ Deploy 成功才创建不可变 annotated tag 和 GitHub Release。
 ## PAT 权限与首次配置
 
 在 GitHub 的 **Fine-grained personal access tokens** 创建凭据：
-
 1. Resource owner 选择知识库所在用户。
 2. Repository access 选择需要阅读的仓库。
 3. Repository permissions 只授予 **Contents: Read-only**；Metadata 随基本权限提供。
@@ -175,7 +174,6 @@ Secrets 添加名为 `GITHUB_TOKEN` 的 **Secret**，不要选择普通 Text 变
 
 侧栏在已知到期日之前 7 天提醒。若 GitHub 未提供日期且没有补充配置，面板
 如实显示“暂未提供”。更新步骤：
-
 1. 在 GitHub 创建替代 fine-grained PAT，保持必要的选定仓库只读权限。
 2. 再次运行 `bun x wrangler secret put GITHUB_TOKEN`。
 3. 使用补充到期值时更新 `GITHUB_TOKEN_EXPIRES_AT` 并重新部署配置。

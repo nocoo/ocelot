@@ -129,7 +129,6 @@ source and current main commit before using the production environment.
 
 本轮文档先于实现写入。并行品牌更新已将 08 用于视觉规范，因此本文件顺延为
 09；保留已发布的品牌图、双语 README 和导航修正。
-
 - 类型、Biome、构建和覆盖率检查通过：163 项 UT，语句/分支/函数/行覆盖率
   分别为 100% / 98.62% / 100% / 100%；完整分母见 05。
 - 独立 Wrangler SQLite/R2 + 生产 bundle 的 17 项 Chromium 流程通过；包含
@@ -188,7 +187,6 @@ Secret 列表为空。生产 D1 只读查询确认登记仓库和目录快照均
 检查只输出绑定名称、类型和统计信息，没有输出凭据或私有笔记。
 
 修复约定（操作前记录）：
-
 - 将此次 Dashboard 版本中已配置的同一凭据迁移到 `GITHUB_TOKEN` Worker Secret。
   仅在内存中读取并通过标准输入交给 Wrangler，不写入文件、命令参数或日志。
   操作前确认线上尚无同名 Secret 且版本没有被用户更新；不覆盖后续用户配置。
@@ -235,7 +233,6 @@ push main、tag、Release 与生产部署；完成一次生产验收后不继续
 
 同步远端 7 个提交后，`CI` 与 `Release` 已拆成两个 workflow。旧发布脚本仍在
 CI 的 jobs 中寻找 `Deploy`，已不符合实际流程。本轮先修复门禁，再执行 minor：
-
 - `Release` 的 run-name 包含来源 CI run ID，避免把相同 head SHA 下由旧 CI
   触发的部署误认为本次部署；手动恢复也使用指定 source-run-id。
 - 发布脚本等待该 SHA 的 push CI 成功，再等待明确引用该 CI run ID 的 Release；

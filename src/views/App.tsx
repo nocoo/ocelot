@@ -262,7 +262,6 @@ function Reader({ model }: { model: ReaderViewModel }) {
             <a
               className="brand"
               href="/"
-              aria-label="Ocelot 首页"
               title={`Ocelot v${version}`}
               onClick={(event) => {
                 if (
@@ -277,6 +276,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
                 void model.goHome();
               }}
             >
+              <span className="sr-only">Ocelot 首页</span>
               <Mark />
               {!railCollapsed && (
                 <>

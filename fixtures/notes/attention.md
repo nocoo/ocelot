@@ -1,7 +1,9 @@
 ---
+
 description: A few notes on noticing what has been here all along.
 tags: [essays, attention]
 ---
+
 # On paying attention
 
 There is a particular kind of pleasure in noticing something that has been there all along: the way afternoon light moves across a wall, a sentence that becomes clearer on a second reading, the pause before a friend answers a difficult question.
@@ -20,7 +22,7 @@ This is useful in reading, too. A book is not a queue of facts waiting to be pro
 
 A good note keeps a conversation open. It records enough context for another version of you to return, disagree, or find a connection you could not have anticipated.
 
-This is why links matter. A link is a modest statement: *there might be something here*. It does not need to be the final word.
+This is why links matter. A link is a modest statement: _there might be something here_. It does not need to be the final word.
 
 The same idea appears in [[01 思考的方法/渐进式总结|progressive summarization]] and in a short walk through [[02 观察与记录/城市里的蓝色|the blues of a city]]. Different paths can lead to the same clearing.
 

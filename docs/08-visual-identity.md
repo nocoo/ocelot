@@ -6,15 +6,15 @@ The selected drawing is an offset warm-gold ocelot portrait with connected flat 
 
 The generation archive is `nocoo/hexly.ai/artwork/logo-family/ocelot/2026-09-11-01`. Native SHA-256: `4c73d8f8bc72c14e02260cbddd8c49d8aa6c526c53d5aad449eb30d764f61d3a`. The original SVG favicon and inline SVG source remain archived there. The selected finishing recipe and exact master checksums are recorded in `assets/brand/provenance.json`.
 
-| Consumer | Asset role |
-| --- | --- |
-| Root `logo.png` | Canonical transparent 2048 px foreground |
-| `assets/brand/icon.png` | Complete square presentation with independent paper and shadows |
-| `assets/brand/icon-rounded.png` | Rounded presentation for both README headers |
-| Shared `Mark`, including navigation, collapsed rail and article footer | Transparent foreground, served at 80/160 px; no enclosing tile or corner crop |
-| Empty reader hero | Complete approved paper presentation, served at 256/512 px; 192 px on desktop and 144 px on mobile, with the original 23% corner radius |
-| Browser favicon | Transparent 16/32 px PNGs |
-| Apple touch icon | Square 180 px presentation; the platform supplies its own mask |
+| Consumer                                                               | Asset role                                                                                                                              |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Root `logo.png`                                                        | Canonical transparent 2048 px foreground                                                                                                |
+| `assets/brand/icon.png`                                                | Complete square presentation with independent paper and shadows                                                                         |
+| `assets/brand/icon-rounded.png`                                        | Rounded presentation for both README headers                                                                                            |
+| Shared `Mark`, including navigation, collapsed rail and article footer | Transparent foreground, served at 80/160 px; no enclosing tile or corner crop                                                           |
+| Empty reader hero                                                      | Complete approved paper presentation, served at 256/512 px; 192 px on desktop and 144 px on mobile, with the original 23% corner radius |
+| Browser favicon                                                        | Transparent 16/32 px PNGs                                                                                                               |
+| Apple touch icon                                                       | Square 180 px presentation; the platform supplies its own mask                                                                          |
 
 The paper background uses independent broken almond rosettes and turned-page curves. It is a presentation palette, not a website theme. Ocelot keeps its existing blue-gray controls, light/dark reading surfaces and text colors. Application marks use the same foreground in both themes.
 

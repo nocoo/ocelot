@@ -55,7 +55,6 @@ Pierre 仅负责 `SidebarNav` 中的虚拟文件树，与 Basalt 容器没有冲
 参考 Surety，logo 在展开、收起和过渡过程中均不移动。Surety 的
 `apps/web/src/components/layout/sidebar.tsx` 两种状态都固定从左侧 **24px**
 开始；该产品要求优先于模板中收起状态的居中示例。当前实施约定：
-
 - 使用 `SidebarHeader` 原生 **56px** 高度、**12px** 右内边距；直接在同一个
   header 上固定 **24px** 左内边距和靠左排列，两种状态都不切换对齐方式。
   logo、产品名和版本标签在一行垂直居中，不叠加品牌副标题或内层水平 padding。
@@ -162,7 +161,6 @@ lint, production build, Worker dry-run and dependency/secret scans pass.
 源码已确认 `App.tsx` 在 `snapshot` 为空时无条件显示目录骨架屏；仓库列表为空、
 初次加载失败、移除最后一个仓库后均会出现没有对应请求的持续动画。连接检测
 只验证 PAT，不自动枚举或导入仓库；目录同步由添加或打开具体仓库触发。
-
 - 骨架屏只在 ViewModel 的 `booting` 或 `loading` 为真且没有目录时出现。
 - 未登记仓库时使用 Basalt 2.1.7 `Empty` 和 `Button`，明确显示添加入口；有登记
   但未载入目录时显示选择入口；失败状态显示实际错误，不继续假装加载。

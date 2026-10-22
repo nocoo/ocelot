@@ -16,13 +16,13 @@
 
 ## 对比
 
-| 项目 | 认证、内容与更新方式 | 对 Ocelot 的价值 | 不匹配之处 |
-| --- | --- | --- | --- |
-| [Flowershow](https://github.com/flowershow/flowershow) | GitHub App installation token；验证 push webhook；Cloudflare Workflow 对比路径与 SHA，下载变更文件到对象存储 | 服务端凭据、Git tree/blob API、增量判断、有限批处理 | 还包含 Next.js、Postgres、发布流程与多用户能力；Ocelot 首版只需其中的架构思路 |
-| [Obsidian-Gitsync-Perlite](https://github.com/l4rm4nd/Obsidian-Gitsync-Perlite) | 私有仓库用环境变量中的 GitHub 用户名/token；git-sync 默认每 30 秒同步到共享卷，Perlite 只读挂载 | 将 Git 同步职责与只读阅读职责分离 | 常驻容器和本地完整 checkout，不是 Worker 按需文件缓存 |
-| [Perlite](https://github.com/secure-77/Perlite) | PHP 从本地 vault 读取并渲染 Markdown；自行部署 Web 访问边界 | 双链、附件、目录和阅读兼容性参考；源码检查文件是否属于可见清单 | 没有该项目内的 GitHub 按需认证/缓存方案 |
-| [Obsidian-Web-Sync-R2](https://github.com/soestin/Obsidian-Web-Sync-R2) | Obsidian 插件上传 R2；Worker 使用 unified/remark/rehype 读取并渲染 | 直接验证 R2 binding → Markdown 渲染可行 | 数据来源是插件同步；导航每次读取全部 Markdown，未在 Worker 源码中验证 Access JWT |
-| [Quartz](https://github.com/jackyzha0/quartz) | 构建 Markdown 为静态站；托管集成在 Git push 后重新构建和部署 | Obsidian 发布生态、静态阅读路线参考 | 添加仓库与更新通常依赖构建/发布，不直接提供 Ocelot 的运行时私有仓库读取 |
+| 项目                                                                            | 认证、内容与更新方式                                                                                         | 对 Ocelot 的价值                                               | 不匹配之处                                                                       |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [Flowershow](https://github.com/flowershow/flowershow)                          | GitHub App installation token；验证 push webhook；Cloudflare Workflow 对比路径与 SHA，下载变更文件到对象存储 | 服务端凭据、Git tree/blob API、增量判断、有限批处理            | 还包含 Next.js、Postgres、发布流程与多用户能力；Ocelot 首版只需其中的架构思路    |
+| [Obsidian-Gitsync-Perlite](https://github.com/l4rm4nd/Obsidian-Gitsync-Perlite) | 私有仓库用环境变量中的 GitHub 用户名/token；git-sync 默认每 30 秒同步到共享卷，Perlite 只读挂载              | 将 Git 同步职责与只读阅读职责分离                              | 常驻容器和本地完整 checkout，不是 Worker 按需文件缓存                            |
+| [Perlite](https://github.com/secure-77/Perlite)                                 | PHP 从本地 vault 读取并渲染 Markdown；自行部署 Web 访问边界                                                  | 双链、附件、目录和阅读兼容性参考；源码检查文件是否属于可见清单 | 没有该项目内的 GitHub 按需认证/缓存方案                                          |
+| [Obsidian-Web-Sync-R2](https://github.com/soestin/Obsidian-Web-Sync-R2)         | Obsidian 插件上传 R2；Worker 使用 unified/remark/rehype 读取并渲染                                           | 直接验证 R2 binding → Markdown 渲染可行                        | 数据来源是插件同步；导航每次读取全部 Markdown，未在 Worker 源码中验证 Access JWT |
+| [Quartz](https://github.com/jackyzha0/quartz)                                   | 构建 Markdown 为静态站；托管集成在 Git push 后重新构建和部署                                                 | Obsidian 发布生态、静态阅读路线参考                            | 添加仓库与更新通常依赖构建/发布，不直接提供 Ocelot 的运行时私有仓库读取          |
 
 ## 关键源码证据
 
@@ -31,7 +31,6 @@
 ### Flowershow
 
 代码快照：`096a0c5132acb8d2351f0e70c3e8c1ab38100bd7`。仓库标记 AGPL-3.0。
-
 - [Worker GitHub 客户端](https://github.com/flowershow/flowershow/blob/096a0c5132acb8d2351f0e70c3e8c1ab38100bd7/apps/cloudflare-worker/src/github.js)：
   用 App 私钥签发 JWT、换取 installation token，通过 tree 与 blob API 读取源内容。
 - [GitHub 同步 Workflow](https://github.com/flowershow/flowershow/blob/096a0c5132acb8d2351f0e70c3e8c1ab38100bd7/apps/cloudflare-worker/src/github-sync-workflow.js)：
@@ -62,7 +61,6 @@ Ocelot 沿用“源只读、目录和正文采用同一可见性规则”的原�
 ### Worker + R2 示例
 
 代码快照：`c7a2386854dee5d347b5a9504f2af21a0b6f6094`；未声明可识别许可证。
-
 - [Worker 入口](https://github.com/soestin/Obsidian-Web-Sync-R2/blob/c7a2386854dee5d347b5a9504f2af21a0b6f6094/src/index.ts)：
   `env.OBSIDIAN_BUCKET.get()` 读取正文，经过 remark/rehype 管线生成 HTML。
 - 同一入口每次请求先运行 `listFiles()`，对列出的 Markdown 批量读取 frontmatter；

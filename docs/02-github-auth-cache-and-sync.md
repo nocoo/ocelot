@@ -21,9 +21,9 @@ Cloudflare Access 回答“谁能打开 Ocelot”；GitHub 凭据回答“Worker
 哪些仓库”。即使 Access 使用 GitHub 作为登录身份提供方，也不会因此得到
 读取 GitHub 私有仓库的 API 权限。
 
-| 方案 | 权限与保存方式 | 操作体验与代价 | 建议 |
-| --- | --- | --- | --- |
-| 细粒度 PAT | 单个 resource owner、选定仓库、`Contents: read`，保存到 Worker Secret | 配置少；增加未授权仓库需在 GitHub 修改授权；到期需手动轮换 | 适合当前单用户首版 |
+| 方案       | 权限与保存方式                                                                          | 操作体验与代价                                                       | 建议                                    |
+| ---------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------- |
+| 细粒度 PAT | 单个 resource owner、选定仓库、`Contents: read`，保存到 Worker Secret                   | 配置少；增加未授权仓库需在 GitHub 修改授权；到期需手动轮换           | 适合当前单用户首版                      |
 | GitHub App | 安装到选定仓库，`Contents: read`；私钥保存到 Worker Secret，按需换取 installation token | 安装令牌约 1 小时过期并可自动重取；需要 App 注册、私钥管理与安装配置 | 需要自动凭据续期或多 owner 授权时更合适 |
 
 PAT 只使用 fine-grained 类型；所需 `Metadata: read` 随仓库基本权限提供。
@@ -65,12 +65,12 @@ flowchart LR
 
 ## 缓存存在哪里
 
-| 位置 | 存储内容 | 原因 |
-| --- | --- | --- |
-| Worker Secret | PAT，或 App 私钥与必要凭据 | 服务端秘密绑定 |
-| D1 | 已添加仓库、稳定 repo ID、分支、当前 commit、已发布快照、tree SHA、ETag、检查时间、同步 lease | 小规模结构化状态，支持原子条件更新 |
-| 私有 R2 | 目录快照 JSON、已读取 Markdown 原文、图片及其他附件 | 适合文件与二进制，部署 Worker 不会清空 |
-| 浏览器内存 | 当前快照、正在阅读的内容和交互状态 | 快速切换阅读，不做私有笔记的离线持久存储 |
+| 位置          | 存储内容                                                                                      | 原因                                     |
+| ------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Worker Secret | PAT，或 App 私钥与必要凭据                                                                    | 服务端秘密绑定                           |
+| D1            | 已添加仓库、稳定 repo ID、分支、当前 commit、已发布快照、tree SHA、ETag、检查时间、同步 lease | 小规模结构化状态，支持原子条件更新       |
+| 私有 R2       | 目录快照 JSON、已读取 Markdown 原文、图片及其他附件                                           | 适合文件与二进制，部署 Worker 不会清空   |
+| 浏览器内存    | 当前快照、正在阅读的内容和交互状态                                                            | 快速切换阅读，不做私有笔记的离线持久存储 |
 
 Workers 的临时文件系统不跨请求持久化，不能作为长期 git checkout。
 首版不需要 `git clone`、本地磁盘、容器或常驻 git-sync 进程。
@@ -112,7 +112,6 @@ GitHub recursive tree 响应有截断限制。遇到 `truncated: true` 时逐层
 
 首版默认：**打开仓库、页面恢复可见、手动刷新时检查；阅读过程中每
 60 秒检查活动仓库。页面隐藏或关闭后停止定时检查。**
-
 - Worker 对 HEAD 使用 ETag 条件请求；60 秒窗口内复用检查结果，多个页面
   不分别请求 GitHub。正确认证的 `304` 不消耗 GitHub 主速率额度，但仍有
   网络和服务成本，也仍需遵守 secondary rate limit。
@@ -164,19 +163,18 @@ Markdown → 安全 HTML/AST 管线，不需要把仓库挂载成本地目录。
 
 ## 实现决策
 
-| 决策 | 实施方案 | 状态 |
-| --- | --- | --- |
-| 私有仓库认证 | 细粒度 PAT，接受定期轮换 | 用户已接受 |
-| 私有内容保存 | D1 元数据 + 私有 R2，按需缓存 | 本地已验证 |
-| 阅读渲染位置 | 浏览器渲染，Worker 提供受保护数据 | 本地已验证 |
-| 更新触发 | 可见时 60 秒条件检查 + 打开/手动检查 | 本地已验证 |
-| 授权复查 | 短窗口，过期且无法验证时停止服务端私有缓存读取 | 本地已验证 |
-| 缓存保留期 | 对象保留 30 天，可重建；移除仓库时清理 | 本地已验证 |
+| 决策         | 实施方案                                       | 状态       |
+| ------------ | ---------------------------------------------- | ---------- |
+| 私有仓库认证 | 细粒度 PAT，接受定期轮换                       | 用户已接受 |
+| 私有内容保存 | D1 元数据 + 私有 R2，按需缓存                  | 本地已验证 |
+| 阅读渲染位置 | 浏览器渲染，Worker 提供受保护数据              | 本地已验证 |
+| 更新触发     | 可见时 60 秒条件检查 + 打开/手动检查           | 本地已验证 |
+| 授权复查     | 短窗口，过期且无法验证时停止服务端私有缓存读取 | 本地已验证 |
+| 缓存保留期   | 对象保留 30 天，可重建；移除仓库时清理         | 本地已验证 |
 
 ## 官方依据
 
 资料核验于 2026-09-11。实现时再次核对实际依赖类型与平台配置。
-
 - [GitHub：PAT 的范围、期限与限制](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 - [GitHub：App installation token](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
 - [GitHub：条件请求、webhook 与限流](https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api)
