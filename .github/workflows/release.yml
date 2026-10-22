@@ -33,7 +33,7 @@ jobs:
       source-run-id: ${{ github.event_name == 'workflow_run' && format('{0}', github.event.workflow_run.id) || inputs.source-run-id }}
       allowed-source-events: "push,workflow_dispatch"
       runtime-version: "1.4.0"
-      node-version: "26.8.1"
+      node-version: "26.12.1"
       install-policy: "project"
       build-command: |
         bun run build
