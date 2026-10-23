@@ -2,7 +2,19 @@
 
 状态：**导航、品牌位置与折叠动效均已验收，用户确认** · 2026-09-11
 
-当前依赖为 **2.1.8**（2026-09-17）。下文的 2.1.7 引用对应首次集成与验收记录。
+当前依赖为 **3.2.1**（2026-10-24）。下文的 2.1.7 / 2.1.8 引用对应首次集成与验收记录。
+
+### 3.2.1 升级记录（2026-10-24）
+
+- 2.2.0 → 3.2.1 无 View 代码改动：本应用的侧栏品牌区、`SidebarSearch`、
+  Pierre 虚拟文件树与阅读页不依赖 3.x 改动的 Loader、几何或 IconPicker 契约。
+- 3.x 会在折叠轨（68px）里居中 header 内容，与本项目 Surety 规则（品牌标固定
+  24px 左偏移，展开/收起/过渡一致）冲突。已用一条限定规则固定在折叠态：
+  `.ocelot-sidebar[data-collapsed] .brand-header { justify-content: flex-start; }`。
+- 实测 `https://ocelot.dev.hexly.ai`：展开 280px / 折叠 68px，两种状态下品牌标
+  左偏移均为 **24px**；桌面与移动首屏与 2.2.0 截图逐字节一致。
+- 验证：`typecheck`、`lint`、`test:coverage`（236 项，覆盖 100/98.77/100/100）、
+  `build`、`worker:check`、`test:e2e`（Chromium + WebKit mobile 含 axe，48 项）。
 
 ## 核查结果
 

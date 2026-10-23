@@ -168,6 +168,11 @@ a {
 .brand-header {
   padding-inline: 24px 12px;
 }
+/* Surety rule: the brand keeps its fixed 24px left inset in the collapsed rail
+   instead of inheriting the library's centered collapsed header. */
+.ocelot-sidebar[data-collapsed] .brand-header {
+  justify-content: flex-start;
+}
 .sidebar-bottom.is-collapsed {
   display: flex;
   flex-direction: column;
