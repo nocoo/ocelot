@@ -29,7 +29,7 @@ with the normal `bun run types` command after updating this group.
 ## Boundaries
 
 - #8, #9, #12 and #14 require numeric-major migrations and remain open.
-- #17 is already satisfied by the current DOMPurify 3.4.16 override and lock.
+- #17 is already satisfied by the current DOMPurify 3.4.17 override and lock.
 - Current source pins Basalt 2.2.0 although the handbook still names 2.1.8. This
   batch preserves the existing source pin; it performs no Basalt migration.
 - Retain TypeScript 7.0.2 and the existing Vitest 4.1.11 pair. Add no React View tests.
