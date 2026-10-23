@@ -9,7 +9,7 @@
         "@nocoo/basalt": "2.2.0",
         "@pierre/trees": "1.0.0-beta.6",
         "jose": "6.2.13",
-        "katex": "0.19.0",
+        "katex": "0.19.1",
         "lucide-react": "1.61.0",
         "mdast-util-to-string": "4.0.0",
         "mermaid": "12.2.0",
@@ -50,7 +50,7 @@
   "overrides": {
     "@vitest/mocker": "4.1.12",
     "dompurify": "3.4.17",
-    "katex": "0.19.0",
+    "katex": "0.19.1",
     "lodash-es": "4.18.1",
     "playwright-core": "1.64.1",
     "sharp": "0.35.5",
@@ -841,7 +841,7 @@
 
     "json5": ["json5@2.2.3", "", { "bin": { "json5": "lib/cli.js" } }, "sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg=="],
 
-    "katex": ["katex@0.19.0", "", { "dependencies": { "commander": "^15.0.0" }, "bin": { "katex": "cli.js" } }, "sha512-v6Tznz3zJ7u3niRCoDTsumM2+HA2XXcCu+WAacCeHD2z3p9A9Ks987o5FzfTGBN0e8A0vjEgIDvLbICrXpdw/Q=="],
+    "katex": ["katex@0.19.1", "", { "dependencies": { "commander": "^15.0.0" }, "bin": { "katex": "cli.js" } }, "sha512-jG8uKntjSEcm2EpQOh0XturpPuuC9r3Sq5HLHdsFdWZT27E672SF19QEi+of0/YeOy15lDgRhKvr5614uRrEfA=="],
 
     "khroma": ["khroma@2.1.0", "", {}, "sha512-Ls993zuzfayK269Svk9hzpeGUKob/sIgZzyHYdjQoAdQetRKpOLj+k/QQQ/6Qi0Yz65mlROrfd+Ev+1+7dz9Kw=="],
 
