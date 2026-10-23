@@ -2,6 +2,17 @@
 
 Release entries are generated from Git commits by `bun run release`.
 
+## [0.3.5] - 2026-10-24
+
+### Changed
+
+- Upgrade `@nocoo/basalt` to 3.2.1, keeping the Surety 24px brand offset by
+  opting the collapsed header out of the 3.x centering.
+- Upgrade Vitest and `@vitest/coverage-istanbul` to 5.0.5, `@types/node` to
+  26.6.5, `@cloudflare/workers-types` to 5.20261023.1 and katex to 0.19.1.
+- Override `zod` to 4.6.6 and `undici` to 7.30.1 so the dependency scan no
+  longer reports the published advisories.
+
 ## [0.3.1] - 2026-09-19
 
 ### Maintenance
