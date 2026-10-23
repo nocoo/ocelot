@@ -79,6 +79,6 @@
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "vitest": "4.1.12",
-    "wrangler": "4.151.3"
+    "wrangler": "4.152.0"
   }
 }
