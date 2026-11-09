@@ -21,7 +21,9 @@ jobs:
       prepare-command: |
         bun run types
         git diff --exit-code -- worker/worker-configuration.d.ts
-      test-command: "bun run test:coverage"
+      test-command: |
+        bun run test:coverage
+        bun run test:l1-gate
       lint-command: "bun run lint"
       typecheck-command: "bun run typecheck"
       build: true

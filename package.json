@@ -31,6 +31,7 @@
     "format": "biome check --write .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:l1-gate": "bun scripts/verify-l1-gate.mjs",
     "test:e2e": "playwright test",
     "check": "bun run typecheck && bun run lint && bun run test:coverage && bun run build",
     "worker:check": "wrangler deploy --dry-run --outdir output/worker",
