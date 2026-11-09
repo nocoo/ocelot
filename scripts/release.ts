@@ -31,11 +31,11 @@ async function run(command: string, ...args: string[]): Promise<void> {
 if (output("git", "branch", "--show-current") !== "main") throw new Error("Release from main.");
 if (output("git", "status", "--porcelain"))
   throw new Error("Commit the working tree before releasing or previewing a release.");
-if (
-  !/^(https:\/\/github\.com\/|git@github\.com:)nocoo\/ocelot(?:\.git)?$/u.test(
-    output("git", "remote", "get-url", "origin"),
-  )
-)
+const originUrl = output("git", "remote", "get-url", "origin")
+  .replace(/^https:\/\/[^@/]+@github\.com\//u, "https://github.com/")
+  .replace(/^git@github\.com:/u, "https://github.com/")
+  .replace(/\.git$/u, "");
+if (originUrl !== "https://github.com/nocoo/ocelot")
   throw new Error("The origin must be nocoo/ocelot.");
 if (!options.dryRun) {
   await run("gh", "auth", "status");
