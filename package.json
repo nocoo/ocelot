@@ -49,7 +49,7 @@
     "katex": "0.19.1",
     "lucide-react": "1.70.0",
     "mdast-util-to-string": "4.0.0",
-    "mermaid": "12.2.0",
+    "mermaid": "12.3.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-markdown": "10.1.0",
