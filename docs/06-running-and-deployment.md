@@ -143,6 +143,7 @@ Deploy 成功才创建不可变 annotated tag 和 GitHub Release。
 ## PAT 权限与首次配置
 
 在 GitHub 的 **Fine-grained personal access tokens** 创建凭据：
+
 1. Resource owner 选择知识库所在用户。
 2. Repository access 选择需要阅读的仓库。
 3. Repository permissions 只授予 **Contents: Read-only**；Metadata 随基本权限提供。
@@ -174,6 +175,7 @@ Secrets 添加名为 `GITHUB_TOKEN` 的 **Secret**，不要选择普通 Text 变
 
 侧栏在已知到期日之前 7 天提醒。若 GitHub 未提供日期且没有补充配置，面板
 如实显示“暂未提供”。更新步骤：
+
 1. 在 GitHub 创建替代 fine-grained PAT，保持必要的选定仓库只读权限。
 2. 再次运行 `bun x wrangler secret put GITHUB_TOKEN`。
 3. 使用补充到期值时更新 `GITHUB_TOKEN_EXPIRES_AT` 并重新部署配置。

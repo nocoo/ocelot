@@ -84,4 +84,5 @@ Authorized releases use `bun run release -- --dry-run` then the selected version
 ## Retrospective
 
 Use [Retrospective.md](Retrospective.md) for narratives. Keep recurring project rules short here; cross-project lessons belong to nmem/global rules, deterministic checks in hooks/tests.
+
 - After credential-only recovery rerun the same failed workflow/explicit version; recover an existing published tag rather than moving it.
