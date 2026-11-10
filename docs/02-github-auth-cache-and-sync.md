@@ -112,6 +112,7 @@ GitHub recursive tree 响应有截断限制。遇到 `truncated: true` 时逐层
 
 首版默认：**打开仓库、页面恢复可见、手动刷新时检查；阅读过程中每
 60 秒检查活动仓库。页面隐藏或关闭后停止定时检查。**
+
 - Worker 对 HEAD 使用 ETag 条件请求；60 秒窗口内复用检查结果，多个页面
   不分别请求 GitHub。正确认证的 `304` 不消耗 GitHub 主速率额度，但仍有
   网络和服务成本，也仍需遵守 secondary rate limit。
@@ -175,6 +176,7 @@ Markdown → 安全 HTML/AST 管线，不需要把仓库挂载成本地目录。
 ## 官方依据
 
 资料核验于 2026-09-11。实现时再次核对实际依赖类型与平台配置。
+
 - [GitHub：PAT 的范围、期限与限制](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
 - [GitHub：App installation token](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
 - [GitHub：条件请求、webhook 与限流](https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api)

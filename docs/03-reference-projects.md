@@ -31,6 +31,7 @@
 ### Flowershow
 
 代码快照：`096a0c5132acb8d2351f0e70c3e8c1ab38100bd7`。仓库标记 AGPL-3.0。
+
 - [Worker GitHub 客户端](https://github.com/flowershow/flowershow/blob/096a0c5132acb8d2351f0e70c3e8c1ab38100bd7/apps/cloudflare-worker/src/github.js)：
   用 App 私钥签发 JWT、换取 installation token，通过 tree 与 blob API 读取源内容。
 - [GitHub 同步 Workflow](https://github.com/flowershow/flowershow/blob/096a0c5132acb8d2351f0e70c3e8c1ab38100bd7/apps/cloudflare-worker/src/github-sync-workflow.js)：
@@ -61,6 +62,7 @@ Ocelot 沿用“源只读、目录和正文采用同一可见性规则”的原�
 ### Worker + R2 示例
 
 代码快照：`c7a2386854dee5d347b5a9504f2af21a0b6f6094`；未声明可识别许可证。
+
 - [Worker 入口](https://github.com/soestin/Obsidian-Web-Sync-R2/blob/c7a2386854dee5d347b5a9504f2af21a0b6f6094/src/index.ts)：
   `env.OBSIDIAN_BUCKET.get()` 读取正文，经过 remark/rehype 管线生成 HTML。
 - 同一入口每次请求先运行 `listFiles()`，对列出的 Markdown 批量读取 frontmatter；
