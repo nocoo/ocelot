@@ -116,8 +116,8 @@ test("home navigation preserves shell nodes, collapsed state and browser history
   await open(page, longRead);
   const noteUrl = page.url();
   const noteTitle = (await page.locator("#document-title").textContent()) ?? "";
-  await page.getByRole("button", { name: "切换知识库导航", exact: true }).click();
-  const toggle = page.getByRole("button", { name: "切换知识库导航", exact: true });
+  await page.getByRole("button", { name: "收起知识库导航", exact: true }).click();
+  const toggle = page.getByRole("button", { name: "展开知识库导航", exact: true });
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   const shellNode = await page.locator(".ocelot-shell").elementHandle();
   const headerNode = await page.locator(".reader-toolbar").elementHandle();
@@ -299,7 +299,7 @@ test("Basalt breadcrumbs reveal folders and the collapsed rail preserves the Pie
   page.on("request", (request) => {
     if (request.url().includes("/document?")) documents.push(request.url());
   });
-  await page.getByRole("button", { name: "切换知识库导航", exact: true }).click();
+  await page.getByRole("button", { name: "收起知识库导航", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "知识库快捷导航" })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "笔记导航", exact: true })).toBeHidden();
   await expect(page.getByRole("button", { name: "搜索笔记", exact: true })).toBeVisible();
@@ -1074,7 +1074,7 @@ test("sidebar keyboard resizing uses a short focus handle and retains the collap
   await expect(handle).toHaveAttribute("aria-valuenow", "272");
   await page.locator(".reader-main").focus();
   await expect(page.locator(".reader-main")).toHaveCSS("outline-style", "none");
-  const toggle = page.getByRole("button", { name: "切换知识库导航", exact: true });
+  const toggle = page.getByRole("button", { name: "收起知识库导航", exact: true });
   await toggle.focus();
   await expect(toggle).toHaveCSS("outline-width", "2px");
   await toggle.click();
