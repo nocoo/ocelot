@@ -102,10 +102,6 @@ a {
 button {
   cursor: pointer;
 }
-.ocelot-shell button,
-.ocelot-dialog button {
-  opacity: 1;
-}
 a {
   color: inherit;
 }

@@ -1127,6 +1127,12 @@ for (const theme of ["light", "dark"] as const) {
       readerBounds && globalBounds && readerBounds.y >= globalBounds.y + globalBounds.height,
     ).toBe(true);
     const trigger = page.getByRole("button", { name: "文章大纲", exact: true });
+    await expect(trigger).toBeEnabled();
+    await expect(trigger).toHaveCSS("opacity", "1");
+    await page.getByRole("button", { name: "查看 Markdown 原文", exact: true }).click();
+    await expect(trigger).toBeDisabled();
+    await expect(trigger).toHaveCSS("opacity", "0.5");
+    await page.getByRole("button", { name: "返回文章阅读", exact: true }).click();
     await trigger.click();
     const dialog = page.getByRole("dialog", { name: "文章大纲", exact: true });
     const last = dialog.getByRole("link").last();
