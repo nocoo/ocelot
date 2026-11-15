@@ -63,7 +63,7 @@ Run the checks relevant to the changed scope; hook and CI requirements still app
 
 Pre-commit enforces index-snapshot L1 (`typecheck`, `lint`, `test:coverage`); target wall time is under 30s on a warm toolchain. Pre-push runs working-tree coverage. Target stdin pushed-ref L2/G2 in under 3 minutes is not implemented. Never bypass hooks, suppress security checks or weaken coverage.
 
-The owner merged former G1 into L1 on 2026-09-21; the framework keeps the 6DQ name: L1, L2, L3, G2 and D1. Use `system0-6dq-l1` for the L1 contract and its S/A/B/F rubric.
+The quality framework follows System1 (S1-S3, G1-G2, B1, L1-L4, P1, Z1) with unified L1. Use `system1-quality` for the quality contract.
 
 ## Resources / Isolation
 
