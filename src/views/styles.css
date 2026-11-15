@@ -166,7 +166,7 @@ a {
   background: var(--accent);
 }
 .brand-header {
-  padding-inline: 24px 12px;
+  padding-inline: 26px 12px;
 }
 /* Surety rule: the brand keeps its fixed 24px left inset in the collapsed rail
    instead of inheriting the library's centered collapsed header. */
@@ -2062,7 +2062,7 @@ a {
 }
 @media (max-width: 767px) {
   .ocelot-sidebar {
-    width: 280px;
+    width: 260px;
   }
   .brand-name {
     font-size: 18px;

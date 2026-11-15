@@ -1,7 +1,11 @@
-import { AppHeader } from "@nocoo/basalt/components/app-header";
+import {
+  AppHeader,
+  AppHeaderMenuButton,
+  HeaderAction,
+  ProjectLinks,
+} from "@nocoo/basalt/components/app-header";
 import { AppMain, AppShell, AppSkipLink } from "@nocoo/basalt/components/app-shell";
 import { Avatar, AvatarFallback, AvatarImage } from "@nocoo/basalt/components/avatar";
-import { Badge } from "@nocoo/basalt/components/badge";
 import { Button } from "@nocoo/basalt/components/button";
 import {
   Dialog,
@@ -15,6 +19,7 @@ import { PageHeader } from "@nocoo/basalt/components/page-header";
 import {
   ContentIsland,
   Sidebar,
+  SidebarBrand,
   SidebarFooter,
   SidebarHeader,
   SidebarIconItem,
@@ -22,14 +27,11 @@ import {
   SidebarPartition,
   SidebarProvider,
   SidebarSearch,
+  SidebarToggle,
   SidebarUser,
 } from "@nocoo/basalt/components/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@nocoo/basalt/components/tooltip";
+import { ThemeToggle } from "@nocoo/basalt/components/theme-toggle";
+import { TooltipProvider } from "@nocoo/basalt/components/tooltip";
 import { ThemeProvider } from "@nocoo/basalt/providers/theme";
 import {
   ArrowDownToLine,
@@ -50,20 +52,18 @@ import {
   ListTree,
   LoaderCircle,
   LockKeyhole,
-  Monitor,
-  Moon,
   PanelLeft,
   Plus,
   RefreshCw,
   Search,
   ShieldCheck,
-  Sun,
   UnfoldHorizontal,
   X,
 } from "lucide-react";
 import {
-  type ComponentProps,
+  type ButtonHTMLAttributes,
   type CSSProperties,
+  forwardRef,
   useCallback,
   useEffect,
   useMemo,
@@ -75,7 +75,6 @@ import { version } from "../../package.json";
 import { connectionPresentation } from "../models/connection";
 import { changedFiles, fileTitle, isMarkdown } from "../models/vault";
 import type { ReaderViewModel } from "../viewmodels/reader";
-import { Github, Hexly } from "./chrome-icons";
 import { Dialogs } from "./Dialogs";
 import { Mark } from "./Mark";
 import { Markdown } from "./Markdown";
@@ -84,7 +83,6 @@ import { ReaderBreadcrumbs } from "./ReaderBreadcrumbs";
 import { ImageLightbox } from "./ReaderImage";
 import { ReaderOutline } from "./ReaderOutline";
 import { RecentNotes } from "./RecentNotes";
-import { useResolvedTheme } from "./useResolvedTheme";
 
 export function App({ model }: { model: ReaderViewModel }) {
   useEffect(() => model.mount(), [model]);
@@ -97,49 +95,32 @@ export function App({ model }: { model: ReaderViewModel }) {
   );
 }
 
-function ToolbarButton({
-  title,
-  className = "",
-  children,
-  onClick,
-  ...props
-}: ComponentProps<typeof Button> & { "aria-label": string }) {
+const ToolbarButton = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    title?: string;
+    "aria-label": string;
+  }
+>(function ToolbarButton(
+  { title, className = "", children, onClick, "aria-label": ariaLabel, ...props },
+  ref,
+) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`chrome-button ${className}`}
-          onClick={(event) => {
-            // Safari taps need an explicit focus target for dialog focus restoration.
-            event.currentTarget.focus({ preventScroll: true });
-            onClick?.(event);
-          }}
-          {...props}
-        >
-          {children}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" sideOffset={8} className="toolbar-tooltip">
-        {title ?? props["aria-label"]}
-      </TooltipContent>
-    </Tooltip>
+    <HeaderAction
+      ref={ref}
+      label={ariaLabel}
+      tooltip={title ?? ariaLabel}
+      className={`chrome-button ${className}`}
+      onClick={(event) => {
+        event.currentTarget.focus({ preventScroll: true });
+        onClick?.(event);
+      }}
+      {...props}
+    >
+      {children}
+    </HeaderAction>
   );
-}
-
-function ThemeButton() {
-  const { theme, setTheme } = useResolvedTheme();
-  const nextTheme = theme === "system" ? "light" : theme === "light" ? "dark" : "system";
-  const label =
-    nextTheme === "system" ? "使用系统主题" : nextTheme === "light" ? "切换到浅色" : "切换到深色";
-  const Icon = theme === "system" ? Monitor : theme === "dark" ? Moon : Sun;
-  return (
-    <ToolbarButton aria-label="切换主题" title={label} onClick={() => setTheme(nextTheme)}>
-      <Icon aria-hidden="true" />
-    </ToolbarButton>
-  );
-}
+});
 
 function Reader({ model }: { model: ReaderViewModel }) {
   const state = useSyncExternalStore(model.subscribe, model.getSnapshot);
@@ -251,42 +232,45 @@ function Reader({ model }: { model: ReaderViewModel }) {
     >
       <AppShell className="ocelot-shell">
         <AppSkipLink>跳到正文</AppSkipLink>
-        <Sidebar id="vault-sidebar" className="ocelot-sidebar">
-          {compact && (
-            <>
-              <DialogTitle className="sr-only">知识库导航</DialogTitle>
-              <DialogDescription className="sr-only">选择知识库或打开一份笔记。</DialogDescription>
-            </>
-          )}
+        <Sidebar id="vault-sidebar" aria-label="知识库导航" className="ocelot-sidebar">
           <SidebarHeader className="brand-header">
-            <a
-              className="brand"
-              href="/"
-              title={`Ocelot v${version}`}
-              onClick={(event) => {
-                if (
-                  event.button !== 0 ||
-                  event.metaKey ||
-                  event.ctrlKey ||
-                  event.shiftKey ||
-                  event.altKey
+            <SidebarBrand
+              logo={
+                <a
+                  className="brand"
+                  href="/"
+                  title={`Ocelot v${version}`}
+                  onClick={(event) => {
+                    if (
+                      event.button !== 0 ||
+                      event.metaKey ||
+                      event.ctrlKey ||
+                      event.shiftKey ||
+                      event.altKey
+                    )
+                      return;
+                    event.preventDefault();
+                    void model.goHome();
+                  }}
+                >
+                  <span className="sr-only">Ocelot 首页</span>
+                  <Mark />
+                </a>
+              }
+              name="ocelot"
+              version={`v${version}`}
+              action={
+                compact ? (
+                  <SidebarToggle
+                    mode="dismiss"
+                    onDismiss={() => setCollapsed(true)}
+                    dismissLabel="关闭知识库导航"
+                  />
+                ) : (
+                  <SidebarToggle expandLabel="展开知识库导航" collapseLabel="收起知识库导航" />
                 )
-                  return;
-                event.preventDefault();
-                void model.goHome();
-              }}
-            >
-              <span className="sr-only">Ocelot 首页</span>
-              <Mark />
-              {!railCollapsed && (
-                <>
-                  <span className="brand-name">ocelot</span>
-                  <Badge variant="secondary" className="version-pill">
-                    v{version}
-                  </Badge>
-                </>
-              )}
-            </a>
+              }
+            />
           </SidebarHeader>
           <div className="sidebar-expanded" hidden={railCollapsed}>
             <div className="sidebar-tools">
@@ -443,14 +427,26 @@ function Reader({ model }: { model: ReaderViewModel }) {
             className="reader-toolbar"
             leading={
               <>
-                <ToolbarButton
-                  aria-label="切换知识库导航"
-                  aria-expanded={!collapsed}
-                  aria-controls="vault-sidebar"
-                  onClick={() => setCollapsed(!collapsed)}
-                >
-                  <PanelLeft aria-hidden="true" />
-                </ToolbarButton>
+                {compact ? (
+                  <AppHeaderMenuButton
+                    label="切换知识库导航"
+                    aria-expanded={!collapsed}
+                    aria-controls="vault-sidebar"
+                    onClick={(event) => {
+                      event.currentTarget.focus({ preventScroll: true });
+                      setCollapsed(!collapsed);
+                    }}
+                  />
+                ) : (
+                  <ToolbarButton
+                    aria-label="切换知识库导航"
+                    aria-expanded={!collapsed}
+                    aria-controls="vault-sidebar"
+                    onClick={() => setCollapsed(!collapsed)}
+                  >
+                    <PanelLeft aria-hidden="true" />
+                  </ToolbarButton>
+                )}
                 <ReaderBreadcrumbs
                   snapshot={snapshot}
                   path={reading?.path}
@@ -494,19 +490,26 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       <FileCodeCorner aria-hidden="true" />
                     )}
                   </ToolbarButton>
-                  <ToolbarButton
-                    aria-label="在 GitHub 打开 Markdown"
-                    asChild={!!githubDocumentUrl}
-                    disabled={!githubDocumentUrl}
-                  >
-                    {githubDocumentUrl ? (
-                      <a href={githubDocumentUrl} target="_blank" rel="noopener noreferrer">
-                        <ArrowUpRight aria-hidden="true" />
-                      </a>
-                    ) : (
+                  {githubDocumentUrl ? (
+                    <HeaderAction
+                      label="在 GitHub 打开 Markdown"
+                      href={githubDocumentUrl}
+                      external
+                      newTabLabel="（新标签页打开）"
+                      tooltip="在 GitHub 打开 Markdown"
+                      className="chrome-button"
+                    >
                       <ArrowUpRight aria-hidden="true" />
-                    )}
-                  </ToolbarButton>
+                    </HeaderAction>
+                  ) : (
+                    <ToolbarButton
+                      aria-label="在 GitHub 打开 Markdown"
+                      title="在 GitHub 打开 Markdown"
+                      disabled
+                    >
+                      <ArrowUpRight aria-hidden="true" />
+                    </ToolbarButton>
+                  )}
                   <ToolbarButton
                     className="mobile-outline-button"
                     ref={outlineButton}
@@ -566,25 +569,22 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       <FlaskConical aria-hidden="true" />
                     </ToolbarButton>
                   )}
-                  <ToolbarButton aria-label="Ocelot GitHub 仓库" asChild>
-                    <a
-                      href="https://github.com/nocoo/ocelot"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Github aria-hidden="true" />
-                    </a>
-                  </ToolbarButton>
-                  <ToolbarButton aria-label="Ocelot on hexly.ai" asChild>
-                    <a
-                      href="https://hexly.ai/projects/ocelot"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Hexly aria-hidden="true" />
-                    </a>
-                  </ToolbarButton>
-                  <ThemeButton />
+                  <ProjectLinks
+                    github="nocoo/ocelot"
+                    hexly="ocelot"
+                    name="Ocelot"
+                    githubLabel="Ocelot GitHub 仓库"
+                    hexlyLabel="Ocelot on hexly.ai"
+                    newTabLabel="（新标签页打开）"
+                  />
+                  <ThemeToggle
+                    aria-label="切换主题"
+                    labels={{
+                      light: "切换到浅色",
+                      dark: "切换到深色",
+                      system: "使用系统主题",
+                    }}
+                  />
                 </fieldset>
               </>
             }

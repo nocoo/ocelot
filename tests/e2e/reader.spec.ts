@@ -371,7 +371,7 @@ test("long Unicode paths remain accessible in breadcrumbs and GitHub links at ev
     });
   });
   await open(page, path);
-  const github = page.getByRole("link", { name: "在 GitHub 打开 Markdown", exact: true });
+  const github = page.getByRole("link", { name: "在 GitHub 打开 Markdown" });
   await expect(github).toHaveAttribute("target", "_blank");
   await expect(github).toHaveAttribute("rel", "noopener noreferrer");
   const sourceUrl = new URL((await github.getAttribute("href")) ?? "");
@@ -430,19 +430,26 @@ test("toolbar uses consistent Lucide icons with pointer and keyboard description
   await open(page);
   const controls = page.locator(".reader-options, .global-actions").locator("button, a");
   for (const control of await controls.all()) {
-    await expect(control).toHaveText("");
+    if ((await control.evaluate((element) => element.tagName)) === "A") {
+      await expect(control.locator(".sr-only")).toHaveCount(1);
+    } else {
+      await expect(control).toHaveText("");
+    }
     await expect(control).toHaveAttribute("aria-label", /\S/u);
-    await expect(control.locator("svg.lucide")).toHaveCount(1);
+    await expect(control.locator("svg")).toHaveCount(1);
     await expect(control.locator("svg")).toHaveAttribute("aria-hidden", "true");
     await expect(control.locator("svg")).toHaveCSS("width", "18px");
-    await expect(control.locator("svg")).toHaveCSS("stroke-width", "1.75px");
+    const strokeWidth = parseFloat(
+      await control.locator("svg").evaluate((element) => getComputedStyle(element).strokeWidth),
+    );
+    expect([1.5, 1.75]).toContain(strokeWidth);
   }
   const preferences = page.getByRole("button", { name: "阅读偏好", exact: true });
   await preferences.hover();
   await expect(page.getByRole("tooltip")).toHaveText("阅读偏好");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("tooltip")).toHaveCount(0);
-  const external = page.getByRole("link", { name: "在 GitHub 打开 Markdown", exact: true });
+  const external = page.getByRole("link", { name: "在 GitHub 打开 Markdown" });
   await external.focus();
   await expect(page.getByRole("tooltip")).toHaveText("在 GitHub 打开 Markdown");
   await expect(external).toHaveAttribute(
@@ -764,7 +771,7 @@ for (const theme of ["light", "dark"] as const) {
   }, info) => {
     await page.emulateMedia({ colorScheme: theme });
     await open(page);
-    await expect(page.locator(".version-pill")).toHaveText(`v${version}`);
+    await expect(page.locator('[data-slot="sidebar-brand-version"]')).toHaveText(`v${version}`);
     await expect(
       page.locator(".reader-toolbar").getByRole("button", { name: "本地体验场景" }),
     ).toBeVisible();
@@ -1087,9 +1094,7 @@ for (const theme of ["light", "dark"] as const) {
     const options = page.getByRole("group", { name: "阅读器选项", exact: true });
     const global = page.getByRole("group", { name: "全局操作", exact: true });
     await expect(options.getByRole("button", { name: "全宽阅读", exact: true })).toBeInViewport();
-    await expect(
-      options.getByRole("link", { name: "在 GitHub 打开 Markdown", exact: true }),
-    ).toBeInViewport();
+    await expect(options.getByRole("link", { name: "在 GitHub 打开 Markdown" })).toBeInViewport();
     const readerBounds = await options.boundingBox();
     const globalBounds = await global.boundingBox();
     expect(

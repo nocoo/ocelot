@@ -2,7 +2,14 @@
 
 状态：**导航、品牌位置与折叠动效均已验收，用户确认** · 2026-09-11
 
-当前依赖为 **3.2.1**（2026-10-24）。下文的 2.1.7 / 2.1.8 引用对应首次集成与验收记录。
+当前依赖为 **3.3.6**（2026-11-15）。下文保留首次集成与验收记录。
+
+### 3.3.6 升级记录（2026-11-15）
+
+- 样式入口迁移到 Tailwind CSS v4：`@import "@nocoo/basalt/styles/tailwind"`、`@import "tailwindcss"`，并用 `@source` 扫描 `node_modules/@nocoo/basalt/dist`。
+- 品牌区改用 `SidebarBrand`，移动菜单改用 `AppHeaderMenuButton`，顶部项目链接与主题按钮改用 `ProjectLinks`、`ThemeToggle`、`HeaderAction`。
+- 保留阅读器、目录树、认证、缓存与路由语义；侧栏品牌标继续固定在左侧 24px 偏移。
+- 验证：`typecheck`、`lint`、`test:coverage`、`build`、`worker:check`，Chromium 43 项与 WebKit mobile 5 项通过。
 
 ### 3.2.1 升级记录（2026-10-24）
 
