@@ -27,7 +27,7 @@ Obsidian 阅读应用。用户可以添加 GitHub 上的公开或私有仓库，
 | 访问控制   | Cloudflare Access，单用户；仅 `GET /api/live` 可匿名         | JWT 校验已测试，team/AUD/owner 已配置；匿名入口已核验 |
 | 前端       | Vite + React，MVVM                                           | 已实现                                                |
 | 类型系统   | TypeScript `7.0.2`，固定版本                                 | 已安装并通过类型检查                                  |
-| 控件与布局 | `@nocoo/basalt` `3.2.1`，固定版本                            | 已集成并验证                                          |
+| 控件与布局 | `@nocoo/basalt` `3.3.6`，固定版本                            | 已集成并验证                                          |
 | 工程工具   | Biome、Husky                                                 | 已配置，CI 使用同一检查命令                           |
 | 单元测试   | 非 View 的业务与 Worker 代码，四项覆盖率均 ≥95%              | 163 项通过，最低一项 98.62%                           |
 | View 验证  | 浏览器交互、可访问性、视觉检查；不要求 View UT               | 17 项浏览器测试及明暗/移动端扫描通过                  |
@@ -64,7 +64,7 @@ ViewModel 达标。View 只负责渲染状态与传递意图；涉及分支决�
 
 | 参考                                                                              | 在 Ocelot 中的用途                             | 已核验事实                                           |
 | --------------------------------------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------- |
-| Basalt                                                                            | 应用外壳、侧栏、工具栏、表单、弹层、状态控件   | React 19；提供 standalone CSS 与布局组件             |
+| Basalt                                                                            | 应用外壳、侧栏、工具栏、表单、弹层、状态控件   | React 19；提供 Tailwind 样式入口与布局组件           |
 | [Kami](https://github.com/tw93/Kami)                                              | 中英文长文排版、字体回退、层级、段落节奏与留白 | MIT 文档设计系统和模板，并非 Markdown 渲染 SDK       |
 | [Pierre Trees](https://github.com/pierrecomputer/pierre/tree/main/packages/trees) | 文件树、键盘导航、路径状态与变更标记           | `@pierre/trees/react`；Shadow DOM；提供主题 CSS 变量 |
 

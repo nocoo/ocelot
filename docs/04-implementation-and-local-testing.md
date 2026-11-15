@@ -59,6 +59,13 @@
 借鉴 Kami 的长文层次与中英文节奏，保留语义强调，调整为屏幕阅读尺寸。
 Pierre 使用公开 CSS variables 与 React API，关闭文件修改能力。
 
+样式入口遵循 Basalt 的 Tailwind 契约：`src/styles/tailwind.css` 依次
+`@import "@nocoo/basalt/styles/tailwind"` 与 `@import "tailwindcss"`，并用
+`@source` 扫描 `node_modules/@nocoo/basalt/dist`，使组件内的工具类被生成。
+应用自有规则集中在 `src/views/styles.css`，只覆盖阅读排版与品牌，不重复
+声明 Basalt token；Tailwind preflight 移除的 Markdown 列表与段落间距由
+该样式显式还原。
+
 桌面提供目录、正文和文章大纲；窄屏将导航收纳为抽屉。浮层使用轻阴影，正文
 依靠留白。动画不挤动文章；自动化浏览器验收包含 light/dark/mobile 截图。
 

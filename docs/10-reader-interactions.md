@@ -33,7 +33,7 @@
 
 ## 核查与实施约定
 
-- 已安装的 `@nocoo/basalt 2.1.7` 提供 `TableOfContents` /
+- 已安装的 `@nocoo/basalt 3.3.6` 提供 `TableOfContents` /
   `TableOfContentsItem`。本轮开始时目录仍是手写结构，现已改用发布包组件，
   加入连续移动的活动指示条与平滑章节滚动；减少动态效果时关闭动画。
   目录高度以实际阅读容器为限，列表独立滚动，进度与回顶操作保留可达性。
@@ -55,7 +55,7 @@
   后续生产反馈复现了 Workers 不支持 `redirect: "error"` 的异常；本机公开
   请求不代表边缘请求已成功。实际云端复现、修复及复测见 [12](12-author-profile-recovery.md)。
 - 底部继续使用 `SidebarFooter`、`SidebarUser`、`Avatar`，恢复模板的
-  字号、间距与头像大小，清除 standalone CSS 模式下段落默认 margin 的干扰。
+  字号、间距与头像大小，清除 Tailwind preflight 模式下段落默认 margin 的干扰。
   收起状态也保留身份头像；品牌位置仍固定在左侧 24px。
 - Basalt `SidebarProvider` 的调整宽度 separator 是贯穿高度的可聚焦元素，
   当前通用 `:focus-visible` 给它整条描边。改为局部手柄焦点提示；正文的

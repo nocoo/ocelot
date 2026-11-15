@@ -1,4 +1,4 @@
-import "@nocoo/basalt/styles/standalone";
+import "./styles/tailwind.css";
 import "@fontsource-variable/source-serif-4/standard.css";
 import "@fontsource-variable/source-serif-4/standard-italic.css";
 import "katex/dist/katex.min.css";

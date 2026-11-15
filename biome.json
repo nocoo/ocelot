@@ -11,7 +11,7 @@
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always" } },
-  "css": { "parser": { "cssModules": false } },
+  "css": { "parser": { "cssModules": false, "tailwindDirectives": true } },
   "overrides": [
     {
       "includes": ["src/views/styles.css"],

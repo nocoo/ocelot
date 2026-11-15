@@ -54,7 +54,7 @@ Markdown）、两个 Git 版本、原创 PNG 附件。所有内容与路径均�
   非 View 覆盖率；CI 另外校验生成的 Worker 类型、构建、Worker dry run 和浏览器。
   验证 job 只使用合成数据，不获得 GitHub PAT 或 Cloudflare 部署凭据；CD Token
   只进入所有验证通过后的部署步骤。OSV / Gitleaks 同时作为部署门禁。
-- 工具版本已固定：Basalt 2.1.7、TypeScript 7.0.2；Cloudflare 当前测试插件
+- 工具版本已固定：Basalt 3.3.6、TypeScript 7.0.2；Cloudflare 当前测试插件
   `@cloudflare/vitest-plugin` 1.1.7 与 Wrangler 4.131.0 使用同版本 Miniflare。
 - `bun run typecheck`、`bun run lint` 通过。
 - `bun run test:coverage`：**10 个测试文件，163 项通过**；语句 **100% (1054/1054)**、

@@ -84,7 +84,7 @@ Ocelot 需要缓存目录快照，逐文件读取正文，并在源内容、fron
 
 ## 用户指定的界面参考
 
-- Basalt 本地源码与 npm 均确认 `@nocoo/basalt@2.1.7`；TypeScript
+- Basalt 本地源码与 npm 均确认 `@nocoo/basalt@3.3.6`；TypeScript
   `7.0.2` 也已核验存在。
 - [Kami 排版规范](https://github.com/tw93/Kami/blob/4dab24cc4c527dbb35aa8fae09e02822992dfbe2/skills/kami/references/design.md)：
   面向中英文文档，明确说明自己不是 UI framework。迁移排版规则时按屏幕阅读

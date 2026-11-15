@@ -771,6 +771,7 @@ a {
   font-weight: 650;
   letter-spacing: -0.035em;
   color: var(--ink);
+  margin: 0.67em 0;
 }
 .article-heading p {
   font-family: var(--basalt-font-sans);
@@ -889,7 +890,7 @@ a {
   line-height: 1.8;
 }
 .prose blockquote p {
-  margin-bottom: 0.55em;
+  margin: 1em 0 0.55em;
 }
 .prose blockquote p:last-child {
   margin: 0;
@@ -899,6 +900,13 @@ a {
 .prose ol {
   padding-left: 1.45em;
   margin: 1.1em 0 1.5em;
+}
+/* Tailwind preflight removes list markers; the reader keeps the Markdown structure. */
+.prose ul {
+  list-style-type: disc;
+}
+.prose ol {
+  list-style-type: decimal;
 }
 .prose li {
   padding-left: 0.2em;
@@ -1575,6 +1583,7 @@ a {
   padding-left: 17px;
   color: var(--muted);
   line-height: 1.9;
+  list-style-type: decimal;
 }
 .rotation-details li {
   margin: 8px 0;
