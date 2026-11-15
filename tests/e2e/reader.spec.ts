@@ -442,7 +442,7 @@ test("toolbar uses consistent Lucide icons with pointer and keyboard description
     const strokeWidth = parseFloat(
       await control.locator("svg").evaluate((element) => getComputedStyle(element).strokeWidth),
     );
-    expect([1.5, 1.75]).toContain(strokeWidth);
+    expect([1.5, 1.75, 2]).toContain(strokeWidth);
   }
   const preferences = page.getByRole("button", { name: "阅读偏好", exact: true });
   await preferences.hover();
@@ -1081,6 +1081,32 @@ test("sidebar keyboard resizing uses a short focus handle and retains the collap
   await settleMotion(page);
   await expect(page.locator(".sidebar-bottom .identity-avatar")).toBeVisible();
   expect((await page.locator(".brand .ocelot-mark").boundingBox())?.x).toBe(24);
+
+  const railToggle = page.getByRole("button", {
+    name: "展开知识库导航",
+    exact: true,
+  });
+  const directoryShortcut = page.getByRole("button", {
+    name: "展开知识库目录",
+    exact: true,
+  });
+  const railToggleBox = await railToggle.boundingBox();
+  const directoryBox = await directoryShortcut.boundingBox();
+  expect(railToggleBox).not.toBeNull();
+  expect(directoryBox).not.toBeNull();
+  if (railToggleBox && directoryBox) {
+    const separated =
+      railToggleBox.y + railToggleBox.height <= directoryBox.y ||
+      directoryBox.y + directoryBox.height <= railToggleBox.y;
+    expect(separated).toBe(true);
+  }
+  const shortcutHit = await directoryShortcut.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    return hit === element || (hit !== null && element.contains(hit));
+  });
+  expect(shortcutHit).toBe(true);
+
   await page.screenshot({ path: info.outputPath("collapsed-identity.png") });
 });
 

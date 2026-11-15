@@ -14,6 +14,14 @@
   "css": { "parser": { "cssModules": false, "tailwindDirectives": true } },
   "overrides": [
     {
+      "includes": ["src/styles/tailwind.css"],
+      "linter": {
+        "rules": {
+          "correctness": { "noInvalidPositionAtImportRule": "off" }
+        }
+      }
+    },
+    {
       "includes": ["src/views/styles.css"],
       "linter": {
         "rules": {

@@ -116,15 +116,6 @@ a {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-.basalt-ui:disabled,
-.sidebar-shortcuts button:disabled {
-  opacity: 1;
-  color: var(--disabled-text);
-  background: var(--disabled-surface);
-  border-color: var(--hairline);
-  box-shadow: none;
-  cursor: not-allowed;
-}
 .ocelot-shell {
   height: 100dvh;
   position: relative;
@@ -184,11 +175,6 @@ a {
 .sidebar-expanded[hidden],
 .navigation-area[hidden] {
   display: none;
-}
-.sidebar-shortcuts {
-  align-items: center;
-  gap: 8px;
-  padding-top: 12px;
 }
 .brand {
   display: flex;
@@ -601,41 +587,6 @@ a {
 .breadcrumb-menu-item > span {
   min-width: 0;
   overflow-wrap: anywhere;
-}
-.chrome-button {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  color: var(--muted);
-  border-radius: 8px;
-}
-.reader-toolbar .chrome-button svg {
-  width: 18px;
-  height: 18px;
-  stroke-width: 1.75;
-}
-.chrome-button:hover {
-  color: var(--ink);
-  background: var(--accent-soft);
-}
-.chrome-button:focus-visible {
-  box-shadow: none;
-}
-.chrome-button[aria-pressed="true"],
-.mobile-outline-button[aria-expanded="true"] {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-.sync-button.update-ready {
-  color: var(--accent);
-  background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-.toolbar-tooltip {
-  font-family: var(--basalt-font-sans);
-  font-size: 12px;
-  line-height: 1.5;
 }
 .mobile-outline-button {
   display: none;
@@ -2072,10 +2023,6 @@ a {
   }
   .breadcrumb-current {
     font-size: 11px;
-  }
-  .chrome-button {
-    width: 32px;
-    height: 32px;
   }
   .island-wrap {
     padding: 0 8px;

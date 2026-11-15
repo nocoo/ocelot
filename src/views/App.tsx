@@ -110,7 +110,7 @@ const ToolbarButton = forwardRef<
       ref={ref}
       label={ariaLabel}
       tooltip={title ?? ariaLabel}
-      className={`chrome-button ${className}`}
+      className={className}
       onClick={(event) => {
         event.currentTarget.focus({ preventScroll: true });
         onClick?.(event);
@@ -306,7 +306,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
             </SidebarPartition>
           </div>
           {railCollapsed && (
-            <SidebarNav className="sidebar-shortcuts" aria-label="知识库快捷导航">
+            <SidebarNav aria-label="知识库快捷导航">
               <SidebarIconItem
                 aria-label="展开知识库目录"
                 title="展开知识库目录"
@@ -497,7 +497,6 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       external
                       newTabLabel="（新标签页打开）"
                       tooltip="在 GitHub 打开 Markdown"
-                      className="chrome-button"
                     >
                       <ArrowUpRight aria-hidden="true" />
                     </HeaderAction>
