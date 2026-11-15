@@ -52,7 +52,6 @@ import {
   ListTree,
   LoaderCircle,
   LockKeyhole,
-  PanelLeft,
   Plus,
   RefreshCw,
   Search,
@@ -292,7 +291,11 @@ function Reader({ model }: { model: ReaderViewModel }) {
                 </span>
                 <ChevronsUpDown size={14} aria-hidden="true" />
               </Button>
-              <SidebarSearch onClick={() => model.openDialog("search")} disabled={!snapshot}>
+              <SidebarSearch
+                className="border border-basalt-border"
+                onClick={() => model.openDialog("search")}
+                disabled={!snapshot}
+              >
                 <span>搜索笔记</span>
               </SidebarSearch>
             </div>
@@ -427,7 +430,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
             className="reader-toolbar"
             leading={
               <>
-                {compact ? (
+                {compact && (
                   <AppHeaderMenuButton
                     label="切换知识库导航"
                     aria-expanded={!collapsed}
@@ -437,15 +440,6 @@ function Reader({ model }: { model: ReaderViewModel }) {
                       setCollapsed(!collapsed);
                     }}
                   />
-                ) : (
-                  <ToolbarButton
-                    aria-label="切换知识库导航"
-                    aria-expanded={!collapsed}
-                    aria-controls="vault-sidebar"
-                    onClick={() => setCollapsed(!collapsed)}
-                  >
-                    <PanelLeft aria-hidden="true" />
-                  </ToolbarButton>
                 )}
                 <ReaderBreadcrumbs
                   snapshot={snapshot}

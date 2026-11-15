@@ -266,27 +266,12 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.sidebar-tools > button:last-child {
-  width: 100%;
-  height: 36px;
-  padding: 0 10px;
-  display: flex;
-  gap: 9px;
-  color: var(--muted);
-  font-size: 12px;
-  background: transparent;
-}
-.sidebar-tools > button:last-child kbd {
-  margin-left: auto;
-  font-family: var(--basalt-font-sans);
-  color: var(--faint);
-  font-size: 11px;
-}
 .tree-caption {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin: 0;
+  padding-inline: 18px;
   padding-top: 22px;
   padding-bottom: 10px;
 }
