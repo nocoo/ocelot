@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@nocoo/basalt/components/dialog";
-import { ImageOff, Minimize2, X, ZoomIn } from "lucide-react";
+import { ImageOff, Minimize2, X, ZoomIn } from "@nocoo/basalt/icons";
 import { useRef } from "react";
 import type { LightboxImage, ReaderViewModel } from "../viewmodels/reader";
 

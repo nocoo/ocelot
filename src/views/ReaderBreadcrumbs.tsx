@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@nocoo/basalt/components/dropdown-menu";
-import { BookOpen, Ellipsis, Folder } from "lucide-react";
+import { BookOpen, Ellipsis, Folder } from "@nocoo/basalt/icons";
 import { useRef } from "react";
 import type { Snapshot } from "../models/contracts";
 import { ancestorDirectories, fileTitle } from "../models/vault";

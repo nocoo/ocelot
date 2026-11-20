@@ -739,7 +739,7 @@ test("Access identity loads after reading, hides local controls and handles a fa
   await expect(page.locator(".identity-avatar img")).toBeVisible();
   await expect(page.locator(".identity-avatar")).toHaveCSS("width", "36px");
   await expect(page.locator(".space-identity p").first()).toHaveCSS("margin", "0px");
-  await expect(page.locator(".space-identity p").first()).toHaveCSS("font-size", "14px");
+  await expect(page.locator(".space-identity p").first()).toHaveCSS("font-size", "13px");
   await expect(page.locator(".space-identity p").last()).toHaveCSS("font-size", "12px");
   const alignment = await page.locator(".space-identity").evaluate((element) => {
     const avatar = element.querySelector(".identity-avatar")?.getBoundingClientRect();

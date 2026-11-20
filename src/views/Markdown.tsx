@@ -1,4 +1,4 @@
-import { BookOpen, FileQuestion, ImageOff } from "lucide-react";
+import { BookOpen, FileQuestion, ImageOff } from "@nocoo/basalt/icons";
 import { lazy, memo, Suspense, useMemo } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeKatex from "rehype-katex";

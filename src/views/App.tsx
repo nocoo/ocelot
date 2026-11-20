@@ -32,7 +32,6 @@ import {
 } from "@nocoo/basalt/components/sidebar";
 import { ThemeToggle } from "@nocoo/basalt/components/theme-toggle";
 import { TooltipProvider } from "@nocoo/basalt/components/tooltip";
-import { ThemeProvider } from "@nocoo/basalt/providers/theme";
 import {
   ArrowDownToLine,
   ArrowUp,
@@ -58,7 +57,8 @@ import {
   ShieldCheck,
   UnfoldHorizontal,
   X,
-} from "lucide-react";
+} from "@nocoo/basalt/icons";
+import { ThemeProvider } from "@nocoo/basalt/providers/theme";
 import {
   type ButtonHTMLAttributes,
   type CSSProperties,

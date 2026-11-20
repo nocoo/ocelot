@@ -2,6 +2,17 @@
 
 Release entries are generated from Git commits by `bun run release`.
 
+## [0.3.8] - 2026-11-20
+
+### Changed
+
+- Upgrade `@nocoo/basalt` to `^3.5.1`, remove `lucide-react`, and rewrite icon
+  imports to `@nocoo/basalt/icons`.
+- Switch `src/styles/tailwind.css` to the two-line `@import "@nocoo/basalt/styles"; @import "tailwindcss";`
+  contract without manual `@source`.
+- Align the `SidebarUser` identity E2E font-size assertion to Basalt's `13px`
+  `text-basalt-md` token.
+
 ## [0.3.5] - 2026-10-24
 
 ### Changed

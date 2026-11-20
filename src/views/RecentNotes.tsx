@@ -1,5 +1,5 @@
 import { Button } from "@nocoo/basalt/components/button";
-import { ArrowUpRight, Clock3, LoaderCircle } from "lucide-react";
+import { ArrowUpRight, Clock3, LoaderCircle } from "@nocoo/basalt/icons";
 import { useLayoutEffect, useRef, useState } from "react";
 import { routeUrl } from "../models/links";
 import { fileTitle } from "../models/vault";
