@@ -1,88 +1,68 @@
 # Ocelot
 
-Single-user, read-only web reader for public and private GitHub Obsidian vaults, running on Cloudflare Workers behind Cloudflare Access.
-Profile: ts-worker-web.
-Direction: [project status](docs/00-project-status.md), [product contract](docs/01-product-contract.md).
+Single-user, read-only web reader for public and private GitHub Obsidian vaults on Cloudflare Workers behind Cloudflare Access (`ts-worker-web`).
+Docs: [README.md](README.md) · [Status](docs/00-project-status.md) · [Contract](docs/01-product-contract.md) · [Deploy](docs/06-running-and-deployment.md) · [Retrospective](Retrospective.md)
 
-## Scope and instruction sources
+## Commands
 
-- This file applies throughout the repository.
-- Maintain this file as the only root handbook; do not recreate `CLAUDE.md`, a symlink, an import or a compatibility alias. Frameworks must not rewrite the handbook.
-- Keep numbered documents in `docs/`. Write or update the relevant document before implementation, recording its current status and verification evidence. Distinguish user requirements, proposed decisions, accepted decisions and completed work: a proposal is not an implemented feature.
-- Source of truth: root `package.json` (sole version source), `wrangler.jsonc` plus generated `worker/worker-configuration.d.ts`, `wrangler.local.jsonc` with `mock/` and synthetic `fixtures/`, `.husky/`, `.github/workflows/verify.yml`, `vitest.config.ts` and Playwright. Raise weaker enforcement to match; record drift rather than lowering the contract.
-
-## Setup and commands
-
-Run from the repository root. Bun 1.4.0 (`packageManager`; CI pins Node 26.12.1), TypeScript 7.0.2 strict, Biome, Husky. Local development uses only synthetic repositories and needs no PAT or Cloudflare account.
+Run from root with Bun 1.4.0 (`packageManager`; CI Node 26.12.1), TS 7.0.2 strict, Biome, Husky. Local dev (`wrangler.local.jsonc`, `mock/`, `fixtures/`) uses synthetic repos only (no PAT or Cloudflare account).
 
 ```sh
 bun install --frozen-lockfile
-bun run dev
-bun run types
-bun run typecheck
-bun run lint
-bun run test:coverage
-bun run build
-bun run worker:check
-bun x playwright install chromium
-bun x playwright install webkit
-bun run test:e2e
-bun run check:security
+bun run dev  # https://ocelot.dev.hexly.ai/ -> 7049 / 37049
+bun run types  # Bindings from empty .dev.vars.example
+bun run typecheck  # S1
+bun run lint  # S2 check-only Biome, 0 warnings
+bun run test:coverage  # L1 Vitest models + worker, >= 95%
+bun run test:l1-gate  # Pre-commit index-snapshot probe
+bun run build  # B1 frontend bundle
+bun run worker:check  # B1 prod Worker dry-run
+bunx playwright install chromium webkit  # Once per machine (L4)
+bun run test:e2e  # L4 Chromium + WebKit mobile + axe
+bun run check:security  # G1 gitleaks (.gitleaks.toml) + G2 osv-scanner
+bun run release -- --dry-run  # Preview scripts/release.ts
 ```
 
-`types` uses the tracked empty `.dev.vars.example` only for deterministic generation, never deployment; avoid overwriting generated bindings by hand (CI verifies the generated file is unchanged). `worker:check` packages the production config as a dry run. G2 uses osv-scanner 2.5.1 and gitleaks 8.30.1; CI verifies the binaries.
+`.dev.vars.example` is tracked empty only for `bun run types`, never deployed; never hand-edit `worker/worker-configuration.d.ts` (CI asserts zero diff).
 
-## Project boundaries
+## Invariants
 
-- Source vaults remain read-only. Local app preferences, repository registrations and cache writes never authorize writes to a GitHub repository.
-- Keep this public repository free of credentials, private vault contents, private note paths and private fixtures; use synthetic test documents. Read reference projects without modifying them; preserve upstream licenses and notices when adapting their code, templates or assets.
-- Verify the Access JWT and configured owner before every asset, API, avatar or private-cache response except the public `GET /api/live`. Keep `workers.dev` and preview URLs disabled; production never imports synthetic transports or test controls. Cloudflare Access identity and GitHub repository credentials stay separate.
-- GitHub PATs live only in Worker Secrets (`GITHUB_TOKEN`, optional `GITHUB_TOKEN_EXPIRES_AT`) — never ordinary Wrangler text vars, `VITE_*`, build variables, browser storage, public build assets or logs. A missing current PAT rejects GitHub operations even when old health data is cached.
-- Author profile lookup receives the verified normalized email's SHA-256. Profile loading is separate from reading; proxy only the allowed raster avatar origin with bounded content and preserve CSP.
-- Treat Markdown, HTML, SVG, URLs, repository paths and diagrams as untrusted input; restrict executable content and validate paths at the boundary.
-- Pin Basalt 3.3.6 and TypeScript 7.0.2; use `@pierre/trees` for file navigation (verify and pin the published version before integration). Adapt Kami's Chinese/English typography without treating Kami as a parser or React UI package. Follow the [navigation](docs/07-basalt-navigation.md) contract.
-- Use MVVM: Views render state and forward intents; ViewModels own interaction state; models/services own parsing, GitHub access and caching. Keep business logic out of Views; prefer functions and direct composition. Authorize before cache reads.
-- Unit-test coverage reaches 95% for statements, branches, functions and lines across first-party non-View runtime code, including unexecuted files. Only presentation-only Views and generated/declaration files are excluded; do not blanket-exclude `.tsx` or the Worker. Verify Views through browser flows, accessibility and visual inspection; View unit tests are not required.
-- Keep the restrained cool blue-gray identity with distinct surface, text, selected, focused, loading and disabled states; respect reduced motion. Sidebar and header share the Basalt L0 background; interface text is at least 11px; keep visible spacing between adjacent hovered/selected tree backgrounds without changing virtual row geometry. Keep the sidebar logo at the fixed 24px left offset when expanded, collapsed and throughout the transition (Surety rule); never center it dynamically.
-- Keep root `package.json` the sole version source; show its `vX.Y.Z` beside the sidebar name and return `X.Y.Z` from public `GET /api/live`.
+- Source vaults stay read-only; prefs, registrations, and cache never authorize GitHub writes.
+- Public repo: no credentials, private vault contents/paths, or private fixtures (synthetic docs only). Keep reference repos read-only and preserve notices.
+- Verify Access JWT + `OWNER_EMAIL` before every asset, API, avatar, or private-cache read except `GET /api/live`; keep Access identity separate from GitHub PATs.
+- Disable `workers.dev` and preview URLs; prod (`worker/index.ts`, `wrangler.jsonc`) never imports `worker/local.ts`, `mock/`, or test controls.
+- Keep `GITHUB_TOKEN` (and optional `GITHUB_TOKEN_EXPIRES_AT`) in Worker Secrets only — never Wrangler vars, `VITE_*`, build vars, storage, assets, or logs; missing PAT fails closed even with cached health.
+- Profile lookup sends verified normalized email SHA-256, decoupled from reading; proxy only the allowed raster avatar origin with bounded size and CSP ([12](docs/12-author-profile-recovery.md)).
+- Treat Markdown, HTML, SVG, URLs, repo paths, and diagrams as untrusted; block executable content and validate paths.
+- Pin `@nocoo/basalt` (3.3.6), TS (7.0.2), and `@pierre/trees`; adapt Kami typography without treating it as a parser/UI lib.
+- MVVM: Views render/forward intents only; ViewModels own UI state; models/services own parsing, GitHub, and caching. Prefer pure composition; authorize before cache reads.
+- UI: cool blue-gray palette, shared Basalt L0 sidebar/header bg, ≥11px text, distinct states, reduced motion ([08](docs/08-visual-identity.md)).
+- Nav: gap adjacent hovered/selected Pierre rows without changing virtual row height; fix sidebar logo at 24px left across transitions — never center ([07](docs/07-basalt-navigation.md)).
+- Root `package.json` is sole version source (`vX.Y.Z` in sidebar, `X.Y.Z` at `GET /api/live`); raise weaker checks to match contracts, never lower them.
+- Update numbered `docs/NN-*.md` before coding with honest status/evidence; distinguish requirements, proposals, decisions, and completed work.
+- Authorized releases only: preview `bun run release -- --dry-run` (`patch` default); migrations precede Worker code after matching `main` CI ([16](docs/16-release-policy.md)).
+- Never move published tags; after credential fixes rerun failed workflow/version or recover existing tags. Live checks never replace private-vault UAT ([09](docs/09-identity-and-delivery.md)).
 
-## Testing and quality contract
+## Quality & Local Gates
 
-Run the checks relevant to the changed scope; hook and CI requirements still apply. Unit tests run Vitest projects `models` (node) and `worker` (Cloudflare plugin, D1 migrations); browser verification runs Playwright. Statuses: `enforced`, `planned`, `manual`, `N/A`. No focused or skipped tests.
+Follows `system1-quality`; CI slots and pinned `base-ci` live in `.github/workflows/quality-slots.yml` (`verify.yml` -> `quality / Z1: Gate` on `main`). Statuses: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests.
 
-| Dimension               | Required contract                                                                                                                                                                           | Current status and evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| L1 — pre-commit quality | UT with statements, branches, functions and lines each ≥95%; strict types and check-only lint with zero errors/warnings; installed hook on the index snapshot; failure rejection; under 30s | enforced. `vitest.config.ts` uses Istanbul with 95/95/95/95 thresholds over `src/**/*.{ts,tsx}`, `worker/**/*.ts`, `mock/**/*.ts` and `scripts/release-model.ts`, excluding only `src/views/**`, `src/main.tsx` and `**/*.d.ts`. `.husky/pre-commit` exports the Git index via `git checkout-index` into a temp directory (cleaned on exit or interrupt), symlinks `node_modules`, then runs `typecheck`, `lint` and `test:coverage` on that snapshot only. `bun run test:l1-gate` (`scripts/verify-l1-gate.mjs`) proves staged-vs-worktree rejection for types, unit tests, coverage and Biome; CI runs it after `test:coverage`. Pre-push still runs working-tree `test:coverage`. |
-| L2 — integration        | Real HTTP/SQLite across every API endpoint/method                                                                                                                                           | planned. Worker tests and browser HTTP exist; there is no separate exhaustive API inventory gate.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| L3 — system             | Reading, navigation, auth and cache behavior, accessibility                                                                                                                                 | enforced. CI browser job runs Playwright e2e on Chromium and WebKit with axe.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| G2 — security           | Dependency and secret scans; missing required scanners fail                                                                                                                                 | enforced. `check:security` runs osv-scanner over `bun.lock` and gitleaks with the tracked `.gitleaks.toml`; the shared quality CI receives the same config.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| D1 — isolation          | Per-run local state and guards/marker before reset/seed                                                                                                                                     | planned. `dev.mjs --test` uses local fake bindings but resets the fixed `.wrangler/e2e` directory without marker checks.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| Build                   | Vite and Worker packaging                                                                                                                                                                   | enforced. Verify CI builds plus `worker:check`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Release                 | Matching CI/CD before immutable tag/release                                                                                                                                                 | enforced. Release policy/script and workflows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| Docs                    | Status and behavior evidence updated before implementation                                                                                                                                  | manual. Numbered document review.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+- **Exceptions / gaps**: `L2 Runtime` `N/A` (L1 `worker` Miniflare); `L3 Integration` `N/A` in CI (API inventory gate `planned`); `P1 Package` `N/A` (private); docs `manual`; E2E `_test_marker` `planned`.
+- **Coverage**: Istanbul ≥95% (stmts/branches/funcs/lines) on `src/**`, `worker/**`, `mock/**`, `scripts/release-model.ts` (incl. unexecuted); excludes only `src/views/**`, `src/main.tsx`, `**/*.d.ts`.
+- **Views**: Never blanket-exclude `.tsx`/Worker; verify Views via Playwright, axe, and visual checks (no View UTs required).
+- **Hooks**: `bun run prepare` installs `.husky/`; `pre-commit` runs `typecheck`, `lint`, `test:coverage` on a `git checkout-index` snapshot (<30s; tested by `test:l1-gate`).
+- **Pre-push**: `.husky/pre-push` runs working-tree `test:coverage` (stdin pushed-ref L3/G2 <3m `planned`). Never bypass hooks, suppress security scans, or weaken coverage.
 
-Pre-commit enforces index-snapshot L1 (`typecheck`, `lint`, `test:coverage`); target wall time is under 30s on a warm toolchain. Pre-push runs working-tree coverage. Target stdin pushed-ref L2/G2 in under 3 minutes is not implemented. Never bypass hooks, suppress security checks or weaken coverage.
+## Resources & Isolation
 
-The quality framework follows System1 (S1-S3, G1-G2, B1, L1-L4, P1, Z1) with unified L1. Use `system1-quality` for the quality contract.
+| Lane | Endpoint / State (UI / Worker / inspector)                                | Boundary                                       |
+| ---- | ------------------------------------------------------------------------- | ---------------------------------------------- |
+| Dev  | `https://ocelot.dev.hexly.ai/`, `7049`/`37049`/`38049`, `.wrangler/state` | Synthetic only; preserve dev server & Caddy    |
+| E2E  | `127.0.0.1`, `27049`/`17049`/`18049`, fixed `.wrangler/e2e`               | Single run; per-run + `_test_marker` `planned` |
+| Prod | `https://ocelot.hexly.ai`, Access `nocoo`, `wrangler.jsonc`               | Read-only unless authorized; no remote `-test` |
 
-## Resources / Isolation
-
-| Purpose    | Port / resource                                              | Isolation                              |
-| ---------- | ------------------------------------------------------------ | -------------------------------------- |
-| Dev        | Caddy `https://ocelot.dev.hexly.ai/`, UI 7049 / Worker 37049 | `.wrangler/state`; inspector 38049     |
-| Browser    | UI 27049 / Worker 17049                                      | Fixed `.wrangler/e2e`; inspector 18049 |
-| Production | `https://ocelot.hexly.ai`, Access team `nocoo`               | Exact audience/bindings in Wrangler    |
-
-Keep registered ports and Caddy aligned and preserve existing servers. Required tests use new per-run SQLite/R2, reject remote bindings/credentials and verify local context plus `_test_marker` before fixtures/cleanup. Do not create remote `-test` resources or use developer/private vault data.
-
-## Operations / Release
-
-Operational commands and release recovery live in this handbook's operations section, [running/deployment](docs/06-running-and-deployment.md) and [identity/delivery](docs/09-identity-and-delivery.md). Make small, coherent, atomic commits directly to `main` and push to `origin/main`; this is explicitly authorized by the project owner.
-
-Authorized releases use `bun run release -- --dry-run` then the selected version (`patch` default; policy in [delivery](docs/16-release-policy.md)) via `scripts/release.ts`. Trusted `main` deploys after checks, migrations precede Worker code, and publishing requires the matching successful CI/CD. Never rotate a PAT into ordinary vars or move published tags. Verify the active version/tag and Access redirect; these checks do not replace authenticated private-vault UAT.
+Tests reject remote bindings/credentials and private vault data; never run parallel E2E sessions against `.wrangler/e2e`.
 
 ## Retrospective
 
-Use [Retrospective.md](Retrospective.md) for narratives. Keep recurring project rules short here; cross-project lessons belong to nmem/global rules, deterministic checks in hooks/tests.
-
-- After credential-only recovery rerun the same failed workflow/explicit version; recover an existing published tag rather than moving it.
+Record incidents in [Retrospective.md](Retrospective.md); promote recurring rules to `Invariants` and enforceable checks to tests/hooks.
