@@ -23,7 +23,7 @@ import {
   Search,
   ShieldCheck,
   Trash2,
-} from "lucide-react";
+} from "@nocoo/basalt/icons";
 import { useEffect, useRef } from "react";
 import { connectionPresentation } from "../models/connection";
 import type { Scenario } from "../models/contracts";
