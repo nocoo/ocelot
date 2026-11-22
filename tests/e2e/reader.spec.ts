@@ -706,11 +706,21 @@ test("Access identity loads after reading, hides local controls and handles a fa
     revealProfile = resolve;
   });
   await page.route("**/api/session", async (route) => {
-    const response = await route.fetch();
-    await route.fulfill({
-      response,
-      json: { ...(await response.json()), local: false, email: "reader@example.test" },
-    });
+    try {
+      const response = await route.fetch();
+      const session = await response.json();
+      await route.fulfill({
+        response,
+        json: { ...session, local: false, email: "reader@example.test" },
+      });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        /disposed|Target page, context or browser has been closed/iu.test(error.message)
+      )
+        return;
+      throw error;
+    }
   });
   await page.route("**/api/profile", async (route) => {
     await profileReady;
@@ -763,6 +773,7 @@ test("Access identity loads after reading, hides local controls and handles a fa
   await expect(page.locator("#document-title")).toHaveText(welcome);
   await expect(page.locator(".reader-error")).toHaveCount(0);
   await expectReadableText(page);
+  await page.unrouteAll({ behavior: "ignoreErrors" });
 });
 
 for (const theme of ["light", "dark"] as const) {
