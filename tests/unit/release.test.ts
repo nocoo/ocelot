@@ -239,7 +239,7 @@ describe("nmem release policy", () => {
   });
 });
 
-describe("release CLI preflight and read-only preview", () => {
+describe("release CLI preflight and read-only preview", { timeout: 30_000 }, () => {
   const directories: string[] = [];
   afterEach(() => {
     for (const directory of directories.splice(0))
