@@ -984,7 +984,24 @@ test("image overlays fit the viewport, scroll at original size and restore readi
   page,
 }, info) => {
   await open(page, illustrated);
+  await expect(page.locator(".embed-skeleton")).toHaveCount(0);
   const trigger = page.getByRole("button", { name: "放大图片：横向全景", exact: true });
+  await trigger.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      page
+        .locator(".prose img")
+        .evaluateAll((images) =>
+          images
+            .filter((image) => image.getBoundingClientRect().top <= window.innerHeight)
+            .every(
+              (image) =>
+                (image as HTMLImageElement).complete &&
+                (image as HTMLImageElement).naturalWidth > 0,
+            ),
+        ),
+    )
+    .toBe(true);
   await trigger.scrollIntoViewIfNeeded();
   const before = await page.locator(".reading-scroll").evaluate((element) => element.scrollTop);
   await trigger.click();
