@@ -48,6 +48,7 @@ export function ImageLightbox({
     <Dialog open={image !== null} onOpenChange={(open) => !open && model.closeImage()}>
       <DialogContent
         className="ocelot-dialog image-lightbox"
+        showCloseButton={false}
         onOpenAutoFocus={() => {
           returnFocus.current = document.activeElement as HTMLElement | null;
         }}

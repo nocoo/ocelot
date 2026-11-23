@@ -791,6 +791,7 @@ function Reader({ model }: { model: ReaderViewModel }) {
       <Dialog open={state.outlineOpen} onOpenChange={(open) => model.setOutlineOpen(open)}>
         <DialogContent
           className="ocelot-dialog mobile-outline"
+          showCloseButton={false}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             outlineButton.current?.focus({ preventScroll: true });

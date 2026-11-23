@@ -34,7 +34,7 @@ bun run release -- --dry-run  # Preview scripts/release.ts
 - Keep `GITHUB_TOKEN` (and optional `GITHUB_TOKEN_EXPIRES_AT`) in Worker Secrets only — never Wrangler vars, `VITE_*`, build vars, storage, assets, or logs; missing PAT fails closed even with cached health.
 - Profile lookup sends verified normalized email SHA-256, decoupled from reading; proxy only the allowed raster avatar origin with bounded size and CSP ([12](docs/12-author-profile-recovery.md)).
 - Treat Markdown, HTML, SVG, URLs, repo paths, and diagrams as untrusted; block executable content and validate paths.
-- Pin `@nocoo/basalt` (3.3.6), TS (7.0.2), and `@pierre/trees`; adapt Kami typography without treating it as a parser/UI lib.
+- Pin `@nocoo/basalt` (3.6.0), TS (7.0.2), and `@pierre/trees`; adapt Kami typography without treating it as a parser/UI lib.
 - MVVM: Views render/forward intents only; ViewModels own UI state; models/services own parsing, GitHub, and caching. Prefer pure composition; authorize before cache reads.
 - UI: cool blue-gray palette, shared Basalt L0 sidebar/header bg, ≥11px text, distinct states, reduced motion ([08](docs/08-visual-identity.md)).
 - Nav: gap adjacent hovered/selected Pierre rows without changing virtual row height; fix sidebar logo at 24px left across transitions — never center ([07](docs/07-basalt-navigation.md)).
