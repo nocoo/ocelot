@@ -48,7 +48,7 @@ bun run release -- --dry-run  # Preview scripts/release.ts
 Follows `system1-quality`; CI slots and pinned `base-ci` live in `.github/workflows/quality-slots.yml` (`verify.yml` -> `quality / Z1: Gate` on `main`). Statuses: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests.
 
 - **Exceptions / gaps**: `L2 Runtime` `N/A` (L1 `worker` Miniflare); `L3 Integration` `N/A` in CI (API inventory gate `planned`); `P1 Package` `N/A` (private); docs `manual`; E2E `_test_marker` `planned`.
-- **Coverage**: Istanbul ≥95% (stmts/branches/funcs/lines) on `src/**`, `worker/**`, `mock/**`, `scripts/release-model.ts` (incl. unexecuted); excludes only `src/views/**`, `src/main.tsx`, `**/*.d.ts`.
+- **Coverage**: Istanbul ≥95% (stmts/branches/funcs/lines) on `src/**`, `worker/**`, `scripts/release-model.ts` (incl. unexecuted); excludes `src/views/**`, `src/main.tsx`, `mock/**`, `**/*.d.ts`.
 - **Views**: Never blanket-exclude `.tsx`/Worker; verify Views via Playwright, axe, and visual checks (no View UTs required).
 - **Hooks**: `bun run prepare` installs `.husky/`; `pre-commit` runs `typecheck`, `lint`, `test:coverage` on a `git checkout-index` snapshot (<30s; tested by `test:l1-gate`).
 - **Pre-push**: `.husky/pre-push` runs working-tree `test:coverage` (stdin pushed-ref L3/G2 <3m `planned`). Never bypass hooks, suppress security scans, or weaken coverage.
