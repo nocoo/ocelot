@@ -17,8 +17,8 @@ bun run test:coverage  # L1 Vitest models + worker, >= 95%
 bun run test:l1-gate  # Pre-commit index-snapshot probe
 bun run build  # B1 frontend bundle
 bun run worker:check  # B1 prod Worker dry-run
-bunx playwright install chromium webkit  # Once per machine (L4)
-bun run test:e2e  # L4 Chromium + WebKit mobile + axe
+bunx playwright install chromium  # Once per machine (L4)
+bun run test:e2e  # L4 Chromium desktop + mobile emulation + axe
 bun run check:security  # G1 gitleaks (.gitleaks.toml) + G2 osv-scanner
 bun run release -- --dry-run  # Preview scripts/release.ts
 ```
