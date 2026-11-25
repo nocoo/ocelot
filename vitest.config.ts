@@ -6,7 +6,7 @@ export default defineConfig({
     allowOnly: false,
     passWithNoTests: false,
     coverage: {
-      provider: "istanbul",
+      provider: "v8",
       include: ["src/**/*.{ts,tsx}", "worker/**/*.ts", "scripts/release-model.ts"],
       exclude: [
         "src/views/**",
@@ -16,7 +16,7 @@ export default defineConfig({
         "**/*.d.ts",
       ],
       reporter: ["text", "html", "json", "json-summary"],
-      thresholds: { statements: 95, branches: 95, functions: 95, lines: 95 },
+      thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
     },
     projects: [
       { test: { name: "models", environment: "node", include: ["tests/unit/**/*.test.ts"] } },

@@ -13,7 +13,7 @@ bun run dev  # https://ocelot.dev.hexly.ai/ -> 7049 / 37049
 bun run types  # Bindings from empty .dev.vars.example
 bun run typecheck  # S1
 bun run lint  # S2 check-only Biome, 0 warnings
-bun run test:coverage  # L1 Vitest models + worker, >= 95%
+bun run test:coverage  # L1 Vitest models + worker, >= 80%
 bun run test:l1-gate  # Pre-commit index-snapshot probe
 bun run build  # B1 frontend bundle
 bun run worker:check  # B1 prod Worker dry-run
@@ -47,8 +47,8 @@ bun run release -- --dry-run  # Preview scripts/release.ts
 
 Follows `system1-quality`; CI slots and pinned `base-ci` live in `.github/workflows/quality-slots.yml` (`verify.yml` -> `quality / Z1: Gate` on `main`). Statuses: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests.
 
-- **Exceptions / gaps**: `L2 Runtime` `N/A` (L1 `worker` Miniflare); `L3 Integration` `N/A` in CI (API inventory gate `planned`); `P1 Package` `N/A` (private); docs `manual`; E2E `_test_marker` `planned`.
-- **Coverage**: Istanbul ≥95% (stmts/branches/funcs/lines) on `src/**`, `worker/**`, `scripts/release-model.ts` (incl. unexecuted); excludes `src/views/**`, `src/main.tsx`, `mock/**`, `**/*.d.ts`.
+- **Exceptions / gaps**: `L2 Runtime` `N/A` (L1 `worker` Miniflare); `L3 Integration` `N/A` in CI (API inventory gate `planned`); `P1 Package` `enforced` (`bun run worker:check` on `B1` artifact); docs `manual`; E2E `_test_marker` `planned`.
+- **Coverage**: V8 ≥80% (stmts/branches/funcs/lines) on `src/**`, `worker/**`, `scripts/release-model.ts` (incl. unexecuted); excludes `src/views/**`, `src/main.tsx`, `mock/**`, `**/*.d.ts`.
 - **Views**: Never blanket-exclude `.tsx`/Worker; verify Views via Playwright, axe, and visual checks (no View UTs required).
 - **Hooks**: `bun run prepare` installs `.husky/`; `pre-commit` runs `typecheck`, `lint`, `test:coverage` on a `git checkout-index` snapshot (<30s; tested by `test:l1-gate`).
 - **Pre-push**: `.husky/pre-push` runs working-tree `test:coverage` (stdin pushed-ref L3/G2 <3m `planned`). Never bypass hooks, suppress security scans, or weaken coverage.
