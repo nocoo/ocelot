@@ -3,8 +3,7 @@
 详细交付约定。日常命令、6DQ 与测试隔离差距见根 AGENTS.md；本页不构成新的部署授权。
 
 - Write numbered docs before implementation and record honest verification status.
-- `CLOUDFLARE_API_TOKEN` is the repository Actions secret for CD. The account ID
-  is public configuration. Test jobs never receive deployment credentials.
+- `CLOUDFLARE_API_TOKEN` is the `production` environment Actions secret for CD, and `CLOUDFLARE_ACCOUNT_ID` is its environment variable. Test jobs never receive deployment credentials.
 - GitHub vault credentials are separate: Worker Secret `GITHUB_TOKEN`, with
   optional `GITHUB_TOKEN_EXPIRES_AT`. Never put a PAT in Actions build variables,
   `VITE_*`, source, browser storage, logs, screenshots, or test fixtures.
