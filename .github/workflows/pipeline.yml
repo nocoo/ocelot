@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: pipeline-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   quality:
@@ -30,7 +30,7 @@ jobs:
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy == true)
-    uses: nocoo/base-ci/.github/workflows/deploy-worker.yml@1bf0b015de41d57d6a620773b955b5c386c387de # v2026.21
+    uses: nocoo/base-ci/.github/workflows/deploy-worker.yml@9933a7461a312cfaac526ccc5907357a7e3f669a # v2026.25
     with:
       runtime-version: "1.4.0"
       node-version: "26.12.1"
