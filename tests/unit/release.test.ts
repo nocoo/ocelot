@@ -30,12 +30,12 @@ afterEach(() => {
 describe("nmem release policy", () => {
   it("lets the deployment gate derive Wrangler from the frozen lockfile", () => {
     const manifest = JSON.parse(readFileSync("package.json", "utf8"));
-    const workflow = parseYaml(readFileSync(".github/workflows/release.yml", "utf8"));
+    const workflow = parseYaml(readFileSync(".github/workflows/pipeline.yml", "utf8"));
     expect(manifest.devDependencies.wrangler).toMatch(/^\d+\.\d+\.\d+$/u);
-    // base-ci main 2026-10-22 reads the exact version from the lockfile; a pin is optional but must match.
     const pin = workflow.jobs.deploy.with["wrangler-version"];
     if (pin !== undefined && pin !== "lockfile")
       expect(pin).toBe(manifest.devDependencies.wrangler);
+    expect(workflow.jobs.deploy.with["artifact-name"]).toBe("b1-dist");
   });
   const now = Date.parse("2026-09-11T12:00:00Z");
   const baseline = {
@@ -164,29 +164,40 @@ describe("nmem release policy", () => {
     ])
       expect(() => assertWorkflowSuccess({ ...workflow, ...patch }, revision)).toThrow();
     const job = {
-      name: "Deploy / Deploy Worker",
+      name: "deploy / Deploy Worker",
       conclusion: "success",
-      steps: [{ name: "Run project deploy script", conclusion: "success" }],
+      steps: [
+        { name: "D4: Deploy — Run project deploy script", conclusion: "success" },
+        { name: "D5: Verify — Production health check", conclusion: "success" },
+      ],
     };
     const deployment = {
       ...workflow,
-      event: "workflow_run",
-      displayTitle: "Deploy CI 42",
       jobs: [job],
     };
     expect(() => assertWorkflowSuccess(deployment, revision, 42)).not.toThrow();
-    expect(() =>
-      assertWorkflowSuccess({ ...deployment, event: "workflow_dispatch" }, revision, 42),
-    ).not.toThrow();
     for (const patch of [
-      { displayTitle: "Deploy CI 41" },
-      { event: "push" },
+      { event: "workflow_run" },
       { jobs: [] },
       { jobs: [{ ...job, name: "Deploy" }] },
       { jobs: [{ ...job, conclusion: "skipped" }] },
       { jobs: [{ ...job, steps: [] }] },
-      { jobs: [{ ...job, steps: [{ name: "Build", conclusion: "success" }] }] },
-      { jobs: [{ ...job, steps: [{ name: "Run project deploy script", conclusion: "failure" }] }] },
+      {
+        jobs: [
+          {
+            ...job,
+            steps: [{ name: "D2: Artifact — Download CI build artifact", conclusion: "success" }],
+          },
+        ],
+      },
+      {
+        jobs: [
+          {
+            ...job,
+            steps: [{ name: "D4: Deploy — Run project deploy script", conclusion: "failure" }],
+          },
+        ],
+      },
     ])
       expect(() => assertWorkflowSuccess({ ...deployment, ...patch }, revision, 42)).toThrow();
   });
@@ -325,21 +336,18 @@ const revision = execFileSync(${JSON.stringify(realGit)}, ["rev-parse", "HEAD"],
 const output = value => process.stdout.write(JSON.stringify(value));
 if (args[0] === "auth") process.exit(0);
 if (args[0] === "run" && args[1] === "list") {
-  output(args.includes("verify.yml") ? [{ databaseId: 11 }] : [
-    { databaseId: 99, displayTitle: "Deploy CI 10" },
-    { databaseId: 22, displayTitle: "Deploy CI 11" }
-  ]);
+  output([{ databaseId: 11 }]);
 } else if (args[0] === "run" && args[1] === "watch") {
-  if ((args[2] === "11" && mode === "ci-failure") || (args[2] === "22" && mode === "deploy-failure")) process.exit(1);
+  if (mode === "ci-failure" || mode === "deploy-failure") process.exit(1);
 } else if (args[0] === "run" && args[1] === "view") {
-  const deploy = args[2] === "22";
   output({ headSha: mode === "wrong-sha" ? "bad" : revision, status: "completed", conclusion: "success",
-    event: deploy ? "workflow_run" : "push",
-    displayTitle: deploy ? (mode === "wrong-source" ? "Deploy CI 10" : "Deploy CI 11") : "CI",
+    event: "push",
+    displayTitle: "Pipeline",
     url: "https://github.com/nocoo/ocelot/actions/runs/" + args[2],
-    jobs: deploy ? [{ name: "Deploy / Deploy Worker", conclusion: "success", steps: [
-      { name: "Run project deploy script", conclusion: mode === "skipped-deploy" ? "skipped" : "success" }
-    ] }] : [] });
+    jobs: [{ name: "deploy / Deploy Worker", conclusion: "success", steps: [
+      { name: "D4: Deploy — Run project deploy script", conclusion: mode === "skipped-deploy" ? "skipped" : "success" },
+      { name: "D5: Verify — Production health check", conclusion: "success" }
+    ] }] });
 } else if (args[0] === "api") {
   process.stdout.write(mode === "main-moved" ? "f".repeat(40) : revision);
 } else if (args[0] === "release" && args[1] === "create") {
@@ -358,7 +366,7 @@ if (args[0] === "run" && args[1] === "list") {
           .map((line) => JSON.parse(line) as string[]),
     };
   }
-  it("publishes only after independent matching CI/CD and records both evidence URLs", () => {
+  it("publishes only after independent matching CI/CD and records evidence URL", () => {
     const { cli, git, commands, notes } = publication();
     const result = cli("minor");
     expect(result.status, result.stderr).toBe(0);
@@ -367,35 +375,25 @@ if (args[0] === "run" && args[1] === "list") {
     expect(git("cat-file", "-t", "v0.2.0")).toBe("tag");
     const calls = commands();
     const deployment = calls.findIndex(
-      (call) => call[0] === "gh" && call[1] === "run" && call[2] === "watch" && call[3] === "22",
+      (call) => call[0] === "gh" && call[1] === "run" && call[2] === "watch" && call[3] === "11",
     );
     const tag = calls.findIndex(
       (call) => call[0] === "git" && call[1] === "tag" && call[2] === "-a",
     );
     expect(tag).toBeGreaterThan(deployment);
-    expect(calls.some((call) => call[1] === "run" && call[2] === "watch" && call[3] === "99")).toBe(
-      false,
-    );
     const body = readFileSync(notes, "utf8");
-    expect(body).toContain("[Verified CI](https://github.com/nocoo/ocelot/actions/runs/11)");
-    expect(body).toContain(
-      "[Verified production deployment](https://github.com/nocoo/ocelot/actions/runs/22)",
-    );
+    expect(body).toContain("[Verified pipeline](https://github.com/nocoo/ocelot/actions/runs/11)");
   });
-  it.each([
-    "ci-failure",
-    "deploy-failure",
-    "wrong-sha",
-    "wrong-source",
-    "skipped-deploy",
-    "main-moved",
-  ])("does not create a tag or Release after %s", (mode) => {
-    const { cli, git, commands } = publication(mode);
-    expect(cli("minor").status).not.toBe(0);
-    expect(git("tag", "--list")).toBe("");
-    expect(commands().some((call) => call[0] === "gh" && call[1] === "release")).toBe(false);
-    expect(git("status", "--porcelain")).toBe("");
-  });
+  it.each(["ci-failure", "deploy-failure", "wrong-sha", "skipped-deploy", "main-moved"])(
+    "does not create a tag or Release after %s",
+    (mode) => {
+      const { cli, git, commands } = publication(mode);
+      expect(cli("minor").status).not.toBe(0);
+      expect(git("tag", "--list")).toBe("");
+      expect(commands().some((call) => call[0] === "gh" && call[1] === "release")).toBe(false);
+      expect(git("status", "--porcelain")).toBe("");
+    },
+  );
   it("retries an untagged version after deployment recovery without another version increment", () => {
     const { cli, git, cwd, cleanEnv } = publication("deploy-failure");
     expect(cli("minor").status).not.toBe(0);
@@ -482,7 +480,6 @@ if (args.includes("apply") && process.env.OCELOT_TEST_FAIL === "migrate") proces
         "--message",
         `Ocelot v0.1.0 (${revision})`,
       ],
-      ["scripts/verify-deployment.ts", revision],
     ]);
     writeFileSync(join(cwd, "resources.json"), '[{"name":"ocelot"},{"name":"another-app"}]');
     const existing = deploy();

@@ -132,22 +132,28 @@ export function assertWorkflowSuccess(
     );
   if (sourceRunId === undefined) {
     if (workflow.event !== "push")
-      throw new Error("Publication requires the matching push CI run.");
+      throw new Error("Publication requires the matching push pipeline run.");
     return;
   }
   if (
-    !["workflow_run", "workflow_dispatch"].includes(workflow.event) ||
-    workflow.displayTitle !== `Deploy CI ${sourceRunId}` ||
+    workflow.event !== "push" ||
     !workflow.jobs.some(
       (job) =>
-        job.name === "Deploy / Deploy Worker" &&
+        job.name === "deploy / Deploy Worker" &&
         job.conclusion === "success" &&
         job.steps.some(
-          (step) => step.name === "Run project deploy script" && step.conclusion === "success",
+          (step) =>
+            step.name === "D4: Deploy — Run project deploy script" && step.conclusion === "success",
+        ) &&
+        job.steps.some(
+          (step) =>
+            step.name === "D5: Verify — Production health check" && step.conclusion === "success",
         ),
     )
   )
-    throw new Error("Production deployment for this CI run did not succeed. No tag was created.");
+    throw new Error(
+      "Production deployment for this pipeline run did not succeed. No tag was created.",
+    );
 }
 
 export function deploymentVersion(value: unknown): string {

@@ -40,12 +40,12 @@ bun run release -- --dry-run  # Preview scripts/release.ts
 - Nav: gap adjacent hovered/selected Pierre rows without changing virtual row height; fix sidebar logo at 24px left across transitions — never center ([07](docs/07-basalt-navigation.md)).
 - Root `package.json` is sole version source (`vX.Y.Z` in sidebar, `X.Y.Z` at `GET /api/live`); raise weaker checks to match contracts, never lower them.
 - Update numbered `docs/NN-*.md` before coding with honest status/evidence; distinguish requirements, proposals, decisions, and completed work.
-- Authorized releases only: preview `bun run release -- --dry-run` (`patch` default); migrations precede Worker code after matching `main` CI ([16](docs/16-release-policy.md)).
+- **Pipeline & releases**: `.github/workflows/pipeline.yml` runs `quality` (`S1`–`Z1` in `.github/workflows/quality-slots.yml`, `quality / Z1: Gate` required on `main`) then `deploy` (`D1`–`D5` via `base-ci` `deploy-worker.yml` `v2026.21` reusing `B1` `b1-dist`) automatically on `main` push (`workflow_dispatch` requires `deploy=true`; PRs skip `deploy`). Preview release script with `bun run release -- --dry-run`.
 - Never move published tags; after credential fixes rerun failed workflow/version or recover existing tags. Live checks never replace private-vault UAT ([09](docs/09-identity-and-delivery.md)).
 
 ## Quality & Local Gates
 
-Follows `system1-quality`; CI slots and pinned `base-ci` live in `.github/workflows/quality-slots.yml` (`verify.yml` -> `quality / Z1: Gate` on `main`). Statuses: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests.
+Follows `system1-quality`; CI slots and pinned `base-ci` live in `.github/workflows/quality-slots.yml` (`pipeline.yml` -> `quality / Z1: Gate` on `main`). Statuses: `enforced`, `planned`, `manual`, `N/A`. No focused/skipped tests.
 
 - **Exceptions / gaps**: `L2 Runtime` `N/A` (L1 `worker` Miniflare); `L3 Integration` `N/A` in CI (API inventory gate `planned`); `P1 Package` `enforced` (`bun run worker:check` on `B1` artifact); docs `manual`; E2E `_test_marker` `planned`.
 - **Coverage**: V8 ≥80% (stmts/branches/funcs/lines) on `src/**`, `worker/**`, `scripts/release-model.ts` (incl. unexecuted); excludes `src/views/**`, `src/main.tsx`, `mock/**`, `**/*.d.ts`.

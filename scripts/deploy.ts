@@ -27,4 +27,3 @@ wrangler(
   "--message",
   `Ocelot v${version} (${revision})`,
 );
-execFileSync("bun", ["scripts/verify-deployment.ts", revision], { stdio: "inherit" });
